@@ -1,6 +1,6 @@
-# Dati di addestramento e artefatti grezzi: mai in git, per costruzione.
-# Le eccezioni esplicite sotto sono l'unico modo in cui questi pattern
-# possono entrare nel repo.
+# Training data and raw artifacts: never in git, by construction.
+# The explicit exceptions below are the only way these patterns
+# can enter the repo.
 *.tsv
 *.tsv.gz
 *.bin
@@ -14,7 +14,7 @@ data/
 datasets/
 shards/
 
-# Segreti e configurazione locale
+# Secrets and local configuration
 *.pem
 *_rsa
 *_ed25519
@@ -23,7 +23,7 @@ luna_oracle.pub
 .env
 *.key
 
-# Eccezioni esplicite: questo E' il materiale che deve entrare nel repo
+# Explicit exceptions: this IS the material that must enter the repo
 !nets/*.nnue
 !nets/*.sha256
 !results/**
