@@ -1,67 +1,68 @@
 # luna-nnue
 
-Provenienza dati, filiera e risultati per le reti NNUE di
+Data provenance, pipeline, and results for the NNUE networks of
 [Luna Chess Engine](https://github.com/Spunc595/Luna-Chess-Engine).
-Repository separato dal motore: qui vive la storia di *come* ogni rete è
-stata generata e misurata, non il codice del motore stesso.
+A separate repository from the engine itself: this is where the history
+of *how* each network was generated and measured lives, not the engine's
+own code.
 
-Pubblico. I numeri qui dentro non fanno sempre una bella figura (la rete
-conforme sta sotto gen0, che sta sotto akimbo) — pubblicarli è la scelta,
-non un compromesso: un registro che mostra anche i numeri scomodi vale più
-di qualunque dichiarazione di provenienza non verificabile.
+Public. The numbers in here don't always look good (the compliant network
+sits below gen0, which sits below akimbo) — publishing them is the choice,
+not a compromise: a record that shows the uncomfortable numbers too is
+worth more than any unverifiable provenance claim.
 
-## Da dove iniziare
+## Where to start
 
-- **[`LINEAGE.md`](LINEAGE.md)** — da chi/cosa discende ogni rete
-  presentata. La domanda più importante che ci verrà fatta.
-- **[`COMPLIANCE.md`](COMPLIANCE.md)** — la dichiarazione di conformità
-  TCEC NNUE, fase per fase, con l'elenco esplicito di ogni punto in cui
-  Stockfish compare nel repository e perché non è una violazione.
-- **[`RESULTS.md`](RESULTS.md)** — le tabelle. Ogni numero è ricalcolabile
-  dai `.csv` in `results/`.
+- **[`LINEAGE.md`](LINEAGE.md)** — what each presented network descends
+  from. The most important question we'll be asked.
+- **[`COMPLIANCE.md`](COMPLIANCE.md)** — the TCEC NNUE compliance
+  declaration, phase by phase, with an explicit list of every place
+  Stockfish appears in the repository and why it isn't a violation.
+- **[`RESULTS.md`](RESULTS.md)** — the tables. Every number is
+  recomputable from the `.csv` files in `results/`.
 
-## Struttura
+## Structure
 
 ```
-LINEAGE.md           il grafo di ascendenza delle reti
-COMPLIANCE.md         la dichiarazione TCEC, punto per punto
-RESULTS.md            le tabelle
+LINEAGE.md            the network ancestry graph
+COMPLIANCE.md          the TCEC declaration, point by point
+RESULTS.md             the tables
 results/
-  eval_set.epd         l'insieme di posizioni di valutazione condiviso
-  *.csv                valutazioni grezze, una riga per posizione
-  scripts/             gli script che le producono e calcolano il ρ
+  eval_set.epd          the shared evaluation position set
+  *.csv                 raw evaluations, one row per position
+  scripts/              the scripts that produce them and compute rho
 pipeline/
-  generate/ annotate/ dataset/ train/ measure/    codice, nessun dato
-manifests/ gen1/ gen2/ gen3/                       manifesti per shard
-nets/                 luna_gen1.nnue, luna_gen2.nnue (+ .sha256)
-checksums/ gen1/ gen2/                             hash dei dataset
-non_conforme/          gen0: cos'è, perché non conta, script isolato
+  generate/ annotate/ dataset/ train/ measure/    code, no data
+manifests/ gen1/ gen2/ gen3/                       per-shard manifests
+nets/                  luna_gen1.nnue, luna_gen2.nnue (+ .sha256)
+checksums/ gen1/ gen2/                             dataset hashes
+non_conforme/           gen0: what it is, why it doesn't count, isolated script
 ```
 
-## Come si riproduce una generazione
+## How to reproduce a generation
 
-1. `pipeline/generate/` — self-play (`run_selfplay_genN.sh`) + estrazione
-   posizioni + costruzione manifesto, guidato da `generate_shards_genN.sh`
-   (assert aritmetico sul dimensionamento dei pool prima di partire).
-2. `pipeline/annotate/` — annotazione incrementale a inseguimento
-   (`annotate_incremental_genN*.py`), dedup globale via `global_seen.bin`,
-   correzione WDL delle partite troncate.
-3. `pipeline/dataset/` — `build_training_dataset_genN.py` assembla
-   train/val (split per partita), `convert_to_binary.py` converte in
-   formato memory-mapped per il training.
-4. `pipeline/train/` — `train.py`, con i tre numeri di pre-volo stampati
-   automaticamente prima di ogni run come controllo di sanità.
-5. `pipeline/measure/` — gate sul maestro prima di ogni nuova generazione,
-   misure Spearman statiche e in ricerca per `RESULTS.md`.
+1. `pipeline/generate/` — self-play (`run_selfplay_genN.sh`) + position
+   extraction + manifest construction, driven by `generate_shards_genN.sh`
+   (an arithmetic assert on pool sizing before it starts).
+2. `pipeline/annotate/` — incremental, trailing annotation
+   (`annotate_incremental_genN*.py`), global dedup via `global_seen.bin`,
+   WDL correction for truncated games.
+3. `pipeline/dataset/` — `build_training_dataset_genN.py` assembles
+   train/val (split by game), `convert_to_binary.py` converts to a
+   memory-mapped format for training.
+4. `pipeline/train/` — `train.py`, with the three preflight numbers
+   printed automatically before every run as a sanity check.
+5. `pipeline/measure/` — the gate on the master before every new
+   generation, static and search-based Spearman measurements for
+   `RESULTS.md`.
 
-I dati stessi (shard, dataset assemblati, checkpoint) non sono in questo
-repository — vivono su Oracle Cloud e su un bucket OCI. Questo repository
-contiene il codice per riprodurli e le misure per verificarli.
+The data itself (shards, assembled datasets, checkpoints) is not in this
+repository — it lives on Oracle Cloud and an OCI bucket. This repository
+holds the code to reproduce it and the measurements to verify it.
 
-## Regola di conformità
+## Compliance rule
 
-Tutti i dati di addestramento di gen1 in poi vengono dalla ricerca e/o
-valutazione del motore stesso — mai da Stockfish, mai da un motore terzo.
-Dettagli completi, incluso perché il nome "Stockfish" compare comunque nel
-codice (come strumento di misura offline, non come sorgente di etichette),
-in `COMPLIANCE.md`.
+All training data from gen1 onward comes from the engine's own search
+and/or evaluation — never from Stockfish, never from a third-party engine.
+Full details, including why "Stockfish" still appears in the code (as an
+offline measurement tool, never as a label source), in `COMPLIANCE.md`.

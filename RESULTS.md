@@ -1,188 +1,202 @@
 # Results
 
-Ogni numero in questo documento è stato **ricalcolato dai `.csv` in
-`results/`** al momento di scriverlo (2026-09-15), non copiato dal
-RUNBOOK — vedi 5.2 per il vincolo e per le due discrepanze reali trovate
-ricalcolando.
+Every number in this document was **recomputed from the `.csv` files in
+`results/`** at the time of writing (2026-09-15), not copied from
+RUNBOOK.md — see 5.2 for the constraint and the two real discrepancies
+found while recomputing.
 
-## 1. Reti a confronto — misura statica
+## 1. Networks compared — static measurement
 
-Valutazione statica (comando UCI `eval`, **nessuna ricerca**), stesso
-insieme di 2.000 posizioni (`results/eval_set.epd`, campionate con
-seed=7 da un validation set di riferimento condiviso, dettagli in 5.3),
-Stockfish depth 8 come riferimento.
+Static evaluation (UCI `eval` command, **no search**), same set of 2,000
+positions (`results/eval_set.epd`, sampled with seed=7 from a shared
+reference validation set, details in 5.3), Stockfish depth 8 as the
+reference.
 
-| Rete | ρ vs Stockfish |
+| Network | ρ vs Stockfish |
 |---|---|
-| gen1 | 0,5874 |
-| gen2 | 0,6790 |
-| gen0 *(non conforme — vedi `non_conforme/README.md`)* | 0,7850 |
-| akimbo *(rete di terzi, MIT, solo riferimento — mai usata per generare dati)* | 0,8522 |
+| gen1 | 0.5874 |
+| gen2 | 0.6790 |
+| gen0 *(non-compliant — see `non_conforme/README.md`)* | 0.7850 |
+| akimbo *(third-party network, MIT, reference only — never used to generate data)* | 0.8522 |
 
 Script: `results/scripts/measure_static_vs_stockfish.py`. CSV:
 `results/gen1_vs_stockfish.csv`, `gen2_vs_stockfish.csv`,
-`akimbo_vs_stockfish.csv`. Motore commit `076defcb93d4a1dc834d4ecd5132f45ba9a311d2`
-(gen1, gen2); akimbo: build di riferimento separata (v3.1.2, rete embedded
-akimbo, nessuna rete esterna caricata). Data: 2026-09-15. Nessuna ricerca
-coinvolta: la valutazione statica non usa thread, è deterministica per
-costruzione.
+`akimbo_vs_stockfish.csv`. Engine commit
+`076defcb93d4a1dc834d4ecd5132f45ba9a311d2` (gen1, gen2); akimbo: separate
+reference build (v3.1.2, embedded akimbo network, no external network
+loaded). Date: 2026-09-15. No search involved: static evaluation uses no
+threads, deterministic by construction.
 
-## 2. Il motore in ricerca, per generazione
+## 2. The engine in search, per generation
 
-**Non è la stessa grandezza della tabella 1** — qui si misura il motore
-COME GIOCA DAVVERO (ricerca a nodi fissi), non la rete isolata. **1 thread**
-(default UCI, mai sovrascritto in nessuno script di misura di questo
-repository — riproducibile esattamente). Stesso insieme di 2.000 posizioni
-di `results/eval_set.epd`.
+**Not the same quantity as table 1** — this measures how the engine
+actually plays (fixed-node search), not the isolated network. **1
+thread** (UCI default, never overridden in any measurement script in this
+repository — reproducible exactly). Same set of 2,000 positions from
+`results/eval_set.epd`.
 
-| nodi | Luna + gen1 | Luna + gen2 | passo |
+| nodes | Luna + gen1 | Luna + gen2 | step |
 |---|---|---|---|
-| 10.000 | 0,8072 | 0,8537 | +0,0465 |
-| 20.000 | 0,8285 | 0,8760 | +0,0475 |
-| 50.000 | 0,8413 | 0,8887 | +0,0474 |
+| 10,000 | 0.8072 | 0.8536 | +0.0464 |
+| 20,000 | 0.8249 | 0.8758 | +0.0509 |
+| 50,000 | 0.8428 | 0.8891 | +0.0463 |
 
-**Il passo è costante ai tre livelli di nodi** — se fosse rumore lo si
-vedrebbe variare. Il miglioramento gen1→gen2 si trasferisce alla ricerca
-in modo uniforme, non solo dove la ricerca è cieca.
+**The step is quite stable across the three node levels** (+0.0464 /
++0.0509 / +0.0463) — "constant" would be a stronger claim than these
+three numbers support, but it doesn't swing wildly either. The numbers
+are here, without a claim broader than what they hold up.
 
 Script: `results/scripts/measure_search_vs_stockfish.py`. CSV:
 `results/gen1_master_vs_stockfish.csv`, `results/gen2_master_vs_stockfish.csv`.
-Data: 2026-09-15.
+Date: 2026-09-15.
 
-**Discrepanza trovata e non risolta a favore di un numero scelto a
-piacere** (vincolo 5.2): ricalcolando dai CSV appena prodotti, i valori
-gen1 a 20k e 50k nodi **non coincidono esattamente** con quelli registrati
-nel RUNBOOK/gen2.md:
+**Note on the gen1 discrepancy, corrected**: an earlier version of this
+table reported the RUNBOOK/gen2.md values for gen1 (0.8072 / 0.8285 /
+0.8413) while the surrounding text already claimed the table was
+recomputed from the CSVs — the table itself wasn't, contradicting its own
+note. **The table above now uses the recomputed values** (0.8072 / 0.8249
+/ 0.8428): at 10,000 nodes it matches RUNBOOK, at 20,000 and 50,000 it
+doesn't (a real gap, not rounding noise). gen2 recomputes within 0.0004 in
+all three cases. Unverified hypothesis for why: the original RUNBOOK
+measurement for gen1 may straddle the `076defc` fix (a real quiescence
+timeout bug, which affects longer searches more — consistent with 10k,
+the shortest search, matching exactly while 20k/50k don't). Neither value
+was chosen as "the right one": the table above uses the value recomputed
+now, under the same engine commit for both generations (so comparable
+between them even though it differs from the historical figure). TODO:
+verify the exact commit used for the original gen1 measurement, if
+recoverable from logs.
 
-| nodi | registrato (RUNBOOK) | ricalcolato ora (stesso seed, stesso commit motore) |
-|---|---|---|
-| 10.000 | 0,8072 | 0,8072 |
-| 20.000 | 0,8285 | 0,8249 |
-| 50.000 | 0,8413 | 0,8428 |
+## 3. How well each network learned from its own master
 
-gen2 ricalcola entro 0,0004 in tutti e tre i casi (rumore di
-arrotondamento atteso). gen1 no, a 20k e 50k. Entrambi i motori sono
-**a 1 thread** e la valutazione a 10.000 nodi coincide esattamente —
-un'ipotesi plausibile ma non verificata è che la misura originale di gen1
-sia stata fatta a cavallo del fix `076defc` (correzione di un vero bug di
-timeout in `quiescence`, che incide di più su ricerche più profonde/lunghe
-— coerente col fatto che 10k, la ricerca più corta, coincida esattamente
-mentre 20k/50k no). **Non scelto quale dei due è giusto**: la tabella sopra
-usa il valore RICALCOLATO ora (stesso commit `076defc` per entrambe le
-generazioni, quindi confrontabile fra loro), il valore storico resta
-qui come nota. TODO: verificare il commit esatto usato per la misura gen1
-originale, se recuperabile dai log.
+**A different quantity from the first two — not comparable to them.**
+Measures how faithfully the network reproduces its own master (classical
+PST for gen1, the gen1 network in search for gen2): it says nothing about
+how close the network is to the truth (that's what tables 1-2 say).
 
-## 3. Quanto ciascuna rete ha appreso dal proprio maestro
-
-**Grandezza diversa dalle prime due — non confrontabile con esse.** Misura
-quanto fedelmente la rete riproduce il proprio maestro (che per gen1 è la
-PST classica, per gen2 è la rete gen1 in ricerca): non dice nulla su
-quanto la rete sia vicina alla verità (quello lo dicono le tabelle 1-2).
-
-| Generazione | ρ vs proprio maestro |
+| Generation | ρ vs own master |
 |---|---|
-| gen1 | 0,9230 |
-| gen2 | 0,9508 |
+| gen1 | 0.9230 |
+| gen2 | 0.9508 |
 
-## 4. I dataset
+## 4. The datasets
 
-| Generazione | Posizioni totali | Uniche | Tasso di unicità | Partite | Resa (pos/partita) | Nodi self-play | Nodi annotazione | Rete maestro | Macchina | Commit |
+| Generation | Total positions | Unique | Uniqueness rate | Games | Yield (pos/game) | Self-play nodes | Annotation nodes | Master network | Machine | Commit |
 |---|---|---|---|---|---|---|---|---|---|---|
-| gen1 | 3.300.643 | 2.135.009 | 64,7% | 230.000 | 14,3506 | 3.000 | 10.000 | classica (PST) | Oracle (self-play), PC (annotazione) | self-play `b0cfb937` / annotazione `076defc` |
-| gen2 | 3.083.063 | 2.972.944 | 96,4% | 265.000 | 11,6342 | 3.000 | 20.000 | gen1 (ricerca) | Oracle (self-play e, dopo riconciliazione, annotazione) | `076defc` (entrambe) |
-| gen3 | *in corso* | *in corso* | *in corso* | *in corso* | 11,88 *(solo 5 shard di controllo su 54, non l'intera generazione)* | 3.000 | 20.000 | gen2 (ricerca) | Oracle (intera generazione) | `076defc` (entrambe) |
+| gen1 | 3,300,643 | 2,135,009 | 64.7% | 230,000 | 14.3506 | 3,000 | 10,000 | classical (PST) | Oracle (self-play), PC (annotation) | self-play `b0cfb937` / annotation `076defc` |
+| gen2 | 3,083,063 | 2,972,944 | 96.4% | 265,000 | 11.6342 | 3,000 | 20,000 | gen1 (search) | Oracle (self-play and, after reconciliation, annotation) | `076defc` (both) |
+| gen3 | *in progress* | *in progress* | *in progress* | *in progress* | 11.88 *(only 5 control shards out of 54, not the full generation)* | 3,000 | 20,000 | gen2 (search) | Oracle (entire generation) | `076defc` (both) |
 
-**Denominatore della resa, dichiarato per tutte e tre**: posizioni grezze
-estratte / **partite completate**. Verificato esplicitamente per tutte e
-tre le generazioni che partite completate = partite assegnate (100% in
-ognuna, nessuna partita fallita/persa) — il denominatore non è ambiguo qui,
-ma va ricontrollato ad ogni generazione futura, non assunto.
+**Yield denominator, declared for all three**: raw extracted positions /
+**completed games**. Explicitly verified for all three generations that
+completed games = assigned games (100% in each, no failed/lost games) —
+the denominator isn't ambiguous here, but it must be re-checked for every
+future generation, not assumed.
 
-**Nota sulla gen1**: la cifra "14,2 pos/partita" circolata in precedenza
-(RUNBOOK, conversazioni) veniva da un **trial preliminare di 3 shard**
-(2.400 partite), non dall'intera generazione. Il numero corretto per
-l'intera gen1 (46 shard, 230.000 partite) è **14,3506** — la differenza è
-piccola ma il numero sbagliato non va propagato: è quello con cui si
-dimensionerebbero i pool di una generazione futura se si riusasse gen1
-come riferimento.
+**Note on gen1**: the "14.2 pos/game" figure that circulated earlier
+(RUNBOOK, conversations) came from a **preliminary 3-shard trial**
+(2,400 games), not the full generation. The correct number for all of
+gen1 (46 shards, 230,000 games) is **14.3506** — the difference is small
+but the wrong number shouldn't propagate: it's the one a future
+generation's pools would be sized against if gen1 were reused as a
+reference.
 
-## 5. Addestramento
+## 5. Training
 
-| Generazione | Val loss minima | Epoca | Epoche usate | Varianza target (pre-volo) | MSE materiale (pre-volo) | MSE non addestrato (pre-volo) |
+| Generation | Minimum val loss | Epoch | Epochs used | Target variance (preflight) | Material-only MSE (preflight) | Untrained MSE (preflight) |
 |---|---|---|---|---|---|---|
-| gen1 | 0,013316 | — | 12 (mai raggiunto plateau, non rifare per questo) | — | — | — |
-| gen2 | 0,018874 | 4 | 10 (early stop, patience 6) | 0,134622 | 0,030026 | 0,135515 |
+| gen1 | 0.013316 | — | 12 (plateau never reached, not worth redoing for this) | — | — | — |
+| gen2 | 0.018874 | 4 | 10 (early stop, patience 6) | 0.134622 | 0.030026 | 0.135515 |
 
-**Le val loss non sono confrontabili fra generazioni: sono scale diverse**
-(dataset e target diversi). Guardare i rapporti (quota di varianza
-spiegata, distanza dal materiale), non il valore assoluto.
+**Val loss is not comparable across generations: the scales differ**
+(different dataset, different target). Look at ratios (fraction of
+variance explained, distance from material), not the absolute value.
 
-I tre numeri di pre-volo di gen1 non sono stati ritrovati in questa
-sessione (TODO: recuperarli da `gen1_train.log` su richiesta, non urgente).
+gen1's three preflight numbers weren't recovered in this session (TODO:
+pull them from `gen1_train.log` on request, not urgent).
 
-## 5.5 Controllo di sovrapposizione
+## 5.5 Overlap check
 
-`results/eval_set.epd` (le 2.000 posizioni usate per tutte le tabelle
-sopra) è un campione di un validation set (`val_final.tsv`, 274.226
-posizioni) tenuto fuori dal training fin dalla sua creazione (gen0).
-**Verificato per intero, non a campione** (confronto letterale di FEN,
-leggero anche su milioni di righe, nessuna CPU pesante):
+`results/eval_set.epd` (the 2,000 positions used in every table above) is
+a sample of a validation set (`val_final.tsv`, 274,226 positions) held out
+of training since its creation (gen0). **Checked in full, not sampled**
+(literal FEN comparison, cheap even over millions of rows, no heavy CPU):
 
-| Dataset di training | Righe controllate | Sovrapposizioni trovate |
+| Training dataset | Rows checked | Overlaps found |
 |---|---|---|
-| gen1 (`gen1_train.tsv`) | 2.080.991 | 0 |
-| gen2 (`gen2_train.tsv`) | 2.899.216 | 0 |
-| gen3 | *in corso, da controllare a fine generazione* | TODO |
+| gen1 (`gen1_train.tsv`) | 2,080,991 | 0 |
+| gen2 (`gen2_train.tsv`) | 2,899,216 | 0 |
+| gen3 | *in progress, to check once the generation completes* | TODO |
 
-Zero sovrapposizioni confermate per gen1 e gen2: le misure di Spearman non
-premiano memorizzazione.
+Zero overlaps confirmed for gen1 and gen2: the Spearman measurements
+aren't rewarding memorization.
 
-## 5.6 Cosa non è stato misurato
+## 5.6 What was not measured
 
-- **Misurato direttamente**: correlazione di ordinamento (Spearman),
-  sia statica (tabella 1) sia in ricerca a nodi fissi (tabella 2).
-- **Inferito, non misurato**: che una correlazione di rango più alta
-  corrisponda a più forza di gioco (Elo). È un'assunzione ragionevole
-  (l'unico SPRT diretto disponibile, gen0 vs akimbo, mostra una rete con
-  Spearman più basso perdere nettamente — coerente ma è un solo punto dato)
-  non una misura.
-- **Non misurato affatto**: l'Elo di gen1 o gen2. Nessuno SPRT è stato
-  lanciato in questi due cicli (per istruzione esplicita — il confronto è
-  fra generazioni via Spearman, non fra generazione e baseline via Elo).
+- **Measured directly**: rank correlation (Spearman), both static
+  (table 1) and in fixed-node search (table 2).
+- **Inferred, not measured**: that a higher rank correlation corresponds
+  to more playing strength (Elo). A reasonable assumption (the one direct
+  SPRT available, gen0 vs akimbo, shows the network with lower Spearman
+  losing decisively — consistent, but it's a single data point), not a
+  measurement.
+- **Not measured at all**: gen1 or gen2's Elo. No SPRT was run in either
+  cycle (by explicit instruction — the comparison is between generations
+  via Spearman, not generation vs. baseline via Elo).
 
-## 5.7 Le due previsioni per la gen3 (registrate il 2026-09-15, prima del risultato)
+## 5.7 The two gen3 predictions (registered 2026-09-15, before the result)
 
-1. **Tendenza statica** (da `gen3.md`): 0,5874 → 0,6790 è +0,0916; con passi
-   che si accorciano, atteso **0,73-0,76**.
-2. **Rapporto allievo/maestro**: gen2 ha reso 0,6790/0,8285 = **0,8196** del
-   proprio maestro (in ricerca a 20k nodi, valore RUNBOOK originale — vedi
-   nota sulla discrepanza in tabella 2 se si vuole ricalcolare con
-   0,8249); con un maestro gen3 a 0,8760, la gen3 atterrerebbe a **~0,718**.
+1. **Static trend** (from `gen3.md`): 0.5874 → 0.6790 is +0.0916; with
+   shrinking steps, expected **0.73-0.76**.
+2. **Student/master ratio**: gen2 delivered 0.6790/0.8285 = **0.8196** of
+   its own master (in search at 20k nodes, original RUNBOOK value — see
+   the table 2 discrepancy note if recomputing with 0.8249 instead); with
+   a gen3 master at 0.8760, gen3 would land at **~0.718**.
 
-Non modificare la prima previsione dopo aver visto risultati parziali:
-si registrano entrambe adesso, si vede quale vince quando la gen3 chiude.
+Do not revise the first prediction after seeing partial results: both are
+registered now, and whichever wins gets noted once gen3 closes.
 
-## 5.8 Confondimento della generazione 3
+## 5.8 Generation 3's confound
 
-Il pool di aperture normali della gen3 è stato **rigenerato da zero** col
-filtro della rete gen2 (gen2 aveva usato il filtro della rete gen1, non
-riusato). **Il passo gen2→gen3 nel ρ vs Stockfish sarà quindi attribuibile
-a rete E distribuzione delle aperture insieme, non al solo miglioramento
-del maestro isolato.** Non è un errore ed è tardi per tornare indietro —
-ma chi legge il numero fra sei mesi deve saperlo qui, non solo nel testo
-introduttivo: quando la riga gen3 verrà aggiunta alla tabella 1, questa
-nota va ripetuta nella cella o nella riga stessa.
+The gen3 normal-opening pool was **regenerated from scratch** with the
+gen2 network's filter (gen2 had used the gen1 network's filter, not
+reused). **The gen2→gen3 step in ρ vs Stockfish will therefore be
+attributable to network AND opening distribution together, not to the
+master's improvement alone.** This is not a mistake and it's too late to
+undo — but whoever reads the number in six months needs to see this here,
+not only in the introductory text: when the gen3 row is added to table 1,
+this note must be repeated in the cell or row itself.
+
+## 5.9 The gen2 prediction that missed — and why
+
+`gen2.md`'s pre-registered expectation for gen2 was **0.76-0.78**. The
+actual result was **0.6790** — a large miss, and that wrong number is
+sitting inside all 99 committed manifests, so a reader will find it
+regardless of whether this section exists.
+
+**Why it missed**: the expectation was built by multiplying the master's
+*search* ρ (gen1 network in search, 0.8072-0.8413 depending on nodes) by
+the net-to-master ρ seen in gen1 (0.9230). That product is not a valid
+transfer coefficient — it mixes a search-based quantity with a
+static-network-vs-master quantity, exactly the kind of comparison this
+whole project has repeatedly gotten burned by (see the "compare only
+homogeneous quantities" rule adopted from `gen3.md` onward, and the
+distinction kept strict throughout this document between tables 1-2 and
+table 3).
+
+**A pre-registration that never admits missing the round before is
+decorative.** Admitting it is what makes gen3's pre-registration (5.7)
+worth trusting.
 
 ---
 
-## Riferimenti rapidi ai file
+## Quick file reference
 
-- `eval_set.epd` — 2.000 posizioni (fen, eval Stockfish depth 8, bestmove,
-  wdl, depth), campionate deterministicamente (seed=7) da un validation
-  set di riferimento di 274.226 posizioni non usato in alcun training.
-- `*_vs_stockfish.csv` — valutazioni grezze riga per posizione, uno per
-  motore/misura, prodotti dagli script in `results/scripts/`.
-- `results/scripts/` — codice che produce i CSV sopra e calcola Spearman.
-  Vedi `COMPLIANCE.md` per perché la presenza di "stockfish" qui non è una
-  violazione.
+- `eval_set.epd` — 2,000 positions (fen, Stockfish depth-8 eval, bestmove,
+  wdl, depth), deterministically sampled (seed=7) from a 274,226-position
+  reference validation set never used in any training.
+- `*_vs_stockfish.csv` — raw per-position evaluations, one per
+  engine/measurement, produced by the scripts in `results/scripts/`.
+- `results/scripts/` — code that produces the CSVs above and computes
+  Spearman. See `COMPLIANCE.md` for why "stockfish" appearing here isn't
+  a violation.

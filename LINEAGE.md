@@ -15,98 +15,120 @@ pre-registered 0.73-0.76 interval (see `RESULTS.md` 5.7). This file will
 gain a gen3 row once that is true — not before.
 
 ```
-eval classica  (nessuna sorgente esterna)
-      │   self-play + annotazione con la RICERCA di Luna
+classical eval  (no external source)
+      │   self-play + annotation via Luna's own SEARCH
       ▼
-    gen1   nets/luna_gen1.nnue   motore 076defc (etichette) / b0cfb937 (self-play)   ρ 0,5874
+    gen1   nets/luna_gen1.nnue   engine 076defc (labels) / b0cfb937 (self-play)   ρ 0.5874
       ▼
-    gen2   nets/luna_gen2.nnue   motore 076defc (etichette e self-play)              ρ 0,6790
+    gen2   nets/luna_gen2.nnue   engine 076defc (labels and self-play)            ρ 0.6790
       ▼
-    gen3   (in corso — non ancora presentabile)
+    gen3   (in progress — not presentable yet)
 
-ramo separato, NON antenato di alcuna rete presentata:
-    etichette esterne (Stockfish) ──► gen0   ρ 0,7850   [NON CONFORME]
+separate branch, NOT an ancestor of any presented network:
+    external labels (Stockfish) ──► gen0   ρ 0.7850   [NON-COMPLIANT]
 ```
 
-**La rete presentata non ha gen0 fra i propri antenati.** gen0 esiste solo
-come riferimento di confronto (vedi tabella 1 in `RESULTS.md`) e non ha
-contribuito ad alcun dato di addestramento delle reti gen1 e successive —
-è precedente alla conoscenza della regola TCEC applicata da gen1 in poi
-(dettagli in `non_conforme/README.md`).
+**The presented network does not have gen0 among its ancestors.** gen0
+exists only as a comparison reference (see table 1 in `RESULTS.md`) and
+did not contribute any training data to gen1 or later networks — it
+predates the TCEC rule applied from gen1 onward within this project
+(details in `non_conforme/README.md`).
 
-## Generazione 1
+## Generation 1
 
-| Campo | Valore |
+| Field | Value |
 |---|---|
-| Rete | `nets/luna_gen1.nnue` (`sha256`: vedi `nets/luna_gen1.nnue.sha256`) |
-| Maestro self-play | valutazione classica PST (nessuna rete, nessuna fonte esterna) |
-| Commit motore — self-play | `b0cfb9378fad417bf03d6bf662d4738d7adadc66` |
-| Commit motore — annotazione | `076defcb93d4a1dc834d4ecd5132f45ba9a311d2` |
-| Nota di divergenza commit | il self-play è partito prima del fix quiescence (`076defc`); l'annotazione lo usa. Il fix riguarda solo il rispetto del budget nodi/tempo in `quiescence`, non la legalità delle mosse — le posizioni estratte sotto il commit precedente restano valide, solo l'etichetta viene dal commit corretto. |
-| Nodi self-play | 3.000 |
-| Nodi annotazione | 10.000 |
-| Macchina | Oracle (self-play e annotazione) |
-| Shard | 46 (`gen1_shard_00001`..`00046`) |
-| Partite | 230.000 (assegnate = completate, 100%) |
-| Posizioni grezze | 3.300.643 |
-| Posizioni uniche | 2.135.009 (64,7%) |
-| Resa | 14,3506 pos/partita (denominatore: partite completate = partite assegnate) |
-| Dataset train/val | 2.080.991 / 54.018 posizioni, 209.480 / 5.371 partite (split per partita, seed 42) |
-| Val loss minima | 0,013316 |
-| ρ vs proprio maestro | 0,9230 |
-| ρ vs Stockfish (statico) | 0,5874 |
-| Checksum dataset | TODO — vedi `checksums/gen1/README.md` |
+| Network | `nets/luna_gen1.nnue` (`sha256`: see `nets/luna_gen1.nnue.sha256`) |
+| Self-play master | classical PST evaluation (no network, no external source) |
+| Engine commit — self-play | `b0cfb9378fad417bf03d6bf662d4738d7adadc66` |
+| Engine commit — annotation | `076defcb93d4a1dc834d4ecd5132f45ba9a311d2` |
+| Commit divergence note | self-play started before the quiescence fix (`076defc`); annotation used it. The fix only concerns node/time budget enforcement inside `quiescence`, not move legality — positions extracted under the earlier commit remain valid, only the label comes from the fixed commit. |
+| Self-play nodes | 3,000 |
+| Annotation nodes | 10,000 |
+| Machine | Oracle (self-play and annotation) |
+| Shards | 46 (`gen1_shard_00001`..`00046`) |
+| Games | 230,000 (assigned = completed, 100%) |
+| Raw positions | 3,300,643 |
+| Unique positions | 2,135,009 (64.7%) |
+| Yield | 14.3506 pos/game (denominator: completed games = assigned games) |
+| Train/val dataset | 2,080,991 / 54,018 positions, 209,480 / 5,371 games (split by game, seed 42) |
+| Minimum val loss | 0.013316 |
+| ρ vs own master | 0.9230 |
+| ρ vs Stockfish (static) | 0.5874 |
+| Dataset checksum | TODO — see `checksums/gen1/README.md` |
+| Opening pool | **filtered with Stockfish** (depth 6, ±200cp threshold) — see note below |
 
-## Generazione 2
+**Note on the opening filter** (found while re-reading the code, not
+correctly declared until now — `correzioni-pre-post-v2.md` A1):
+`pipeline/generate/gen_random_openings.py`, used by
+`generate_shards_gen1.sh`, discards openings with `|eval| > 200cp` by
+querying **Stockfish**, not Luna's classical evaluation. From gen2 onward
+the filter uses the previous generation's network (Luna itself) —
+correct there, not here.
 
-| Campo | Valore |
+**This is not an error to hide, nor to fix by regenerating**: redoing gen1
+would mean redoing gen2 and gen3 too (weeks, for a *selection*
+contamination, not a *label* one). It stays declared as-is.
+
+**How it propagates**: no gen1 position or label was produced by
+Stockfish — only the *selection* of self-play starting positions. gen2
+regenerated its own openings with the internal filter (gen1 network), so
+the external influence survives only indirectly, through the gen1 network
+used as master — **it attenuates with each generation, it does not
+compound**. A fully clean chain would require regenerating from gen1: not
+done, cost disproportionate to the goal.
+
+## Generation 2
+
+| Field | Value |
 |---|---|
-| Rete | `nets/luna_gen2.nnue` (`sha256`: vedi `nets/luna_gen2.nnue.sha256`) |
-| Maestro self-play e annotazione | rete gen1, in ricerca |
-| Commit motore — self-play | `b0cfb9378fad417bf03d6bf662d4738d7adadc66` |
-| Commit motore — annotazione | `076defcb93d4a1dc834d4ecd5132f45ba9a311d2` |
-| Nodi self-play | 3.000 |
-| Nodi annotazione | 20.000 (scelto: ginocchio della curva su 10k/20k/50k) |
-| Macchina | Oracle (self-play e — dopo riconciliazione, vedi sotto — anche l'intera annotazione) |
-| Shard | 53 (`gen2_shard_00001`..`00053`) |
-| Partite | 265.000 (assegnate = completate, 100%) |
-| Posizioni grezze | 3.083.063 |
-| Posizioni uniche | 2.972.944 (96,4%) |
-| Resa | 11,6342 pos/partita (denominatore: partite completate = partite assegnate) |
-| Dataset train/val | 2.899.216 / 73.728 posizioni, 249.020 / 6.385 partite (split per partita, seed 42) |
-| Val loss minima | 0,018874 (epoca 4, early stop epoca 10) |
-| ρ vs proprio maestro | 0,9508 |
-| ρ vs Stockfish (statico) | 0,6790 |
-| Checksum dataset | TODO — vedi `checksums/gen2/README.md` |
+| Network | `nets/luna_gen2.nnue` (`sha256`: see `nets/luna_gen2.nnue.sha256`) |
+| Self-play and annotation master | gen1 network, in search |
+| Engine commit — self-play | `b0cfb9378fad417bf03d6bf662d4738d7adadc66` |
+| Engine commit — annotation | `076defcb93d4a1dc834d4ecd5132f45ba9a311d2` |
+| Self-play nodes | 3,000 |
+| Annotation nodes | 20,000 (chosen: knee of the 10k/20k/50k curve) |
+| Machine | Oracle (self-play, and — after reconciliation, see below — the entire annotation too) |
+| Shards | 53 (`gen2_shard_00001`..`00053`) |
+| Games | 265,000 (assigned = completed, 100%) |
+| Raw positions | 3,083,063 |
+| Unique positions | 2,972,944 (96.4%) |
+| Yield | 11.6342 pos/game (denominator: completed games = assigned games) |
+| Train/val dataset | 2,899,216 / 73,728 positions, 249,020 / 6,385 games (split by game, seed 42) |
+| Minimum val loss | 0.018874 (epoch 4, early stop at epoch 10) |
+| ρ vs own master | 0.9508 |
+| ρ vs Stockfish (static) | 0.6790 |
+| Dataset checksum | TODO — see `checksums/gen2/README.md` |
 
-**Incidente di provenienza (dichiarato, non nascosto)**: l'annotazione
-doveva passare dal PC a Oracle a metà generazione. Il processo PC non si è
-fermato per un errore di permessi dell'harness e ha ri-annotato in
-parallelo gli shard 3-8 già fatti da Oracle, producendo per alcuni shard un
-disallineamento reale fra `.tsv` (da una corsa) e manifesto (dall'altra) —
-un guasto che non si vede guardando i numeri: il dataset sembrava sano, la
-provenienza era falsa. Intercettato e corretto riconciliando tutto sulla
-corsa Oracle (unica fonte autorevole per gli shard 3-53). In seguito si è
-scoperto che nemmeno gli shard 1-2 venivano dalla corsa Oracle (nessun
-`annotation_machine` nel manifesto, timestamp della corsa PC originale):
-**rifatti su Oracle** sotto lo stesso `global_seen.bin` usato per gli altri
-51, invece di far convivere due stati di deduplica nello stesso script.
-Tutto il dataset gen2 finale viene da un'unica corsa continua. Dettaglio
-completo in `RUNBOOK.md` sez. 15-16 (repository del motore).
+**Provenance incident (declared, not hidden)**: annotation was meant to
+move from the PC to Oracle midway through the generation. The PC process
+didn't stop, due to a harness permission error, and re-annotated shards
+3-8 in parallel with Oracle (which had already done them), producing for
+some shards a real mismatch between the `.tsv` (from one run) and the
+manifest (from the other) — a fault invisible in the numbers themselves:
+the dataset looked healthy, the provenance was false. Caught and fixed by
+reconciling everything onto the Oracle run (the sole authoritative source
+for shards 3-53). It later turned out that shards 1-2 didn't come from
+the Oracle run either (no `annotation_machine` field in the manifest,
+timestamps from the original PC run): **redone on Oracle** under the same
+`global_seen.bin` used for the other 51, instead of letting two dedup
+states coexist in the same script. The whole final gen2 dataset comes
+from a single continuous run. Full detail in `RUNBOOK.md` sections 15-16
+(engine repository).
 
-Un registro che documenta un guasto intercettato e corretto è più
-credibile di uno immacolato: il secondo fa pensare che i controlli non
-esistano, non che non abbiano mai trovato nulla.
+A record that documents a caught-and-fixed fault is more credible than a
+spotless one: the latter suggests the checks don't exist, not that they
+never found anything.
 
-## Generazione 3 (in corso, non presentabile finché non chiude il gate)
+## Generation 3 (in progress, not presentable until its gate closes)
 
-| Campo | Valore (parziale, aggiornare a chiusura) |
+| Field | Value (partial, update on completion) |
 |---|---|
-| Maestro self-play e annotazione | rete gen2, in ricerca |
-| Commit motore | `076defcb93d4a1dc834d4ecd5132f45ba9a311d2` (self-play e annotazione, stesso commit fin dall'inizio — nessuna divergenza) |
-| Nodi self-play | 3.000 |
-| Nodi annotazione | 20.000 (gate sul maestro: ρ 0,8537/0,8760/0,8887 a 10k/20k/50k, sopra il maestro gen2) |
-| Macchina | Oracle, unica dall'inizio alla fine (regola di metodo fissata dopo l'incidente gen2) |
-| Target shard | 54 |
-| Confondimento noto | il pool di aperture normali è stato rigenerato col filtro della rete gen2 (non riusato da gen2). Il passo gen2→gen3 sarà quindi attribuibile a rete + distribuzione delle aperture insieme, non al solo maestro — vedi `RESULTS.md` 5.8. |
-| Resto | TODO — in corso, vedi `RUNBOOK.md` sez. 17 |
+| Self-play and annotation master | gen2 network, in search |
+| Engine commit | `076defcb93d4a1dc834d4ecd5132f45ba9a311d2` (self-play and annotation, same commit from the start — no divergence) |
+| Self-play nodes | 3,000 |
+| Annotation nodes | 20,000 (master gate: ρ 0.8537/0.8760/0.8887 at 10k/20k/50k, above the gen2 master) |
+| Machine | Oracle, sole machine start to finish (method rule fixed after the gen2 incident) |
+| Target shards | 54 |
+| Known confound | the normal-opening pool was regenerated with the gen2 network's filter (not reused from gen2). The gen2→gen3 step will therefore be attributable to network + opening distribution together, not the master alone — see `RESULTS.md` 5.8. |
+| Rest | TODO — in progress, see `RUNBOOK.md` section 17 |
