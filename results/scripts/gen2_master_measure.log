@@ -1,0 +1,4 @@
+nodes=10000: fatto
+nodes=20000: fatto
+nodes=50000: fatto
+Scritte 2000 righe in ../gen2_master_vs_stockfish.csv
