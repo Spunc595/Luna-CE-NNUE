@@ -1,4 +1,4 @@
-# luna-nnue
+# Luna CE NNUE
 
 Data provenance, pipeline, and results for the NNUE networks of
 [Luna Chess Engine](https://github.com/Spunc595/Luna-Chess-Engine).
