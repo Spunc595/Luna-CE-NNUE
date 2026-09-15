@@ -15,7 +15,7 @@ filtered only by piece count and material imbalance — no engine
 evaluation involved in the selection, so no external label source there
 either.
 
-**Correction (`correzioni-pre-post-v2.md` A1)**: the **gen1** normal-opening
+**Correction (2026-09-15)**: the **gen1** normal-opening
 filter uses Stockfish (`pipeline/generate/gen_random_openings.py`, invoked
 by `generate_shards_gen1.sh`), not the classical evaluation as this
 document previously stated. This is a **selection** contamination of

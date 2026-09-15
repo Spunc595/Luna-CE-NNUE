@@ -1,8 +1,8 @@
 # Checksums — generation 1
 
 **TODO** — not computed in this session. Oracle was busy running
-generation 3 (rule zero from `repo-risultati.md`: no heavy I/O load on a
-machine that's occupied), and hashing 46 shards plus the assembled
+generation 3 (rule zero: no heavy I/O load on a machine that's occupied),
+and hashing 46 shards plus the assembled
 dataset plus the binary files is non-trivial I/O even though it uses no
 search CPU.
 

@@ -4,9 +4,11 @@ Data provenance, training pipeline and results for the NNUE networks of
 **Luna Chess Engine** — not to be confused with Thomas Mergener's *Luna*,
 a different engine.
 
-**Every position and every label used to train these networks was produced by
-Luna's own search.** No external engine contributed data at any point in the
-chain. `LINEAGE.md` traces each network back to its ancestors, `COMPLIANCE.md`
+**Every label used to train these networks was produced by Luna's own search,
+and every position comes from Luna's own self-play.** The one external
+influence anywhere in the chain — Stockfish filtering gen1's opening pool, a
+selection of starting positions and not a label — is documented, not hidden.
+`LINEAGE.md` traces each network back to its ancestors, `COMPLIANCE.md`
 states how each stage of the pipeline meets that claim, and `RESULTS.md` holds
 the measurements — with the raw per-position data in `results/`, so every
 number here can be recomputed.

@@ -59,7 +59,7 @@ predates the TCEC rule applied from gen1 onward within this project
 | Opening pool | **filtered with Stockfish** (depth 6, ±200cp threshold) — see note below |
 
 **Note on the opening filter** (found while re-reading the code, not
-correctly declared until now — `correzioni-pre-post-v2.md` A1):
+correctly declared until now — corrected 2026-09-15):
 `pipeline/generate/gen_random_openings.py`, used by
 `generate_shards_gen1.sh`, discards openings with `|eval| > 200cp` by
 querying **Stockfish**, not Luna's classical evaluation. From gen2 onward
@@ -113,8 +113,8 @@ the Oracle run either (no `annotation_machine` field in the manifest,
 timestamps from the original PC run): **redone on Oracle** under the same
 `global_seen.bin` used for the other 51, instead of letting two dedup
 states coexist in the same script. The whole final gen2 dataset comes
-from a single continuous run. Full detail in `RUNBOOK.md` sections 15-16
-(engine repository).
+from a single continuous run. Full detail kept in the author's private
+development notes (not published).
 
 A record that documents a caught-and-fixed fault is more credible than a
 spotless one: the latter suggests the checks don't exist, not that they
@@ -131,4 +131,4 @@ never found anything.
 | Machine | Oracle, sole machine start to finish (method rule fixed after the gen2 incident) |
 | Target shards | 54 |
 | Known confound | the normal-opening pool was regenerated with the gen2 network's filter (not reused from gen2). The gen2→gen3 step will therefore be attributable to network + opening distribution together, not the master alone — see `RESULTS.md` 5.8. |
-| Rest | TODO — in progress, see `RUNBOOK.md` section 17 |
+| Rest | TODO — in progress, tracked in the author's private development notes |

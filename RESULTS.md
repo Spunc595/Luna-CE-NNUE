@@ -1,9 +1,9 @@
 # Results
 
 Every number in this document was **recomputed from the `.csv` files in
-`results/`** at the time of writing (2026-09-15), not copied from
-RUNBOOK.md — see 5.2 for the constraint and the two real discrepancies
-found while recomputing.
+`results/`** at the time of writing (2026-09-15), not copied from earlier
+private working notes — see 5.2 for the constraint and the two real
+discrepancies found while recomputing.
 
 ## 1. Networks compared — static measurement
 
@@ -51,14 +51,15 @@ Script: `results/scripts/measure_search_vs_stockfish.py`. CSV:
 Date: 2026-09-15.
 
 **Note on the gen1 discrepancy, corrected**: an earlier version of this
-table reported the RUNBOOK/gen2.md values for gen1 (0.8072 / 0.8285 /
-0.8413) while the surrounding text already claimed the table was
-recomputed from the CSVs — the table itself wasn't, contradicting its own
-note. **The table above now uses the recomputed values** (0.8072 / 0.8249
-/ 0.8428): at 10,000 nodes it matches RUNBOOK, at 20,000 and 50,000 it
-doesn't (a real gap, not rounding noise). gen2 recomputes within 0.0004 in
-all three cases. Unverified hypothesis for why: the original RUNBOOK
-measurement for gen1 may straddle the `076defc` fix (a real quiescence
+table reported the values from earlier private working notes for gen1
+(0.8072 / 0.8285 / 0.8413) while the surrounding text already claimed the
+table was recomputed from the CSVs — the table itself wasn't,
+contradicting its own note. **The table above now uses the recomputed
+values** (0.8072 / 0.8249 / 0.8428): at 10,000 nodes it matches the
+earlier figure, at 20,000 and 50,000 it doesn't (a real gap, not rounding
+noise). gen2 recomputes within 0.0004 in all three cases. Unverified
+hypothesis for why: the original measurement for gen1 may straddle the
+`076defc` fix (a real quiescence
 timeout bug, which affects longer searches more — consistent with 10k,
 the shortest search, matching exactly while 20k/50k don't). Neither value
 was chosen as "the right one": the table above uses the value recomputed
@@ -94,7 +95,7 @@ the denominator isn't ambiguous here, but it must be re-checked for every
 future generation, not assumed.
 
 **Note on gen1**: the "14.2 pos/game" figure that circulated earlier
-(RUNBOOK, conversations) came from a **preliminary 3-shard trial**
+(private working notes and conversations) came from a **preliminary 3-shard trial**
 (2,400 games), not the full generation. The correct number for all of
 gen1 (46 shards, 230,000 games) is **14.3506** — the difference is small
 but the wrong number shouldn't propagate: it's the one a future
@@ -146,10 +147,10 @@ aren't rewarding memorization.
 
 ## 5.7 The two gen3 predictions (registered 2026-09-15, before the result)
 
-1. **Static trend** (from `gen3.md`): 0.5874 → 0.6790 is +0.0916; with
-   shrinking steps, expected **0.73-0.76**.
+1. **Static trend** (from an earlier internal note): 0.5874 → 0.6790 is
+   +0.0916; with shrinking steps, expected **0.73-0.76**.
 2. **Student/master ratio**: gen2 delivered 0.6790/0.8285 = **0.8196** of
-   its own master (in search at 20k nodes, original RUNBOOK value — see
+   its own master (in search at 20k nodes, original private-notes value — see
    the table 2 discrepancy note if recomputing with 0.8249 instead); with
    a gen3 master at 0.8760, gen3 would land at **~0.718**.
 
@@ -169,7 +170,7 @@ this note must be repeated in the cell or row itself.
 
 ## 5.9 The gen2 prediction that missed — and why
 
-`gen2.md`'s pre-registered expectation for gen2 was **0.76-0.78**. The
+An earlier internal note's pre-registered expectation for gen2 was **0.76-0.78**. The
 actual result was **0.6790** — a large miss, and that wrong number is
 sitting inside all 99 committed manifests, so a reader will find it
 regardless of whether this section exists.
@@ -180,7 +181,7 @@ the net-to-master ρ seen in gen1 (0.9230). That product is not a valid
 transfer coefficient — it mixes a search-based quantity with a
 static-network-vs-master quantity, exactly the kind of comparison this
 whole project has repeatedly gotten burned by (see the "compare only
-homogeneous quantities" rule adopted from `gen3.md` onward, and the
+homogeneous quantities" rule adopted from generation 3 onward, and the
 distinction kept strict throughout this document between tables 1-2 and
 table 3).
 
