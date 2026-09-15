@@ -5,7 +5,10 @@ Provenienza dati, filiera e risultati per le reti NNUE di
 Repository separato dal motore: qui vive la storia di *come* ogni rete è
 stata generata e misurata, non il codice del motore stesso.
 
-**Privato ora, pubblico alla presentazione.**
+Pubblico. I numeri qui dentro non fanno sempre una bella figura (la rete
+conforme sta sotto gen0, che sta sotto akimbo) — pubblicarli è la scelta,
+non un compromesso: un registro che mostra anche i numeri scomodi vale più
+di qualunque dichiarazione di provenienza non verificabile.
 
 ## Da dove iniziare
 
