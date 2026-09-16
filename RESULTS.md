@@ -209,7 +209,7 @@ least 0.0295 from its own lower bound). Recomputing estimator 2 with the
 table-2-discrepancy-corrected gen2 ratio (0.6790/0.8249 = 0.8232, master
 at 0.8760) gives ~0.7211 — still the closer estimator either way. Step
 from gen2: 0.7005 − 0.6790 = **+0.0215**, positive (the cycle has not
-stalled per the stop condition in `gen3.md`) but much smaller than the
+stalled per the pre-registered stop condition, see below) but much smaller than the
 gen1→gen2 step of +0.0916 — a real deceleration beyond what either
 pre-registered estimator expected. The ratio estimator came closer, but
 **not because the transfer ratio is actually stable** — see 5.10, it
@@ -219,6 +219,11 @@ the *ratio* stays roughly constant, and neither quantity did. The ratio
 estimator merely decayed more slowly than the trend one did over this
 single step — not evidence its mechanism is sound, just evidence it's
 less wrong so far.
+
+The pre-registered stop condition for the gen1→gen2→gen3 cycle was simple:
+keep going only while the step stays positive. It did (+0.0215), so this
+alone doesn't call for stopping — see 5.10 for why the cycle was changed
+anyway.
 
 ## 5.10 The transfer ratio is declining, not constant
 
@@ -242,7 +247,7 @@ and a naive continuation of the gen1→gen2→gen3 step sequence
 plateau around **~0.707** — below gen0 (0.7850) and well below akimbo
 (0.8522) — for another full, expensive generation cycle. This is the
 reasoning behind not running a gen4 exactly like gen1-gen3 and running
-the capacity experiment in `gen3-dopo-il-plateau.md` Part A instead.
+the capacity experiment below instead.
 
 **Capacity experiment result (2026-09-16)**: retrained the identical gen3
 dataset (same split, seed, scheduler, epoch budget, patience) with only
@@ -354,11 +359,11 @@ worth trusting.
 search — only the network file changes. No external engine, no anchor,
 no absolute scale. Answers "how many Elo does one point of static ρ cost
 in this project," not "where does Luna sit on any public list." That
-second question needs external anchors and wasn't attempted here (see
-`tasso-di-cambio.md` Part B for why the originally planned CCRL-anchored
-gauntlet was replaced by this design — cross-compiling anchor engines to
-Oracle's ARM would have measured a different artifact than their
-published x86 rating). This section is a distinct kind of quantity from
+second question needs external anchors and wasn't attempted here — an
+earlier plan for a CCRL-anchored gauntlet was replaced by this design
+because cross-compiling anchor engines to Oracle's ARM would have
+measured a different artifact than their published x86 rating. This
+section is a distinct kind of quantity from
 tables 1-3 and is kept separate from them for the same reason static and
 search-based ρ are kept apart.
 
@@ -457,8 +462,8 @@ This is nonetheless the first *measured* value for the quantity
 does TCEC-conformant training cost, in Elo, right now" —
 **≈759 ± 58 Elo** (combined estimate; the direct measurement alone gives
 887.7 ± 188.9, even lower-bounded at ≈699 it clears the same threshold).
-Against the +250 threshold fixed in advance (`girone-tre-reti.md` §6):
-**evaluation is where the work is** — the quiet-position filter and other
+Against the +250 Elo decision-rule threshold fixed in advance, before any
+game was played: **evaluation is where the work is** — the quiet-position filter and other
 eval-side levers take priority over another bootstrap generation,
 unambiguously, not a borderline call, regardless of which of the two
 estimates (759 or 887.7) is used.
@@ -486,8 +491,7 @@ collected in one place**: gen2's expectation (0.76-0.78) missed (§5.9,
 actual 0.6790). gen3's two expectations (0.73-0.76 and ~0.718) both
 missed, though the ratio-based one came closer (§5.7, actual 0.7005).
 This round-robin's decision rule (>250 Elo ⇒ evaluation work has
-priority, fixed in `girone-tre-reti.md` before any game was played) is
-the third prediction and the first to land decisively — the measured
+priority, fixed before any game was played) is the third prediction and the first to land decisively — the measured
 cost clears the threshold by roughly 3× even at its most conservative
 reading. Two misses and one clear hit is the record as it stands. The
 two misses aren't a reason to discount the practice of pre-registering;
