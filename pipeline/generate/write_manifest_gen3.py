@@ -1,13 +1,12 @@
 """
-Manifest JSON per shard della GENERAZIONE 3 (gen3.md): sia la valutazione
-nel self-play SIA le etichette di annotazione vengono dalla RETE GEN2 --
-il manifesto lo registra esplicitamente, con la provenienza del
-checkpoint/rete. Unica macchina (Oracle): "annotation_machine" e
-"self_play_machine" espliciti fin dall'inizio (omissione corretta rispetto
-a gen2, dove il campo macchina non era scritto per gli shard 1-2 originali
-del PC -- gen2-verso-assemblaggio.md).
+Per-shard manifest JSON for GENERATION 3: both the self-play evaluation
+AND the annotation labels come from the GEN2 NETWORK -- the manifest
+records this explicitly, with the checkpoint/network provenance. Single
+machine (Oracle): "annotation_machine" and "self_play_machine" explicit
+from the start (a correction relative to gen2, where the machine field
+wasn't written for the original PC-produced shards 1-2).
 
-Uso:
+Usage:
   python write_manifest_gen3.py --shard-id gen3_shard_00001 \
       --pgn shards/raw/gen3_shard_00001.pgn \
       --positions shards/raw/gen3_shard_00001_positions.txt \
@@ -32,7 +31,7 @@ GEN2_NET_PROVENANCE = {
     "gen2_val_loss_min": 0.018874,
     "gen2_spearman_vs_own_master": 0.9508,
     "gen2_spearman_vs_stockfish_static": 0.6790,
-    "gen3_master_spearman_vs_stockfish_by_nodes": {},  # patchato a mano prima del lancio, vedi RUNBOOK sez 17
+    "gen3_master_spearman_vs_stockfish_by_nodes": {},  # patched by hand before launch, see RUNBOOK sez 17
     "annotation_nodes_chosen": 20000,
     "annotation_nodes_chosen_rationale": "knee of the curve, same method as generation 2.",
     "gen3_expected_spearman_vs_stockfish": "0.73-0.76 (fixed in advance, gen3.md: trend "
@@ -168,7 +167,7 @@ def main():
 
     with open(args.out, "w") as f:
         json.dump(manifest, f, indent=2)
-    print(f"Manifest scritto: {args.out}")
+    print(f"Manifest written: {args.out}")
 
 
 if __name__ == "__main__":

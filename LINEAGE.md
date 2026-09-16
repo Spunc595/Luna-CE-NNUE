@@ -7,12 +7,14 @@ This document is the answer to the one question that actually matters —
 property of the whole chain: one link touched by an external label source
 contaminates everything downstream.
 
-As of this writing (2026-09-15), **gen2 is the current presentation
-candidate**: it is complete, measured, and its full chain is documented
-below. Generation 3 is in progress on Oracle; it replaces gen2 as the
-candidate only if it lands in time and its measured ρ falls inside the
-pre-registered 0.73-0.76 interval (see `RESULTS.md` 5.7). This file will
-gain a gen3 row once that is true — not before.
+As of this writing (2026-09-16), **gen2 remains the current presentation
+candidate**, by its own pre-committed rule: gen3 completed and was
+measured (ρ 0.7005 static vs Stockfish), but that result landed **below**
+the pre-registered 0.73-0.76 interval (`RESULTS.md` 5.7) that was the
+condition for gen3 to replace gen2. The rule was written down before the
+result existed specifically so this wouldn't become a judgment call after
+the fact — gen3 is documented below as a complete, measured generation,
+not as the new candidate.
 
 ```
 classical eval  (no external source)
@@ -20,9 +22,9 @@ classical eval  (no external source)
       ▼
     gen1   nets/luna_gen1.nnue   engine 076defc (labels) / b0cfb937 (self-play)   ρ 0.5874
       ▼
-    gen2   nets/luna_gen2.nnue   engine 076defc (labels and self-play)            ρ 0.6790
+    gen2   nets/luna_gen2.nnue   engine 076defc (labels and self-play)            ρ 0.6790   ← current candidate
       ▼
-    gen3   (in progress — not presentable yet)
+    gen3   nets/luna_gen3.nnue   engine 076defc (labels and self-play)            ρ 0.7005   (measured, did not clear the bar to replace gen2)
 
 separate branch, NOT an ancestor of any presented network:
     external labels (Stockfish) ──► gen0   ρ 0.7850   [NON-COMPLIANT]
@@ -120,15 +122,44 @@ A record that documents a caught-and-fixed fault is more credible than a
 spotless one: the latter suggests the checks don't exist, not that they
 never found anything.
 
-## Generation 3 (in progress, not presentable until its gate closes)
+## Generation 3
 
-| Field | Value (partial, update on completion) |
+Complete and measured. **Not the presentation candidate** — see the note
+at the top of this document: its ρ (0.7005) landed below the
+pre-registered 0.73-0.76 interval that was the condition for replacing
+gen2.
+
+| Field | Value |
 |---|---|
+| Network | `nets/luna_gen3.nnue` (`sha256`: see `nets/luna_gen3.nnue.sha256`) |
 | Self-play and annotation master | gen2 network, in search |
 | Engine commit | `076defcb93d4a1dc834d4ecd5132f45ba9a311d2` (self-play and annotation, same commit from the start — no divergence) |
 | Self-play nodes | 3,000 |
-| Annotation nodes | 20,000 (master gate: ρ 0.8537/0.8760/0.8887 at 10k/20k/50k, above the gen2 master) |
+| Annotation nodes | 20,000 (master gate: ρ 0.8537/0.8760/0.8887 at 10k/20k/50k, above the gen2 master's 0.8072/0.8285/0.8413) |
 | Machine | Oracle, sole machine start to finish (method rule fixed after the gen2 incident) |
-| Target shards | 54 |
-| Known confound | the normal-opening pool was regenerated with the gen2 network's filter (not reused from gen2). The gen2→gen3 step will therefore be attributable to network + opening distribution together, not the master alone — see `RESULTS.md` 5.8. |
-| Rest | TODO — in progress, tracked in the author's private development notes |
+| Shards | 54 (`gen3_shard_00001`..`00054`) |
+| Games | 270,000 (assigned = completed, 100%, verified) |
+| Raw positions | 3,210,755 |
+| Unique positions | 3,112,004 (96.9%) |
+| Yield | 11.8917 pos/game (denominator: completed games = assigned games, verified) |
+| Dataset train/val | 3,033,768 / 78,236 positions, 253,434 / 6,498 games (split by game, seed 42) |
+| Minimum val loss | 0.022381 (epoch 3, early stop at epoch 9 of a 25-epoch budget) |
+| ρ vs own master | 0.9475 |
+| ρ vs Stockfish (static) | **0.7005** |
+| Dataset checksum | `checksums/gen3/` |
+| Known confound | the normal-opening pool was regenerated with the gen2 network's filter (not reused from gen2). The gen2→gen3 step in ρ is therefore attributable to network **and** opening distribution together, not the master alone — repeated in `RESULTS.md` table 1's own row, see 5.8. |
+
+**Gate 0 (master-identity check, done before assembling anything)**: 20
+positions sampled from shard 1, re-evaluated at `go nodes 20000`/1 thread
+in three configurations — deterministic at fixed nodes, so the match had
+to be exact, not approximate. External gen2 network: **20/20 exact
+match**. Classical eval: 0/20. Embedded akimbo network: 0/20. Confirms the
+annotation labels genuinely came from the gen2 network, not a
+misconfigured fallback.
+
+**Round-trip (PyTorch vs. engine, on export)**: max 37.07cp / avg 12.84cp
+over 20 positions. Re-ran the identical check against the already-shipped
+gen2 checkpoint for calibration: max 24.33cp / avg 11.22cp — same order of
+magnitude, same known quantization gap documented for the whole project
+(see RESULTS.md and the engine repository's own notes on it), not a new
+regression specific to gen3.

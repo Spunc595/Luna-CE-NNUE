@@ -1,9 +1,9 @@
 # Results
 
 Every number in this document was **recomputed from the `.csv` files in
-`results/`** at the time of writing (2026-09-15), not copied from earlier
-private working notes — see 5.2 for the constraint and the two real
-discrepancies found while recomputing.
+`results/`** at the time of writing (2026-09-15/16), not copied from
+earlier private working notes — see 5.2 for the constraint and the two
+real discrepancies found while recomputing.
 
 ## 1. Networks compared — static measurement
 
@@ -16,15 +16,16 @@ reference.
 |---|---|
 | gen1 | 0.5874 |
 | gen2 | 0.6790 |
+| gen3 *(opening pool re-filtered with the gen2 network, not reused from gen2 — this step is attributable to network **and** opening distribution together, not the master alone; see 5.8)* | 0.7005 |
 | gen0 *(non-compliant — see `non_conforme/README.md`)* | 0.7850 |
 | akimbo *(third-party network, MIT, reference only — never used to generate data)* | 0.8522 |
 
 Script: `results/scripts/measure_static_vs_stockfish.py`. CSV:
 `results/gen1_vs_stockfish.csv`, `gen2_vs_stockfish.csv`,
-`akimbo_vs_stockfish.csv`. Engine commit
-`076defcb93d4a1dc834d4ecd5132f45ba9a311d2` (gen1, gen2); akimbo: separate
+`gen3_vs_stockfish.csv`, `akimbo_vs_stockfish.csv`. Engine commit
+`076defcb93d4a1dc834d4ecd5132f45ba9a311d2` (gen1, gen2, gen3); akimbo: separate
 reference build (v3.1.2, embedded akimbo network, no external network
-loaded). Date: 2026-09-15. No search involved: static evaluation uses no
+loaded). Date: 2026-09-15/16. No search involved: static evaluation uses no
 threads, deterministic by construction.
 
 ## 2. The engine in search, per generation
@@ -79,6 +80,7 @@ how close the network is to the truth (that's what tables 1-2 say).
 |---|---|
 | gen1 | 0.9230 |
 | gen2 | 0.9508 |
+| gen3 | 0.9475 |
 
 ## 4. The datasets
 
@@ -86,13 +88,21 @@ how close the network is to the truth (that's what tables 1-2 say).
 |---|---|---|---|---|---|---|---|---|---|---|
 | gen1 | 3,300,643 | 2,135,009 | 64.7% | 230,000 | 14.3506 | 3,000 | 10,000 | classical (PST) | Oracle (self-play), PC (annotation) | self-play `b0cfb937` / annotation `076defc` |
 | gen2 | 3,083,063 | 2,972,944 | 96.4% | 265,000 | 11.6342 | 3,000 | 20,000 | gen1 (search) | Oracle (self-play and, after reconciliation, annotation) | `076defc` (both) |
-| gen3 | *in progress* | *in progress* | *in progress* | *in progress* | 11.88 *(only 5 control shards out of 54, not the full generation)* | 3,000 | 20,000 | gen2 (search) | Oracle (entire generation) | `076defc` (both) |
+| gen3 | 3,210,755 | 3,112,004 | 96.9% | 270,000 | 11.8917 | 3,000 | 20,000 | gen2 (search) | Oracle (entire generation) | `076defc` (both) |
 
 **Yield denominator, declared for all three**: raw extracted positions /
 **completed games**. Explicitly verified for all three generations that
 completed games = assigned games (100% in each, no failed/lost games) —
 the denominator isn't ambiguous here, but it must be re-checked for every
 future generation, not assumed.
+
+Note on gen3's game count in the dataset: `gen3_dataset_composition.json`
+reports 259,932 games among the deduplicated training rows, lower than
+the 270,000 completed self-play games — some games contributed zero
+surviving positions after dedup (all their extracted positions were
+duplicates of positions from other games), so they don't appear once
+`build_training_dataset_gen3.py` joins by game_id. Expected, not an error;
+same structural behavior as gen1/gen2.
 
 **Note on gen1**: the "14.2 pos/game" figure that circulated earlier
 (private working notes and conversations) came from a **preliminary 3-shard trial**
@@ -108,13 +118,32 @@ reference.
 |---|---|---|---|---|---|---|
 | gen1 | 0.013316 | — | 12 (plateau never reached, not worth redoing for this) | — | — | — |
 | gen2 | 0.018874 | 4 | 10 (early stop, patience 6) | 0.134622 | 0.030026 | 0.135515 |
+| gen3 | 0.022381 | 3 | 9 (early stop, patience 6) | 0.128605 | 0.035448 | 0.130053 |
 
 **Val loss is not comparable across generations: the scales differ**
 (different dataset, different target). Look at ratios (fraction of
 variance explained, distance from material), not the absolute value.
+For gen3: val loss ends 82.6% below variance and 36.9% below the
+material-only baseline — same qualitative shape as gen2, plateau reached
+even earlier (epoch 3 vs. epoch 4), so more epochs would not have helped.
 
 gen1's three preflight numbers weren't recovered in this session (TODO:
 pull them from `gen1_train.log` on request, not urgent).
+
+### 5.4a Export and structural checks (gen3)
+
+- **Exported file size**: 6,297,664 bytes — exact match to the expected
+  size (a free structural check: a wrong size means a broken export, and
+  every downstream measurement would be meaningless).
+- **Round-trip (PyTorch model output vs. engine's static eval)**, 20
+  hand-picked + sampled positions: **max 37.07cp, avg 12.84cp**. Recomputed
+  the identical check against gen2's already-shipped checkpoint for
+  calibration: max 24.33cp, avg 11.22cp — same order of magnitude, same
+  known quantization gap already documented for this project (dominated by
+  output-layer rounding), not a new regression specific to gen3.
+- **SIMD safety gate**: `max|output_weight| = 4` (limit 128, the point
+  past which the 16-bit multiply in the SIMD dot product could overflow) —
+  wide margin, zero clamped weights across all 9 training epochs.
 
 ## 5.5 Overlap check
 
@@ -127,10 +156,10 @@ of training since its creation (gen0). **Checked in full, not sampled**
 |---|---|---|
 | gen1 (`gen1_train.tsv`) | 2,080,991 | 0 |
 | gen2 (`gen2_train.tsv`) | 2,899,216 | 0 |
-| gen3 | *in progress, to check once the generation completes* | TODO |
+| gen3 (`gen3_train.tsv`) | 3,033,768 | 0 |
 
-Zero overlaps confirmed for gen1 and gen2: the Spearman measurements
-aren't rewarding memorization.
+Zero overlaps confirmed for all three generations: the Spearman
+measurements aren't rewarding memorization.
 
 ## 5.6 What was not measured
 
@@ -141,9 +170,9 @@ aren't rewarding memorization.
   SPRT available, gen0 vs akimbo, shows the network with lower Spearman
   losing decisively — consistent, but it's a single data point), not a
   measurement.
-- **Not measured at all**: gen1 or gen2's Elo. No SPRT was run in either
-  cycle (by explicit instruction — the comparison is between generations
-  via Spearman, not generation vs. baseline via Elo).
+- **Not measured at all**: gen1, gen2, or gen3's Elo. No SPRT was run in
+  any of the three cycles (by explicit instruction — the comparison is
+  between generations via Spearman, not generation vs. baseline via Elo).
 
 ## 5.7 The two gen3 predictions (registered 2026-09-15, before the result)
 
@@ -156,6 +185,22 @@ aren't rewarding memorization.
 
 Do not revise the first prediction after seeing partial results: both are
 registered now, and whichever wins gets noted once gen3 closes.
+
+**Result (2026-09-16): ρ = 0.7005.** Both predictions overshot — neither
+was hit — but the **student/master ratio estimator (~0.718) came closer**
+(off by 0.0175) than the **static-trend estimator (0.73-0.76)** (off by at
+least 0.0295 from its own lower bound). Recomputing estimator 2 with the
+table-2-discrepancy-corrected gen2 ratio (0.6790/0.8249 = 0.8232, master
+at 0.8760) gives ~0.7211 — still the closer estimator either way. Step
+from gen2: 0.7005 − 0.6790 = **+0.0215**, positive (the cycle has not
+stalled per the stop condition in `gen3.md`) but much smaller than the
+gen1→gen2 step of +0.0916 — a real deceleration beyond what either
+pre-registered estimator expected. This is the first generation where a
+pre-registered estimator's mechanism (ratio held roughly constant against
+a rising master) tracked the result more closely than extrapolating the
+raw historical trend — worth weighting the ratio estimator more when
+pre-registering gen4's expectation, not as a rule proven by one data
+point, but as the first evidence for it.
 
 ## 5.8 Generation 3's confound
 
