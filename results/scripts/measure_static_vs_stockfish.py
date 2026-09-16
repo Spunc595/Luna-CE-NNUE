@@ -16,6 +16,8 @@ Usage:
       --engine <path-to-luna.exe> --label gen1 --out ../gen1_vs_stockfish.csv
 """
 import argparse
+import hashlib
+import os
 import random
 import subprocess
 import time
@@ -86,7 +88,13 @@ def main():
         for (fen, eval_cp, bestmove, wdl_mover, depth), e in zip(rows, engine_evals):
             f.write(f'"{fen}",{eval_cp},{bestmove},{depth},{e}\n')
 
-    print(f"Scritte {len(rows)} righe in {args.out}")
+    engine_sha256 = hashlib.sha256(open(args.engine, "rb").read()).hexdigest()
+    net_path = os.path.join(os.path.dirname(os.path.abspath(args.engine)), "luna.nnue")
+    net_sha256 = hashlib.sha256(open(net_path, "rb").read()).hexdigest() if os.path.exists(net_path) else "embedded (no external luna.nnue found)"
+
+    print(f"Wrote {len(rows)} rows to {args.out}")
+    print(f"engine sha256: {engine_sha256}")
+    print(f"net sha256:    {net_sha256}")
 
 
 if __name__ == "__main__":

@@ -392,8 +392,13 @@ its own.
 
 **gen3 won zero of its 500 games against akimbo.** Zero time losses, zero
 illegal moves, zero crashes across all 1,500 games — the first real
-multi-hundred-game tournament run with this codebase. PGNs:
-`results/girone/girone_AB_akimbo_vs_gen0.pgn`,
+multi-hundred-game tournament run with this codebase. **Correction: this
+robustness result belongs to commit `076defc`, not to the released
+`v3.1.4` binary** (see the conditions note above — they differ by three
+commits, including the TT-aging fix, which touches the replacement policy
+and therefore search behavior). `v3.1.4` as released has not itself
+played a multi-hundred-game tournament; see §6a below for that check.
+PGNs: `results/girone/girone_AB_akimbo_vs_gen0.pgn`,
 `girone_AC_akimbo_vs_gen3.pgn`, `girone_BC_gen0_vs_gen3.pgn` (raw data,
 1,500 games total).
 
