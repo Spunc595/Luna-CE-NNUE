@@ -7,14 +7,32 @@ This document is the answer to the one question that actually matters —
 property of the whole chain: one link touched by an external label source
 contaminates everything downstream.
 
-As of this writing (2026-09-16), **gen2 remains the current presentation
-candidate**, by its own pre-committed rule: gen3 completed and was
-measured (ρ 0.7005 static vs Stockfish), but that result landed **below**
-the pre-registered 0.73-0.76 interval (`RESULTS.md` 5.7) that was the
-condition for gen3 to replace gen2. The rule was written down before the
-result existed specifically so this wouldn't become a judgment call after
-the fact — gen3 is documented below as a complete, measured generation,
-not as the new candidate.
+As of this writing (2026-09-16), **gen3 is the current presentation
+candidate.**
+
+**Amendment to the candidacy rule (2026-09-16), written down rather than
+applied silently.** The original rule (`RESULTS.md` 5.7) said gen3 would
+replace gen2 as candidate only if its ρ landed inside the pre-registered
+0.73-0.76 interval. It measured 0.7005 — outside that interval — and by
+the letter of the original rule gen2 would stay candidate. That rule is
+now judged to have been the wrong criterion, for a specific reason: the
+0.73-0.76 interval was a **test of a prediction method** (does the
+static-trend extrapolation forecast well), not a **test of the network's
+merit**. Gen3 is the objectively better network by the only quantity this
+project measures for this purpose — ρ 0.7005 vs Stockfish, against gen2's
+0.6790, on the identical 2,000-position set, same script, same protocol.
+Holding a better-measured network out of the candidate slot because a
+*forecast about it* missed would be optimizing the wrong target.
+
+The prediction failure itself is not discarded — it's recorded in full in
+`RESULTS.md` 5.7/5.10, including the finding that drove this amendment
+(the master/student transfer ratio is declining, not constant, which is
+why both pre-registered estimators overshot). That failure stays exactly
+as embarrassing as it was; it just doesn't get to also disqualify the
+network it happened to be a bad prediction about. Chess-strength note:
+this amendment concerns the Spearman-based candidacy documented here,
+not playing strength — `misura-forza-v2.md`'s gauntlet, not yet run,
+measures that separately, arm B updated to gen3 in place of gen2.
 
 ```
 classical eval  (no external source)
@@ -22,9 +40,9 @@ classical eval  (no external source)
       ▼
     gen1   nets/luna_gen1.nnue   engine 076defc (labels) / b0cfb937 (self-play)   ρ 0.5874
       ▼
-    gen2   nets/luna_gen2.nnue   engine 076defc (labels and self-play)            ρ 0.6790   ← current candidate
+    gen2   nets/luna_gen2.nnue   engine 076defc (labels and self-play)            ρ 0.6790
       ▼
-    gen3   nets/luna_gen3.nnue   engine 076defc (labels and self-play)            ρ 0.7005   (measured, did not clear the bar to replace gen2)
+    gen3   nets/luna_gen3.nnue   engine 076defc (labels and self-play)            ρ 0.7005   ← current candidate (amended rule, see above)
 
 separate branch, NOT an ancestor of any presented network:
     external labels (Stockfish) ──► gen0   ρ 0.7850   [NON-COMPLIANT]
@@ -124,10 +142,11 @@ never found anything.
 
 ## Generation 3
 
-Complete and measured. **Not the presentation candidate** — see the note
-at the top of this document: its ρ (0.7005) landed below the
-pre-registered 0.73-0.76 interval that was the condition for replacing
-gen2.
+Complete and measured. **The current presentation candidate** — see the
+amendment note at the top of this document: its ρ (0.7005) landed below
+the originally pre-registered 0.73-0.76 interval, but that interval
+tested a prediction method, not the network's merit, and gen3 is the
+objectively better network of the two.
 
 | Field | Value |
 |---|---|

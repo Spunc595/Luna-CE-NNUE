@@ -195,12 +195,57 @@ at 0.8760) gives ~0.7211 — still the closer estimator either way. Step
 from gen2: 0.7005 − 0.6790 = **+0.0215**, positive (the cycle has not
 stalled per the stop condition in `gen3.md`) but much smaller than the
 gen1→gen2 step of +0.0916 — a real deceleration beyond what either
-pre-registered estimator expected. This is the first generation where a
-pre-registered estimator's mechanism (ratio held roughly constant against
-a rising master) tracked the result more closely than extrapolating the
-raw historical trend — worth weighting the ratio estimator more when
-pre-registering gen4's expectation, not as a rule proven by one data
-point, but as the first evidence for it.
+pre-registered estimator expected. The ratio estimator came closer, but
+**not because the transfer ratio is actually stable** — see 5.10, it
+isn't. Both estimators overshot for a related reason: the trend estimator
+assumed the *step* stays roughly constant, the ratio estimator assumed
+the *ratio* stays roughly constant, and neither quantity did. The ratio
+estimator merely decayed more slowly than the trend one did over this
+single step — not evidence its mechanism is sound, just evidence it's
+less wrong so far.
+
+## 5.10 The transfer ratio is declining, not constant
+
+The reason both 5.7 predictions overshot: the fraction of the master's
+score that the student actually captures is **falling**, not holding
+steady as estimator 2 assumed.
+
+| Generation | Student (static ρ) | Master (ρ in search, 20k nodes) | Ratio |
+|---|---|---|---|
+| gen2 | 0.6790 | 0.8249 | **0.8231** |
+| gen3 | 0.7005 | 0.8758 | **0.7998** |
+
+The master improved by +0.0509 (table 2) from gen1→gen2's master to
+gen2→gen3's master; the student improved by only +0.0215. A plausible
+structural reason: as the master gets stronger, more of its strength
+comes from **search** — plies of lookahead a static network cannot
+reproduce by construction, no matter how well it's trained on the
+master's output. If this holds, the ratio keeps falling every generation,
+and a naive continuation of the gen1→gen2→gen3 step sequence
+(+0.0916 → +0.0215, roughly a 4.3× drop in one generation) would put a
+plateau around **~0.707** — below gen0 (0.7850) and well below akimbo
+(0.8522) — for another full, expensive generation cycle. This is the
+reasoning behind not running a gen4 exactly like gen1-gen3 and running
+the capacity experiment in `gen3-dopo-il-plateau.md` Part A instead.
+
+**Capacity experiment result (2026-09-16)**: retrained the identical gen3
+dataset (same split, seed, scheduler, epoch budget, patience) with only
+`HIDDEN` doubled from 1024 to 2048. Val loss minimum arrived at the same
+epoch (3) as the 1024 run, then rose the same way — the signal that
+matters more than the loss value itself, since a genuinely
+capacity-starved model keeps improving for longer once given more of it.
+Static ρ vs Stockfish: **0.6951, lower than the 1024 run's 0.7005**
+(Δ = −0.0054, well below the pre-registered +0.01 "ambiguous" floor, let
+alone the +0.02 bar for "capacity was the bottleneck"). nps at depth 12,
+same position: 460,989 (2048) vs 625,699 (1024), ~26% slower. **Capacity
+is not the bottleneck** — doubling the hidden layer cost real search
+speed and did not improve rank correlation. The 1536 follow-up called for
+in that document's decision rule is skipped: the rule was to check it
+only if 2048 landed in the ambiguous band, and it didn't. The lever for
+gen4, if there is one, is elsewhere — annotation depth, data
+distribution, or an architecture change other than raw width. CSV:
+`results/gen3_l2048_vs_stockfish.csv` (same script, same eval_set.epd,
+same protocol as every other static measurement in this document).
 
 ## 5.8 Generation 3's confound
 
