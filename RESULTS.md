@@ -22,8 +22,11 @@ reference.
 
 Script: `results/scripts/measure_static_vs_stockfish.py`. CSV:
 `results/gen1_vs_stockfish.csv`, `gen2_vs_stockfish.csv`,
-`gen3_vs_stockfish.csv`, `akimbo_vs_stockfish.csv`. Engine commit
-`076defcb93d4a1dc834d4ecd5132f45ba9a311d2` (gen1, gen2, gen3); akimbo: separate
+`gen3_vs_stockfish.csv`, `gen0_vs_stockfish.csv`, `akimbo_vs_stockfish.csv`.
+Engine commit `076defcb93d4a1dc834d4ecd5132f45ba9a311d2` (gen1, gen2, gen3,
+gen0 — gen0's checkpoint was exported fresh under this commit's export.py,
+2026-09-16, and recomputes to the exact historical 0.7850, confirming it
+wasn't just copied forward); akimbo: separate
 reference build (v3.1.2, embedded akimbo network, no external network
 loaded). Date: 2026-09-15/16. No search involved: static evaluation uses no
 threads, deterministic by construction.
