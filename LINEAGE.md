@@ -29,10 +29,21 @@ The prediction failure itself is not discarded — it's recorded in full in
 (the master/student transfer ratio is declining, not constant, which is
 why both pre-registered estimators overshot). That failure stays exactly
 as embarrassing as it was; it just doesn't get to also disqualify the
-network it happened to be a bad prediction about. Chess-strength note:
-this amendment concerns the Spearman-based candidacy documented here,
-not playing strength — `misura-forza-v2.md`'s gauntlet, not yet run,
-measures that separately, arm B updated to gen3 in place of gen2.
+network it happened to be a bad prediction about.
+
+**Chess-strength note, now measured, not just flagged as pending.** This
+amendment concerns Spearman-based candidacy specifically. Playing
+strength is a different quantity, and it says something less comfortable:
+`RESULTS.md` §6 measured gen3 losing **~759 Elo to akimbo and ~277 Elo to
+gen0** (a network this project already had, trained on external labels)
+in a 1,500-game round-robin. **The distributed binary still embeds
+akimbo, not gen3, and this is why**: gen3 is the better-measured network
+on the one axis this repository's bootstrap methodology optimizes for
+(ρ vs Stockfish), and it is a substantially weaker *player* than what
+this project already shipped. Both facts are true at once and both are
+recorded — candidacy for this repository's own lineage tracking is not
+the same claim as fitness to be the default embedded network, and
+conflating them would misrepresent either one.
 
 ```
 classical eval  (no external source)

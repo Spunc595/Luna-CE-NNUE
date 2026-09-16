@@ -164,18 +164,31 @@ of training since its creation (gen0). **Checked in full, not sampled**
 Zero overlaps confirmed for all three generations: the Spearman
 measurements aren't rewarding memorization.
 
-## 5.6 What was not measured
+## 5.6 What is measured, and what still isn't
+
+**Updated 2026-09-16 — the Spearman/Elo link moved from inferred to
+measured.** This section originally put that link in the "inferred, not
+measured" category; §6 (below) now reports a direct measurement, so the
+categorization changes.
 
 - **Measured directly**: rank correlation (Spearman), both static
-  (table 1) and in fixed-node search (table 2).
-- **Inferred, not measured**: that a higher rank correlation corresponds
-  to more playing strength (Elo). A reasonable assumption (the one direct
-  SPRT available, gen0 vs akimbo, shows the network with lower Spearman
-  losing decisively — consistent, but it's a single data point), not a
-  measurement.
-- **Not measured at all**: gen1, gen2, or gen3's Elo. No SPRT was run in
-  any of the three cycles (by explicit instruction — the comparison is
-  between generations via Spearman, not generation vs. baseline via Elo).
+  (table 1) and in fixed-node search (table 2). And, as of §6, **relative
+  playing strength between three network configurations of the identical
+  binary/search** (akimbo, gen0, gen3), via a 1,500-game round-robin —
+  including two local Spearman-to-Elo slopes (327 and 698 Elo per 0.10 ρ,
+  §6) rather than the single averaged figure an earlier draft reported.
+- **Still inferred, not measured**: that this relative-Elo relationship,
+  measured between three specific networks on one machine/binary/TC,
+  generalizes to networks outside this range, to different search
+  conditions, or to a different engine's Spearman/Elo curve entirely.
+  Three points fix a direction and a visible curvature; they are not a
+  validated general function.
+- **Still not measured at all**: gen1, gen2, or gen3's **absolute** Elo —
+  where any of them would land on a public rating list. §6's numbers are
+  differences between configurations on an arbitrary internal scale, not
+  anchored to CCRL or any other external reference (see §6's own opening
+  note on why that anchoring wasn't attempted on Oracle's ARM hardware).
+  No SPRT against an external baseline was run for gen1 or gen2 either.
 
 ## 5.7 The two gen3 predictions (registered 2026-09-15, before the result)
 
@@ -250,6 +263,56 @@ distribution, or an architecture change other than raw width. CSV:
 `results/gen3_l2048_vs_stockfish.csv` (same script, same eval_set.epd,
 same protocol as every other static measurement in this document).
 
+## 5.11 Quiet-position filter census
+
+Archived here even though it hasn't yet driven a decision — the data is
+worth keeping regardless of what's done with it next. Census only (no
+engine, no evaluation), on the full assembled gen3 dataset
+(3,112,004 positions): what fraction has a `bestmove` that's a capture
+(a common "not quiet" signal in NNUE training pipelines), broken down by
+where the position's game originated and by piece count.
+
+| | Count | % |
+|---|---|---|
+| `bestmove` is a capture (incl. en passant) | 613,683 / 3,112,004 | **19.72%** |
+| Promotion without capture | 24,499 / 3,112,004 | 0.79% |
+
+| Origin | Total | Captures | % |
+|---|---|---|---|
+| Normal-opening pool | 2,663,583 | 580,889 | **21.81%** |
+| Endgame pool | 448,421 | 32,794 | **7.31%** |
+
+| Pieces on board | Total | Captures | % |
+|---|---|---|---|
+| ≤8 | 910,678 | 70,449 | 7.74% |
+| 9-12 | 523,124 | 84,255 | 16.11% |
+| 13-20 | 841,870 | 215,169 | 25.56% |
+| 21-32 | 836,332 | 243,810 | 29.15% |
+
+Already discarded upstream by the existing check-position filter
+(`extract_positions.py`, unrelated to captures): **491,246** positions
+across all 54 shards.
+
+**Two notes for whoever uses this next**: a capture filter removing
+~20.5% of the dataset would cost nothing in *quantity* — training
+saturates by epoch 3 with 3.11M positions (§3 and the training table),
+well before running short of data would matter. But the piece-count
+monotonicity means such a filter isn't just noise removal — it's also a
+**reweighting of the position distribution** toward fewer pieces
+(endgames, already only 7.31% capture-rate, are barely touched, while
+normal-opening-derived, higher-piece-count positions lose over a fifth of
+their volume). Know that before applying it.
+
+**TODO, not done here**: verify the actual premise for filtering — that
+capture positions really do show a larger static-vs-search evaluation gap
+than quiet ones in this project's own data. This census establishes how
+much a filter would remove, not whether removing it would help.
+
+Script: `results/scripts/census_captures.py` (committed for
+recomputability; the underlying game_origins/positions/annotated files it
+reads are gen3's training data and are not committed, per this
+repository's standing rule).
+
 ## 5.8 Generation 3's confound
 
 The gen3 normal-opening pool was **regenerated from scratch** with the
@@ -284,7 +347,7 @@ worth trusting.
 
 ---
 
-## 6. Three-network round-robin — the Spearman/Elo exchange rate
+## 6. Three-network round-robin — the Spearman/Elo exchange rate, measured
 
 **These numbers are NOT CCRL ratings.** They are pairwise Elo
 *differences* between three configurations of the identical binary and
@@ -295,67 +358,137 @@ second question needs external anchors and wasn't attempted here (see
 `tasso-di-cambio.md` Part B for why the originally planned CCRL-anchored
 gauntlet was replaced by this design — cross-compiling anchor engines to
 Oracle's ARM would have measured a different artifact than their
-published x86 rating).
+published x86 rating). This section is a distinct kind of quantity from
+tables 1-3 and is kept separate from them for the same reason static and
+search-based ρ are kept apart.
 
-**Design**: same binary, same commit (`076defcb93d4a1dc834d4ecd5132f45ba9a311d2`),
-same book (`8moves_v3.pgn`, public, 16-ply), same TC (20+0.2), same Hash
-(64MB)/Threads(1)/Ponder(off) for all three networks. Verified before
-playing: the three networks report three different static evaluations on
-the same test position (akimbo +65cp, gen0 +43cp, gen3 −15cp), and each
-branch's `luna.nnue` hash was checked against the exact committed
-`nets/luna_genN.nnue` file it was supposed to be — including a live
-re-check mid-tournament for the gen3 branch after its 98.8%+ score raised
-the "is this really loading what I think" question on its own.
+**Conditions**: engine commit `076defcb93d4a1dc834d4ecd5132f45ba9a311d2`
+— **note**: this predates the `v3.1.4` tag (`8b219b4`) by three commits;
+it has the quiescence-timeout fix that matters for search correctness but
+not the TT-aging fix, the AI-generation-marker removal, or the SIMD
+attribution added for v3.1.4. Binary verified byte-identical across all
+three branches (same file, only `luna.nnue` differs), so this doesn't
+bias the *relative* comparisons the round-robin measures — TT aging's
+replacement-policy effect, if any, applies equally to all three arms —
+but it means these numbers describe `076defc`, not the binary in the
+v3.1.4 release, and that distinction is worth having on the record rather
+than assumed away. Oracle, aarch64. TC 20+0.2 (seconds). 500 games per
+pairing. Concurrency 3. Book: `8moves_v3.pgn` (public, 16 plies). Ponder
+off. Hash 64MB / Threads 1, identical for every arm. Date: 2026-09-16.
 
-| Pairing | Score | Games | Elo difference | LOS |
-|---|---|---|---|---|
-| akimbo vs gen0 | 445–8–47 | 500 | **+469.0 ± 49.6** | 100% |
-| akimbo vs gen3 | 494–0–6 | 500 | **+887.7 ± 188.9** | 100% |
-| gen0 vs gen3 | 381–50–69 | 500 | **+276.7 ± 35.5** | 100% |
+Verified before playing: the three networks report three different
+static evaluations on the same test position (akimbo +65cp, gen0 +43cp,
+gen3 −15cp), and each branch's `luna.nnue` hash was checked against the
+exact committed `nets/luna_genN.nnue` file it was supposed to be —
+including a live re-check mid-tournament for the gen3 branch after its
+99.4%+ score raised the "is this really loading what I think" question on
+its own.
 
-Zero time losses, zero illegal moves, zero crashes across all 1,500
-games — the first real multi-hundred-game tournament run with v3.1.4.
-PGNs: `results/girone/girone_AB_akimbo_vs_gen0.pgn`,
+| Pairing | Score | Games | Score % | Elo difference | LOS |
+|---|---|---|---|---|---|
+| akimbo vs gen0 | 445–8–47 | 500 | 93.7% | **+469.0 ± 49.6** | 100% |
+| akimbo vs gen3 | 494–0–6 | 500 | **99.4%** | **+887.7 ± 188.9** | 100% |
+| gen0 vs gen3 | 381–50–69 | 500 | 83.1% | **+276.7 ± 35.5** | 100% |
+
+**gen3 won zero of its 500 games against akimbo.** Zero time losses, zero
+illegal moves, zero crashes across all 1,500 games — the first real
+multi-hundred-game tournament run with this codebase. PGNs:
+`results/girone/girone_AB_akimbo_vs_gen0.pgn`,
 `girone_AC_akimbo_vs_gen3.pgn`, `girone_BC_gen0_vs_gen3.pgn` (raw data,
 1,500 games total).
 
-**Internal calibration check**: an old, informal measurement
-(`non_conforme/README.md`) had gen0 losing to akimbo by −339.8 ± 94.8 Elo
-over 113 games, on a pre-v3.1.4 binary with a different TC and book. This
-run's akimbo-vs-gen0 result (+469.0 ± 49.6) is the same pairing,
-same sign, same order of magnitude (hundreds of Elo, both statistically
-overwhelming) — but the confidence intervals don't overlap
+**Internal calibration check, reported first**: an old, informal
+measurement (`non_conforme/README.md`) had gen0 losing to akimbo by
+−339.8 ± 94.8 Elo over 113 games, on an older binary with a different TC
+and book. This run's akimbo-vs-gen0 result (+469.0 ± 49.6) is the same
+pairing, same sign, same order of magnitude (hundreds of Elo, both
+statistically overwhelming) — but the confidence intervals don't overlap
 ([419, 519] now vs [245, 435] then). Expected given how much changed
 between the two measurements (binary, TC, book, x86→ARM); reported
 because a calibration check that silently drops an inconvenient gap
 isn't a calibration check.
 
-**Transitivity does not hold well, and that's informative, not broken**:
-chaining the two narrower-CI results (akimbo−gen0 = 469.0, gen0−gen3 =
-276.7) predicts akimbo−gen3 ≈ 745.7, but the direct measurement was
-887.7 — a 142 Elo gap between the direct and the chained estimate. The
-akimbo-vs-gen3 score (494–0–6, 98.8%) is close enough to the edge that
-the logistic Elo model loses precision there (hence its own wide
-±188.9 CI) — not a sign the setup is wrong, a reason to trust the direct
-number less than its point estimate suggests.
+**Transitivity holds — the earlier draft of this section was wrong to
+say otherwise.** Chaining the two narrower-CI results (akimbo−gen0 =
+469.0 ± 49.6, gen0−gen3 = 276.7 ± 35.5) gives an indirect estimate of
+akimbo−gen3 = 745.7 ± 61.0 (SE combined in quadrature: √(49.6²+35.5²)).
+The direct measurement, 887.7 ± 188.9, has a 95%-ish interval of roughly
+[698.8, 1076.6] — **745.7 falls inside it.** Testing the 142.0 Elo gap
+between the two estimates against its own standard error gives z≈1.4,
+p≈0.16: not a significant discrepancy, just the imprecision expected at a
+99.4% score, where the derivative of the logistic curve is steep and a
+small movement in win rate corresponds to a large movement in the implied
+Elo (hence the direct estimate's own wide ±188.9). Consequence: **the
+indirect path is about three times more precise than the direct one**,
+because it routes through the two better-measured pairings. Combining
+direct and indirect by inverse-variance weighting:
 
-**The slope**: three points, (ρ, Elo) with gen3 fixed as the zero
-reference (its own ρ=0.7005, Elo=0 by construction) —
-(0.7005, 0), (0.7850, 276.7), (0.8522, 887.7). Ordinary least squares
-through these three points: **≈574 Elo per 0.10 of static ρ**, RMS
-scatter from that line ≈102 Elo (residuals: +64.0, −144.6, +80.5 at the
-three points respectively) — three points don't make a confident curve,
-and the middle point's residual is the largest, consistent with the
-transitivity gap just above. This is the first *measured* value for the
-quantity `RESULTS.md` 5.6 called "inferred, not measured."
+**akimbo − gen3 ≈ 759 ± 58 Elo** — used as the reference estimate for
+the compliance cost below, in preference to the noisier direct
+measurement, precisely because it's built from the two pairings the
+logistic model estimates most precisely.
 
-**The compliance cost, directly**: akimbo vs gen3 is the pairing that
-answers "what does TCEC-conformant training cost, in Elo, right now" —
-**+887.7 ± 188.9 Elo**, even at the low end of that interval (≈699) far
-past the +250 threshold fixed in advance (`girone-tre-reti.md` §6).
-**Verdict: evaluation is where the work is** — the quiet-position filter
-and other eval-side levers take priority over another bootstrap
-generation, unambiguously, not a borderline call.
+**The Spearman/Elo relationship is concave, not linear — report the two
+local slopes, not one average.** A single three-point regression gives
+≈574 Elo per 0.10 of ρ, but that number is misleading: it averages over a
+relationship that clearly bends.
+
+| Segment | Δρ | ΔElo | Elo per 0.10 ρ |
+|---|---|---|---|
+| gen3 → gen0 | 0.0845 | 276.7 | **327** |
+| gen0 → akimbo | 0.0672 | 469.0 | **698** |
+
+The slope more than doubles between the low segment and the high one. The
+segment that matters for where Luna actually is today is the low one,
+**327 Elo per 0.10 of ρ** — not 574. Concretely: moving static ρ from
+0.70 to 0.75 is worth **≈165 Elo** on the low-segment slope, not the
+≈287 Elo a single average slope would suggest. Three points describe a
+direction and a visible curvature, not a quantified curve — this is a
+first measurement, not a fitted function, and should be read as such.
+This is nonetheless the first *measured* value for the quantity
+`RESULTS.md` 5.6 previously called "inferred, not measured."
+
+**The compliance cost**: akimbo vs gen3 is the pairing that answers "what
+does TCEC-conformant training cost, in Elo, right now" —
+**≈759 ± 58 Elo** (combined estimate; the direct measurement alone gives
+887.7 ± 188.9, even lower-bounded at ≈699 it clears the same threshold).
+Against the +250 threshold fixed in advance (`girone-tre-reti.md` §6):
+**evaluation is where the work is** — the quiet-position filter and other
+eval-side levers take priority over another bootstrap generation,
+unambiguously, not a borderline call, regardless of which of the two
+estimates (759 or 887.7) is used.
+
+**The uncomfortable conclusion, stated without softening it**: three
+generations of this bootstrap chain do not produce a network competitive
+with what the project already had — gen3 costs ~759 Elo against akimbo
+and, more pointedly, **~277 Elo against gen0, a network this same project
+already trained, using external labels**. That 277 Elo figure is the
+real cost of conformance as currently practiced here: not the distance to
+a third party, the distance to this project's own prior, non-compliant
+attempt. This is not a claim that training on one's own data doesn't
+work. It's a claim that this pipeline, at its current scale and method
+(millions of positions rather than the hundreds of millions typical
+elsewhere, 20,000-node labels, no quiet-position filter), is far from
+what competitive self-training requires — and that closing that gap with
+more generations shaped like gen1-gen3 is not the lever: the bootstrap
+scale already plateaued (step +0.0916 → +0.0215), the transfer ratio is
+declining (0.8231 → 0.7998), and capacity is demonstrably not the
+bottleneck (§5.10). The lever is elsewhere, starting with evaluation
+quality itself.
+
+**Three pre-registered predictions, made before their results existed,
+collected in one place**: gen2's expectation (0.76-0.78) missed (§5.9,
+actual 0.6790). gen3's two expectations (0.73-0.76 and ~0.718) both
+missed, though the ratio-based one came closer (§5.7, actual 0.7005).
+This round-robin's decision rule (>250 Elo ⇒ evaluation work has
+priority, fixed in `girone-tre-reti.md` before any game was played) is
+the third prediction and the first to land decisively — the measured
+cost clears the threshold by roughly 3× even at its most conservative
+reading. Two misses and one clear hit is the record as it stands. The
+two misses aren't a reason to discount the practice of pre-registering;
+they're the reason this third result can be trusted as a genuine test
+rather than a foregone conclusion dressed up afterward — a method that
+only ever confirms itself isn't measuring anything.
 
 ---
 
