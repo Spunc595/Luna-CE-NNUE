@@ -495,6 +495,40 @@ they're the reason this third result can be trusted as a genuine test
 rather than a foregone conclusion dressed up afterward — a method that
 only ever confirms itself isn't measuring anything.
 
+## 6a. Does the released binary hold up? v3.1.4 vs 076defc
+
+Triggered by the discovery above (§6's conditions note): the round-robin's
+zero-crash/zero-timeloss/zero-illegal-move result belongs to `076defc`,
+not to the `v3.1.4` binary actually released. `v3.1.4` differs by three
+commits — the TT-aging fix (`tt.rs`, changes the replacement policy),
+AI-generation-marker removal, and a SIMD attribution comment — of which
+only the first can plausibly touch playing strength.
+
+Rather than repeat all 1,500 round-robin games for a label correction, a
+single focused match: `v3.1.4` vs `076defc`, **same network on both
+sides** (akimbo, embedded — no external `luna.nnue` on either branch, so
+this isolates the binary/search-code as the only variable), 400 games,
+TC 20+0.2, concurrency 3, same book (`8moves_v3.pgn`, 16 plies), Ponder
+off, Hash 64MB / Threads 1, Oracle aarch64, started 2026-09-16.
+
+Verified before playing: `v3.1.4` branch binary sha256
+`f1701745983c57ce3e1562753b0c040029c4c351ed20dbf6d8bfb7ffbc57c1f7`
+(matches the tagged release build), `076defc` branch binary sha256
+`f9edde89027b781e3640fd8de809b03d37b4952ab8ff9724af42c7e85d44f55b`
+(matches the round-robin's binary) — both fall back to the embedded net
+as expected, confirmed via UCI startup banner on each.
+
+This gives two things from one match: whether the actually-shipped binary
+holds up over several hundred games (the check the announcement needs),
+and, as a side effect, the first measured Elo value for the TT-aging fix
+itself — previously untested.
+
+**TODO: results pending, match in progress as of this writing.** PGN and
+final Elo table to be added here once it completes; `results/*.csv` for
+this comparison is not applicable (no Stockfish/rho measurement here —
+raw PGN and cutechess log under `results/girone/` once copied over, same
+as the three-network round-robin).
+
 ---
 
 ## Quick file reference
