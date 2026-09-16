@@ -1,7 +1,7 @@
 """
-Verifica di unicita' sui primi N shard della generazione 2 (gen2.md, punto
-2: "deve stare sopra il 95%. Se non ci sta, il problema non era il riuso
-e va capito prima di generare il resto.").
+Verifica di unicita' sui primi N shard della generazione 2: deve stare
+sopra il 95%. Se non ci sta, il problema non era il riuso e va capito
+prima di generare il resto.
 
 Uso:
   python check_uniqueness_gen2.py --shards-dir shards/backed_up --num-shards 5

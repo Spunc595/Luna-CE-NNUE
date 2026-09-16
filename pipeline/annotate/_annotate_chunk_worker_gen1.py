@@ -2,8 +2,8 @@
 Worker interno di annotate_incremental_gen1.py: variante di
 _annotate_chunk_worker.py per la generazione 1 — motore Luna invece di
 Stockfish, limite a NODI invece che a profondita', UseNNUE=false forzato
-(con probe di verifica prima di processare, PROTOCOLLO.md sez. 4: "non dare
-per assunta una configurazione, dimostrala").
+(con probe di verifica prima di processare: non dare per assunta una
+configurazione, dimostrala).
 
 Uso: python _annotate_chunk_worker_gen1.py <input_fens.txt> <output.tsv> <luna_path> <nodes>
 """

@@ -1,6 +1,6 @@
 """
-Genera posizioni di apertura casuali per la diversificazione del self-play
-(vedi nnuedazero.md, punto 1.1): Luna e deterministica oltre il proprio
+Genera posizioni di apertura casuali per la diversificazione del self-play:
+Luna e deterministica oltre il proprio
 libro interno (3183 posizioni), quindi senza una vera randomizzazione
 delle aperture il self-play produce partite quasi identiche.
 

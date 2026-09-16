@@ -1,7 +1,7 @@
 """
 Converte un TSV a 5 colonne (fen, eval_cp, bestmove, wdl_mover, depth) in un
-formato binario compatto, leggibile senza parsing riga-per-riga
-(datasetgrandeepiattaforma.md, sez. 2): il collo di bottiglia del training
+formato binario compatto, leggibile senza parsing riga-per-riga: il collo
+di bottiglia del training
 non e' il calcolo, e' il dataloader che apre il TSV, spacca le righe,
 costruisce una chess.Board() e richiama active_features() in Python puro
 per ogni singola posizione.

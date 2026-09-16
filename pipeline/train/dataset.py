@@ -14,7 +14,7 @@ una volta sola, a monte. board.fen() resta comunque necessario per
 active_features() E per riordinare gli indici in "chi muove/avversario"
 (vedi sotto) — non solo per l'indicizzazione delle feature.
 
-BUG CORRETTO 2026-09-08 (bugtraining.md): active_features() ritorna
+BUG CORRETTO 2026-09-08: active_features() ritorna
 (white_indices, black_indices) — indici dalla prospettiva del bianco e
 del nero, non "di chi muove". model.py si aspetta (us_idx, them_idx) con
 "us" = lato A MUOVERE (output_weights[0] si accoppia col lato al tratto,
@@ -43,7 +43,7 @@ from feature_set import active_features
 # Clamp sull'eval usato per COSTRUIRE IL TARGET (non sui dati su disco, che
 # restano quelli annotati): lo 0,61% delle posizioni ha punteggi di matto
 # intorno a +-15.000, che sigmoide(K*eval) schiaccia comunque a 0/1 ma senza
-# beneficio per il training — bugtraining.md, sez. 4.
+# beneficio per il training.
 TARGET_EVAL_CLAMP_CP = 2000
 
 # Sigmoide in base naturale equivalente a 1/(1+10^(-cp/400)) (convenzione

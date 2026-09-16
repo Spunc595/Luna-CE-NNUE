@@ -1,7 +1,7 @@
 """
 Costruisce il file di aperture per UNO shard della generazione 2, con
-CONSUMO SENZA REINSERIMENTO (gen2.md, punto 2: "garantisce riuso <=1x per
-costruzione invece di sperarci"): ogni pool viene mescolato UNA VOLTA sola
+CONSUMO SENZA REINSERIMENTO (garantisce riuso <=1x per costruzione invece
+di sperarci): ogni pool viene mescolato UNA VOLTA sola
 (seed fisso, alla prima chiamata) e poi consumato in sequenza tramite un
 cursore persistito su disco (data/*_offset.txt) — ogni posizione di
 apertura usata al massimo una volta in tutta la run, indipendentemente da

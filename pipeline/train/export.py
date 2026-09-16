@@ -47,7 +47,7 @@ def main():
     ap.add_argument("--checkpoint", required=True)
     ap.add_argument("--out", default="net.bin")
     ap.add_argument("--alpha", type=float, default=1.0,
-                     help="riscalatura post-training (verificaexport.md sez. successiva): "
+                     help="riscalatura post-training: "
                           "W->W/alpha, b->b/alpha, v->v*alpha^2. Esatta solo dove il clamp "
                           "SCReLU non morde (clamp(acc,0,1)==clamp(acc/alpha,0,1)) — le unita' "
                           "gia' clampate a 0 restano invarianti per costruzione, quelle vicine "
@@ -105,7 +105,7 @@ def main():
     # output_bias_i16 = ob_float * QAB (16320): satura a i16 quando
     # |ob_float| >= 32767/16320 ~= 2.008 (~803cp di bias costante).
     # Improbabile ma export.py lo clamperebbe in silenzio se succedesse —
-    # controllato esplicitamente (verificaexport.md sez. 2.2).
+    # controllato esplicitamente.
     if abs(int(output_bias.item())) >= 32767:
         print("⚠️  output_bias saturato a i16 — |ob_float| >= 2.008, controlla il training")
 

@@ -1,5 +1,5 @@
 """
-Gate del punto 1 (gen2.md): Spearman del MAESTRO della generazione 2 —
+Gate: Spearman del MAESTRO della generazione 2 —
 Luna con la rete gen1 caricata, in RICERCA (go nodes N, non "eval" statico)
 contro Stockfish, sullo stesso insieme di posizioni di gen0/gen1/akimbo
 (val_final.tsv). Misurato a tre valori di nodi: 10.000, 20.000, 50.000.

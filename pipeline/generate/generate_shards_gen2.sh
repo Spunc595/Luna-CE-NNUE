@@ -1,5 +1,5 @@
 #!/bin/bash
-# Generazione a shard per la GENERAZIONE 2 (gen2.md): self-play + estrazione
+# Generazione a shard per la GENERAZIONE 2: self-play + estrazione
 # + manifesto qui su Oracle (4 CPU dedicate). Annotazione a inseguimento sul
 # PC (annotate_incremental_gen2.py, rete gen1 a 50k nodi) — stesso pattern
 # gia' collaudato della gen1, solo la rete cambia. Aperture SENZA
@@ -11,7 +11,7 @@ set -euo pipefail
 cd ~/gen2_classical
 
 GAMES_PER_SHARD="${1:-5000}"
-MAX_SHARDS="${2:-0}"  # 0 = nessun limite; usato per il checkpoint sui primi 5 (gen2.md punto 2)
+MAX_SHARDS="${2:-0}"  # 0 = nessun limite; usato per il checkpoint sui primi 5
 NODES_SELFPLAY=3000
 STATE=shards/next_id.txt
 OCI_BUCKET=luna-nnue-data
@@ -20,7 +20,7 @@ OCI="$HOME/bin/oci"
 mkdir -p shards/raw shards/backed_up
 [ -f "$STATE" ] || echo 0 > "$STATE"
 
-# Assert di dimensionamento pool (gen2-pool.md, punto 1): il gate di unicita'
+# Assert di dimensionamento pool: il gate di unicita'
 # sui primi shard non dimostra che il pool basti fino in fondo — solo
 # l'aritmetica lo fa. Confronta la dimensione dei pool con la domanda totale
 # attesa per MAX_SHARDS shard e si rifiuta di partire se non torna, PRIMA di

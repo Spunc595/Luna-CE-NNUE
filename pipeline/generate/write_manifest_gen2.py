@@ -1,5 +1,5 @@
 """
-Manifest JSON per shard della GENERAZIONE 2 (gen2.md, punto 3): sia la
+Manifest JSON per shard della GENERAZIONE 2: sia la
 valutazione nel self-play SIA le etichette di annotazione vengono dalla
 RETE GEN1 (non la classica, non Stockfish, non akimbo) -- il manifesto lo
 registra esplicitamente, con la provenienza del checkpoint/rete stessa.
@@ -32,7 +32,7 @@ GEN1_NET_PROVENANCE = {
     "annotation_nodes_chosen_rationale": "knee of the curve: still a large gain over 10k, "
                                           "keeps cost/time margin to iterate rather than "
                                           "spending it all on the smaller 50k->20k increment.",
-    "gen2_expected_spearman_vs_stockfish": "0.76-0.78 (fixed in advance, gen2.md follow-up: "
+    "gen2_expected_spearman_vs_stockfish": "0.76-0.78 (fixed in advance: "
                                             "would put gen2 on par with gen0 (Stockfish-trained, "
                                             "0.7850) but with fully TCEC-compliant data)",
     "note": "This net is the SELF-PLAY EVALUATION AND ANNOTATION SOURCE for generation 2. "

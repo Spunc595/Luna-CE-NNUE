@@ -1,13 +1,13 @@
 """
 Annotazione incrementale a inseguimento della generazione 1 (dati conformi
 TCEC) — variante di annotate_incremental.py: motore Luna invece di
-Stockfish, limite a NODI (misurato: 10.000, gen1prossimipassi.md punto 2)
-invece che a profondita', UseNNUE=false forzato in ogni worker con probe di
-verifica. Stessa logica di dedup globale cross-shard e correzione WDL delle
-partite troncate (qui il giudice "indipendente" e' comunque Luna in
-valutazione classica, non Stockfish: scelta imposta da PROTOCOLLO.md sez. 5,
-"mai Stockfish, in nessun punto della catena, ne' per risolvere i risultati
-delle partite troncate" — nota, non un difetto nascosto).
+Stockfish, limite a NODI (misurato: 10.000) invece che a profondita',
+UseNNUE=false forzato in ogni worker con probe di verifica. Stessa logica
+di dedup globale cross-shard e correzione WDL delle partite troncate (qui
+il giudice "indipendente" e' comunque Luna in valutazione classica, non
+Stockfish: scelta di metodo deliberata, "mai Stockfish, in nessun punto
+della catena, ne' per risolvere i risultati delle partite troncate" —
+nota, non un difetto nascosto).
 
 Cartella di stato SEPARATA (--out-dir dedicato, es. gen1_annotated/) dal
 dataset storico: il dedup globale non va mai mescolato fra i due.
@@ -33,9 +33,9 @@ LUNA_REPO_DIR = os.path.expanduser("~/Desktop/rust-chess")
 
 def get_annotation_engine_commit():
     """Commit dell'eseguibile usato per ANNOTARE, non per il self-play — i
-    due possono divergere (gen1-ripresa.md punto 2: gli shard sono stati
-    generati col binario pre-fix 076defc, le etichette con quello corretto).
-    La differenza va scritta nel manifesto, non lasciata implicita."""
+    due possono divergere (es.: shard generati col binario pre-fix
+    076defc, etichette con quello corretto). La differenza va scritta nel
+    manifesto, non lasciata implicita."""
     try:
         result = subprocess.run(["git", "-C", LUNA_REPO_DIR, "rev-parse", "HEAD"],
                                  capture_output=True, text=True, check=True)
@@ -48,8 +48,8 @@ def patch_manifest_with_annotation_commit(shards_dir: str, shard_id: str, annota
     """Aggiunge al manifesto (gia' scritto al momento del self-play) i campi
     relativi all'annotazione: commit del motore usato qui, nodi, timestamp,
     e una nota esplicita se il commit di self-play e quello di annotazione
-    non coincidono (gen1-ripresa.md: "la differenza va scritta, non lasciata
-    implicita"). Se il manifesto non esiste (non dovrebbe succedere, ma non
+    non coincidono (la differenza va scritta, non lasciata implicita). Se
+    il manifesto non esiste (non dovrebbe succedere, ma non
     e' un errore fatale per l'annotazione stessa) lo segnala e prosegue."""
     manifest_path = os.path.join(shards_dir, f"{shard_id}.manifest.json")
     if not os.path.exists(manifest_path):

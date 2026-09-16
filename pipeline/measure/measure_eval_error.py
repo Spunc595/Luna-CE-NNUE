@@ -1,6 +1,6 @@
 """
-Errore di valutazione statica in cp contro Stockfish, per un net (doposprt.md,
-sez. 1): quanto la rete guida bene la scelta della mossa non e' verificato da
+Errore di valutazione statica in cp contro Stockfish, per un net: quanto
+la rete guida bene la scelta della mossa non e' verificato da
 round-trip/simmetria/saturazione (verificano solo che il motore riproduca
 fedelmente la rete) -- questo confronta la rete stessa contro la verita' di
 riferimento (Stockfish depth 8, gia' presente in val_final.tsv).

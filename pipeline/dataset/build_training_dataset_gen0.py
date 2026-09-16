@@ -1,6 +1,6 @@
 """
-Assembla il dataset di training dagli shard annotati (primotraining.md,
-sezione 1): join di ogni shard_NNNNN_annotated.tsv (fen, eval_cp, bestmove,
+Assembla il dataset di training dagli shard annotati: join di ogni
+shard_NNNNN_annotated.tsv (fen, eval_cp, bestmove,
 wdl_mover, depth) con lo shard_NNNNN_positions.txt originale (fen, result,
 game_id, truncated) per recuperare il game_id — necessario per lo split
 treno/validazione PER PARTITA, non per posizione: posizioni della stessa

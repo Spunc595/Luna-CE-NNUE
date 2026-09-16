@@ -1,7 +1,7 @@
 #!/bin/bash
-# Generazione a shard per la GENERAZIONE 3 (gen3.md): self-play + estrazione
+# Generazione a shard per la GENERAZIONE 3: self-play + estrazione
 # + manifesto + annotazione, TUTTO su Oracle (una sola macchina, un solo
-# global_seen.bin -- gen3.md, "regola di metodo", non un ripiego).
+# global_seen.bin -- regola di metodo, non un ripiego).
 # Aperture SENZA reinserimento (build_shard_openings_gen3.py): pool esaurito
 # = errore fatale, non wrap-around silenzioso.
 #
@@ -19,7 +19,7 @@ OCI="$HOME/bin/oci"
 mkdir -p shards/raw shards/backed_up
 [ -f "$STATE" ] || echo 0 > "$STATE"
 
-# Assert di dimensionamento pool (gen3.md, punto 2): aritmetico, non il gate
+# Assert di dimensionamento pool: aritmetico, non il gate
 # di unicita' sui primi shard (che da' falso verde finche' il pool non si
 # esaurisce davvero). Si rifiuta di partire se non torna, PRIMA di consumare
 # nulla.

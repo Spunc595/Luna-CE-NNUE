@@ -1,5 +1,5 @@
 #!/bin/bash
-# Self-play per la generazione 2 (gen2.md, punto 3): valutazione della
+# Self-play per la generazione 2: valutazione della
 # RETE GEN1 (UseNNUE=true, rete caricata esternamente come ./engine/luna.nnue),
 # non la classica e non akimbo. Stessa struttura di run_selfplay_gen1.sh.
 #

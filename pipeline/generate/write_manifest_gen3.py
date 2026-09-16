@@ -31,10 +31,10 @@ GEN2_NET_PROVENANCE = {
     "gen2_val_loss_min": 0.018874,
     "gen2_spearman_vs_own_master": 0.9508,
     "gen2_spearman_vs_stockfish_static": 0.6790,
-    "gen3_master_spearman_vs_stockfish_by_nodes": {},  # patched by hand before launch, see RUNBOOK sez 17
+    "gen3_master_spearman_vs_stockfish_by_nodes": {},  # patched by hand before launch
     "annotation_nodes_chosen": 20000,
     "annotation_nodes_chosen_rationale": "knee of the curve, same method as generation 2.",
-    "gen3_expected_spearman_vs_stockfish": "0.73-0.76 (fixed in advance, gen3.md: trend "
+    "gen3_expected_spearman_vs_stockfish": "0.73-0.76 (fixed in advance: trend "
                                             "0.5874 -> 0.6790 is +0.092, expecting a shorter "
                                             "step as gains taper)",
     "note": "This net is the SELF-PLAY EVALUATION AND ANNOTATION SOURCE for generation 3. "
@@ -147,7 +147,7 @@ def main():
                             "Stockfish/akimbo never used in self-play or labeling, only as an "
                             "offline measurement tool for the gate (see gen2_net_provenance below). "
                             "Single machine (Oracle) for this whole generation -- no cross-machine "
-                            "dedup state to reconcile (gen3.md, method rule).",
+                            "dedup state to reconcile (method rule, not an afterthought).",
         "engine_version": get_engine_version(args.luna_bin),
         "engine_commit": get_engine_commit(),
         "self_play_eval_source": f"gen2 net (UCI: UseNNUE=true, external luna.nnue), nodes={BASE_CONFIG['self_play_nodes']}",

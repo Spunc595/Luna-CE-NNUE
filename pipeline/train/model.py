@@ -47,7 +47,7 @@ class LunaHalfKA(nn.Module):
         # start), not so small that the initial output is negligible.
         nn.init.uniform_(self.feature_weights.weight, -0.2, 0.2)
 
-        # output_weights molto piu' piccolo (inizializzazione.md): con
+        # output_weights molto piu' piccolo: con
         # +-0.2 e ~2048 termini sommati (2 x HIDDEN) l'uscita iniziale ha
         # scarto tipo ~450cp -> sigmoid(K*pred) sparsa su quasi tutto
         # [0,1] e scorrelata dai target, MSE iniziale ~0.22 contro una

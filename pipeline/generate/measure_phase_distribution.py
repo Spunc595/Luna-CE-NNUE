@@ -1,8 +1,8 @@
 """
 Misura la distribuzione per fase di gioco (per numero di pezzi) su uno o
 piu' file positions.txt (formato extract_positions.py: FEN<TAB>...).
-nnue/generazione1.md, punto 2 e referto punto 3: da misurare sui primi
-shard, PRIMA di lanciare il resto della generazione.
+Da misurare sui primi shard, PRIMA di lanciare il resto della
+generazione.
 
 Uso:
   python measure_phase_distribution.py shards/raw/shard_00001_positions.txt shards/raw/shard_00002_positions.txt

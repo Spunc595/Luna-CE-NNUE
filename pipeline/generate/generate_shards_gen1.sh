@@ -1,7 +1,7 @@
 #!/bin/bash
-# Generazione continua a shard per il run su scala (nnuedazero.md, sezione 0:
-# "regola anti-perdita" mai implementata prima di questo run — vedi anche
-# l'incidente di perdita dati del round precedente).
+# Generazione continua a shard per il run su scala ("regola anti-perdita"
+# mai implementata prima di questo run — vedi anche l'incidente di
+# perdita dati del round precedente).
 #
 # Ogni shard viene marcato .done SOLO dopo che sia il PGN che l'estrazione
 # sono scritti per intero: il watcher di backup (sync_shards.sh, sul PC di
@@ -22,13 +22,13 @@
 # jitter sul passo di campionamento maschera il problema nella metrica di
 # unicita' (campiona ply diversi da partite identiche, quindi FEN diversi
 # che pero' sono campioni CORRELATI, non indipendenti) — non e' visibile
-# senza guardare la lista di mosse. Fix (nnuedazero.md, punto 1.2.2): un
-# pool di aperture FRESCO per ogni shard, grande quanto il numero di
+# senza guardare la lista di mosse. Fix: un pool di aperture FRESCO per
+# ogni shard, grande quanto il numero di
 # partite dello shard stesso, cosi' nessuna partita nello shard puo'
 # condividere l'apertura con un'altra (ne' dentro lo shard ne' con shard
 # precedenti, dato che ogni pool e' nuovo).
 #
-# FIX 2026-09-07 (ocibucket.md): terza copia su OCI Object Storage
+# FIX 2026-09-07: terza copia su OCI Object Storage
 # (Instance Principal, nessuna chiave sul disco) oltre a disco-istanza e
 # PC locale. NON BLOCCANTE: se l'upload fallisce (rete, quota, bucket non
 # ancora creato) lo script registra l'errore e prosegue — non deve mai
@@ -93,7 +93,7 @@ while true; do
   # il motivo per cui il resign e' stato alzato a 800 (vedi smoke test
   # shard_00001: cap gia' raggiunto nel 16% delle partite anche a 50 partite).
   # Sicuro ora perche' i duplicati sono gia' sotto controllo via -maxmoves 80
-  # + jitter, non piu' via questo tetto (nnuepostcalibrazione.md).
+  # + jitter, non piu' via questo tetto.
   ~/nnue-data-venv/bin/python extract_positions.py --pgn "$PGN" --out "$POS" --step 4 --skip-opening 11 --max-per-game 38
 
   MANIFEST="shards/raw/${SID}.manifest.json"

@@ -3,8 +3,7 @@ Variante di gen_random_openings_luna.py per la generazione 2: il filtro
 "posizione non ancora decisa" usa la valutazione della RETE GEN1 (UseNNUE
 di default true, rete caricata esternamente accanto al binario come
 luna.nnue), non la classica -- coerente con quello che il self-play della
-gen2 usera' davvero (gen2.md: "self-play con la rete gen1, non la
-classica").
+gen2 usera' davvero: self-play con la rete gen1, non la classica.
 
 Uso:
   python gen_random_openings_gen2.py --count 155000 --plies 9 --out normal_openings.epd \

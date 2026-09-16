@@ -34,8 +34,8 @@ from binary_dataset import BinaryHalfKADataset, binary_collate_fn
 from feature_set import active_features
 
 # Valori di materiale classici, differenza dal punto di vista del lato a
-# muovere -- stessa convenzione dei target (datasetgrandeepiattaforma.md,
-# sez. 3): serve per il preflight, non per allenare.
+# muovere -- stessa convenzione dei target: serve per il preflight, non
+# per allenare.
 PIECE_VALUES = {chess.PAWN: 100, chess.KNIGHT: 320, chess.BISHOP: 330,
                  chess.ROOK: 500, chess.QUEEN: 900, chess.KING: 0}
 
@@ -49,13 +49,13 @@ UNTRAINED_MSE_MAX_RATIO = 1.5
 # Limite di clipping sui pesi in dominio normalizzato float: garantisce
 # |peso_i16| = |peso_float * QB| <= 1.98*64 = 126.7 -> il gate SIMD-safe di
 # nnue.rs (soglia 128) non puo' mai scattare, invece di scoprirlo dopo 20
-# epoche su Colab (verificaexport.md sez. 2.1). Il net akimbo imbarcato
+# epoche su Colab. Il net akimbo imbarcato
 # arriva a |peso_i16|=126 (peso_float~1.97): reti vere sfiorano il limite,
 # non lo sfiorano di poco per caso.
 WEIGHT_CLIP = 1.98
 
 
-LR_MIN = 1e-5  # primotraining.md: "decadimento a ~1e-5", non a zero
+LR_MIN = 1e-5  # decadimento a ~1e-5, non a zero
 
 
 def make_scheduler(optimizer, epochs):
@@ -68,7 +68,7 @@ def make_scheduler(optimizer, epochs):
 def count_clamped_weights(model):
     # Quanti pesi hanno effettivamente toccato il clamp a +/-WEIGHT_CLIP:
     # attesa zero o quasi. Se fossero molti, il clamp sta deformando
-    # l'addestramento, non solo proteggendo il gate SIMD (primotraining.md).
+    # l'addestramento, non solo proteggendo il gate SIMD.
     with torch.no_grad():
         fw = model.feature_weights.weight
         ow = model.output_weights
@@ -82,7 +82,7 @@ def sigmoid_loss(pred_cp, target_prob, loss_fn):
     # non va toccato model.py — vedi commento li). target_prob e' gia' in
     # [0,1] (dataset.py). La STESSA K trasforma la predizione nella stessa
     # scala del target prima del confronto: se le due K divergessero la
-    # loss confronterebbe due spazi diversi (verificaexport.md sez. 1.2).
+    # loss confronterebbe due spazi diversi.
     pred_prob = torch.sigmoid(K * pred_cp)
     return loss_fn(pred_prob, target_prob)
 
@@ -92,8 +92,8 @@ def make_dataset(paths, fmt, eval_lambda):
     parsati riga per riga -- lento, ma non richiede conversione.
     fmt="binary": paths sono prefissi prodotti da convert_to_binary.py
     (.us.npy/.them.npy/.targets.npy) -- ~11x piu' veloce (misurato:
-    6.982 contro 78.193 posizioni/secondo, datasetgrandeepiattaforma.md
-    sez. 2), perche' salta il parsing TSV e la costruzione di una
+    6.982 contro 78.193 posizioni/secondo), perche' salta il parsing TSV
+    e la costruzione di una
     chess.Board() per ogni riga. Un solo prefisso binario per chiamata
     (a differenza del TSV, che accetta piu' file)."""
     if fmt == "binary":
@@ -132,8 +132,8 @@ def _material_diff_mover_pov(fen: str) -> int:
 
 
 def preflight_checks(model, val_paths, eval_lambda, device):
-    """Tre numeri prima di qualunque epoca (datasetgrandeepiattaforma.md,
-    sez. 3): varianza dei target (predittore costante), MSE del solo
+    """Tre numeri prima di qualunque epoca: varianza dei target
+    (predittore costante), MSE del solo
     materiale, MSE del modello appena inizializzato. Avrebbero intercettato
     subito sia il bug us/them (val mai sotto il primo) sia
     l'inizializzazione fuori scala (il terzo a 0.22 invece di ~0.087) senza
@@ -189,8 +189,8 @@ def preflight_checks(model, val_paths, eval_lambda, device):
     assert mse_untrained <= var_t * UNTRAINED_MSE_MAX_RATIO, (
         f"STOP: MSE del modello non addestrato ({mse_untrained:.4f}) supera di piu' di "
         f"{UNTRAINED_MSE_MAX_RATIO}x la varianza dei target ({var_t:.4f}) -- "
-        f"l'inizializzazione dello strato di uscita e' probabilmente fuori scala "
-        f"(inizializzazione.md). Non proseguire: correggi prima di allenare."
+        f"l'inizializzazione dello strato di uscita e' probabilmente fuori scala. "
+        f"Non proseguire: correggi prima di allenare."
     )
 
 
@@ -202,8 +202,7 @@ def main():
                      help="file .tsv (--format tsv) o un prefisso binario (--format binary)")
     ap.add_argument("--format", choices=["tsv", "binary"], default="tsv",
                      help="tsv: parsing riga per riga (lento, nessuna conversione richiesta). "
-                          "binary: array precalcolati da convert_to_binary.py, ~11x piu' veloce "
-                          "(datasetgrandeepiattaforma.md sez. 2)")
+                          "binary: array precalcolati da convert_to_binary.py, ~11x piu' veloce")
     ap.add_argument("--preflight-val", default=None,
                      help="file .tsv per i tre numeri di pre-volo (richiede il FEN, quindi sempre "
                           "TSV anche con --format binary). Default: --val stesso se --format tsv, "
@@ -228,7 +227,7 @@ def main():
                      help="lista separata da virgole (es. 1,5,10,20): oltre a --out, salva anche "
                           "una copia <out>.epoch<N>.pt a fine di ciascuna di queste epoche — serve "
                           "per confrontare una curva (es. round-trip Python/motore) invece del solo "
-                          "punto finale (verificaexport.md sez. 5)")
+                          "punto finale")
     args = ap.parse_args()
     snapshot_epochs = set(int(x) for x in args.snapshot_epochs.split(",")) if args.snapshot_epochs else set()
 
@@ -266,7 +265,7 @@ def main():
 
     train_dataset, train_collate = make_dataset(args.train, args.format, args.eval_lambda)
     print(f"Formato dati: {args.format}"
-          + ("  (~11x piu' veloce del TSV, datasetgrandeepiattaforma.md sez. 2)" if args.format == "binary" else ""))
+          + ("  (~11x piu' veloce del TSV)" if args.format == "binary" else ""))
 
     csv_is_new = not os.path.exists(log_csv)
     with open(log_csv, "a", newline="") as f_csv:
@@ -314,7 +313,7 @@ def main():
 
             # 4 decimali, non 2: con 2 le epoche 3/4/5 di un run precedente
             # stampavano tutte "0.09" e il plateau si notava solo dalla
-            # riga "Nuovo migliore" mancante (bugtraining.md, sez. 4).
+            # riga "Nuovo migliore" mancante.
             val_str = f"{val_loss:.4f}" if val_loss is not None else "n/d"
             print(f"✅ Epoca {epoch+1}/{args.epochs} completata — train_loss={train_loss:.4f}  val_loss={val_str}  "
                   f"lr={scheduler.get_last_lr()[0]:.2e}  {n_positions:,} posizioni  {elapsed:.1f}s  "

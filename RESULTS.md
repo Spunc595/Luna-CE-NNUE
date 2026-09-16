@@ -99,13 +99,12 @@ completed games = assigned games (100% in each, no failed/lost games) —
 the denominator isn't ambiguous here, but it must be re-checked for every
 future generation, not assumed.
 
-Note on gen3's game count in the dataset: `gen3_dataset_composition.json`
-reports 259,932 games among the deduplicated training rows, lower than
-the 270,000 completed self-play games — some games contributed zero
-surviving positions after dedup (all their extracted positions were
-duplicates of positions from other games), so they don't appear once
-`build_training_dataset_gen3.py` joins by game_id. Expected, not an error;
-same structural behavior as gen1/gen2.
+Note on gen3's game count in the dataset: the assembled training rows
+cover 259,932 games, lower than the 270,000 completed self-play games —
+some games contributed zero surviving positions after dedup (all their
+extracted positions were duplicates of positions from other games), so
+they don't appear once `build_training_dataset_gen3.py` joins by
+game_id. Expected, not an error; same structural behavior as gen1/gen2.
 
 **Note on gen1**: the "14.2 pos/game" figure that circulated earlier
 (private working notes and conversations) came from a **preliminary 3-shard trial**

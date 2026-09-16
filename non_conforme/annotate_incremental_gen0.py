@@ -1,6 +1,5 @@
 """
-Annotazione incrementale a inseguimento della generazione
-(annotazioneeunicita.md, sezione 2).
+Annotazione incrementale a inseguimento della generazione.
 
 Per ogni shard, in ordine:
   1. Salta se shard_NNNNN_annotated.tsv esiste gia' ed e' completo

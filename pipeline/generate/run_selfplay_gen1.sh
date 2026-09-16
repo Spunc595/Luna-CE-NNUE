@@ -1,6 +1,6 @@
 #!/bin/bash
-# Lancio self-play per generazione dati NNUE (nnuepostcalibrazione.md, correzioni
-# del 2026-09-07). Tre correzioni rispetto al run di calibrazione precedente:
+# Lancio self-play per generazione dati NNUE (correzioni del 2026-09-07).
+# Tre correzioni rispetto al run di calibrazione precedente:
 #
 #   1. -maxmoves 80  (80 mosse INTERE = 160 semi-mosse, verificato contro il
 #      sorgente di cutechess-cli: "Adjudicate ... if at least n full moves

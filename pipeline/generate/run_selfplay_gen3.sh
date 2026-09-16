@@ -1,5 +1,5 @@
 #!/bin/bash
-# Self-play per la generazione 3 (gen3.md): rete gen2 (UseNNUE=true, rete
+# Self-play per la generazione 3: rete gen2 (UseNNUE=true, rete
 # caricata esternamente come ./engine/luna.nnue). Stessa struttura di
 # run_selfplay_gen2.sh, solo cartella/rete diverse.
 #

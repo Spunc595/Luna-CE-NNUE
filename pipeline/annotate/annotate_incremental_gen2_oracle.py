@@ -19,7 +19,7 @@ WDL partite troncate), adattata per girare su Oracle invece che sul PC:
 Stato globale (global_seen.bin) SEPARATO da quello del PC (gen2_annotated/
 su Oracle e' una cartella distinta) -- per costruzione, ciascuna macchina
 deduplica solo al proprio interno; la deduplica globale sull'unione va fatta
-in fase di assemblaggio (gen2-passaggio-a-oracle.md, nota B2).
+in fase di assemblaggio.
 
 Uso:
   python3 annotate_incremental_gen2_oracle.py \
