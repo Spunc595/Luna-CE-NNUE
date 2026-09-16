@@ -284,6 +284,81 @@ worth trusting.
 
 ---
 
+## 6. Three-network round-robin — the Spearman/Elo exchange rate
+
+**These numbers are NOT CCRL ratings.** They are pairwise Elo
+*differences* between three configurations of the identical binary and
+search — only the network file changes. No external engine, no anchor,
+no absolute scale. Answers "how many Elo does one point of static ρ cost
+in this project," not "where does Luna sit on any public list." That
+second question needs external anchors and wasn't attempted here (see
+`tasso-di-cambio.md` Part B for why the originally planned CCRL-anchored
+gauntlet was replaced by this design — cross-compiling anchor engines to
+Oracle's ARM would have measured a different artifact than their
+published x86 rating).
+
+**Design**: same binary, same commit (`076defcb93d4a1dc834d4ecd5132f45ba9a311d2`),
+same book (`8moves_v3.pgn`, public, 16-ply), same TC (20+0.2), same Hash
+(64MB)/Threads(1)/Ponder(off) for all three networks. Verified before
+playing: the three networks report three different static evaluations on
+the same test position (akimbo +65cp, gen0 +43cp, gen3 −15cp), and each
+branch's `luna.nnue` hash was checked against the exact committed
+`nets/luna_genN.nnue` file it was supposed to be — including a live
+re-check mid-tournament for the gen3 branch after its 98.8%+ score raised
+the "is this really loading what I think" question on its own.
+
+| Pairing | Score | Games | Elo difference | LOS |
+|---|---|---|---|---|
+| akimbo vs gen0 | 445–8–47 | 500 | **+469.0 ± 49.6** | 100% |
+| akimbo vs gen3 | 494–0–6 | 500 | **+887.7 ± 188.9** | 100% |
+| gen0 vs gen3 | 381–50–69 | 500 | **+276.7 ± 35.5** | 100% |
+
+Zero time losses, zero illegal moves, zero crashes across all 1,500
+games — the first real multi-hundred-game tournament run with v3.1.4.
+PGNs: `results/girone/girone_AB_akimbo_vs_gen0.pgn`,
+`girone_AC_akimbo_vs_gen3.pgn`, `girone_BC_gen0_vs_gen3.pgn` (raw data,
+1,500 games total).
+
+**Internal calibration check**: an old, informal measurement
+(`non_conforme/README.md`) had gen0 losing to akimbo by −339.8 ± 94.8 Elo
+over 113 games, on a pre-v3.1.4 binary with a different TC and book. This
+run's akimbo-vs-gen0 result (+469.0 ± 49.6) is the same pairing,
+same sign, same order of magnitude (hundreds of Elo, both statistically
+overwhelming) — but the confidence intervals don't overlap
+([419, 519] now vs [245, 435] then). Expected given how much changed
+between the two measurements (binary, TC, book, x86→ARM); reported
+because a calibration check that silently drops an inconvenient gap
+isn't a calibration check.
+
+**Transitivity does not hold well, and that's informative, not broken**:
+chaining the two narrower-CI results (akimbo−gen0 = 469.0, gen0−gen3 =
+276.7) predicts akimbo−gen3 ≈ 745.7, but the direct measurement was
+887.7 — a 142 Elo gap between the direct and the chained estimate. The
+akimbo-vs-gen3 score (494–0–6, 98.8%) is close enough to the edge that
+the logistic Elo model loses precision there (hence its own wide
+±188.9 CI) — not a sign the setup is wrong, a reason to trust the direct
+number less than its point estimate suggests.
+
+**The slope**: three points, (ρ, Elo) with gen3 fixed as the zero
+reference (its own ρ=0.7005, Elo=0 by construction) —
+(0.7005, 0), (0.7850, 276.7), (0.8522, 887.7). Ordinary least squares
+through these three points: **≈574 Elo per 0.10 of static ρ**, RMS
+scatter from that line ≈102 Elo (residuals: +64.0, −144.6, +80.5 at the
+three points respectively) — three points don't make a confident curve,
+and the middle point's residual is the largest, consistent with the
+transitivity gap just above. This is the first *measured* value for the
+quantity `RESULTS.md` 5.6 called "inferred, not measured."
+
+**The compliance cost, directly**: akimbo vs gen3 is the pairing that
+answers "what does TCEC-conformant training cost, in Elo, right now" —
+**+887.7 ± 188.9 Elo**, even at the low end of that interval (≈699) far
+past the +250 threshold fixed in advance (`girone-tre-reti.md` §6).
+**Verdict: evaluation is where the work is** — the quiet-position filter
+and other eval-side levers take priority over another bootstrap
+generation, unambiguously, not a borderline call.
+
+---
+
 ## Quick file reference
 
 - `eval_set.epd` — 2,000 positions (fen, Stockfish depth-8 eval, bestmove,
