@@ -1,17 +1,20 @@
 """
 Guard against dangling references: every citation to a filename in a
-committed .md file (backtick-quoted) or in a .py/.sh source comment
-(bare, since comments don't use backticks) should point at something a
-reader can actually open. Same remedy as the [cite grep guard in the
-engine repository, applied to a failure mode found twice in this
-repository's own docs and once more, at much larger scale, in the
-pipeline sources themselves: comments citing private working notes that
-were never committed.
+committed .md file (backtick-quoted) or elsewhere in the repository
+(bare, since most file types don't use backticks) should point at
+something a reader can actually open. Same remedy as the [cite grep
+guard in the engine repository, applied to a failure mode found in three
+different file types so far -- .md docs, .py/.sh comments, and JSON
+manifest prose fields -- each time in a file type the previous pass
+hadn't looked at: comments/prose citing private working notes that were
+never committed.
 
-Only .md is checked as a citation TARGET (a script legitimately mentions
-sibling .py/.sh files that aren't necessarily meant to resolve here) --
-what matters is that no comment or doc line points at a note nobody but
-the author can open.
+Scans every TEXT file in the repository, whatever its extension --
+binary files (detected by content, not by an extension list: a NUL byte
+or a decode failure means binary) are skipped automatically. Extending a
+fixed list of extensions just means the next occurrence shows up in
+whatever extension isn't on it yet; scanning by content instead of by
+extension closes that off structurally.
 
 ALLOWLIST covers documents that genuinely exist in this repository and
 genuinely external files (not ours to commit, so naturally absent).
@@ -27,8 +30,6 @@ import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SOURCE_EXTENSIONS = {".md", ".py", ".sh"}
-
 ALLOWLIST = {
     "lichess_db_puzzle.csv",  # external dataset (database.lichess.org), 6.1M rows, not committed -- see COMPLIANCE.md
     "8moves_v3.pgn",  # external public opening book, committed as data under results/girone/, not a doc
@@ -40,13 +41,29 @@ BARE_MD_RE = re.compile(r"\b([A-Za-z0-9_-]+\.md)\b")
 PLACEHOLDER_RE = re.compile(r"NNNNN|genN\b")
 
 
-def find_source_files():
+def is_binary(path, sniff_bytes=8192):
+    try:
+        with open(path, "rb") as f:
+            chunk = f.read(sniff_bytes)
+    except OSError:
+        return True
+    if b"\x00" in chunk:
+        return True
+    try:
+        chunk.decode("utf-8")
+    except UnicodeDecodeError:
+        return True
+    return False
+
+
+def find_text_files():
     for dirpath, dirnames, filenames in os.walk(REPO_ROOT):
         if ".git" in dirnames:
             dirnames.remove(".git")
         for fn in filenames:
-            if os.path.splitext(fn)[1] in SOURCE_EXTENSIONS:
-                yield os.path.join(dirpath, fn)
+            path = os.path.join(dirpath, fn)
+            if not is_binary(path):
+                yield path
 
 
 def repo_has_file(basename_or_path):
@@ -62,7 +79,7 @@ def repo_has_file(basename_or_path):
 
 def main():
     problems = []
-    for src_path in find_source_files():
+    for src_path in find_text_files():
         rel_src = os.path.relpath(src_path, REPO_ROOT)
         is_md = src_path.endswith(".md")
         pattern = BACKTICK_RE if is_md else BARE_MD_RE
