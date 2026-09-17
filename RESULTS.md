@@ -526,11 +526,31 @@ holds up over several hundred games (the check the announcement needs),
 and, as a side effect, the first measured Elo value for the TT-aging fix
 itself — previously untested.
 
-**TODO: results pending, match in progress as of this writing.** PGN and
-final Elo table to be added here once it completes; `results/*.csv` for
-this comparison is not applicable (no Stockfish/rho measurement here —
-raw PGN and cutechess log under `results/girone/` once copied over, same
-as the three-network round-robin).
+**Result (2026-09-16, completed): 400/400 games.**
+
+| Pairing | Score | Games | Score % | Elo difference | LOS | Draw ratio |
+|---|---|---|---|---|---|---|
+| v3.1.4 vs 076defc | 81–70–249 | 400 | 51.4% | **+9.6 ± 20.9** | 81.5% | 62.3% |
+
+**Not statistically significant** — the 95%-ish interval (±20.9) spans
+zero (roughly −11 to +30), and LOS 81.5% is well short of the usual ≥95%
+threshold for calling a result real. Split by color: v3.1.4 as White
+43–26–131 (0.542), as Black 38–44–118 (0.485) — no asymmetry that would
+suggest a confound. **Reading: the TT-aging fix does not show a
+detectable Elo effect at this sample size.** A genuinely small effect
+(a few Elo either way) would need several thousand games to resolve, not
+400; this match was sized for the robustness check, not for precision on
+the fix itself, and that's the more useful thing it answers.
+
+**Robustness (the check this match actually needed to run)**: zero
+crashes, zero illegal moves, zero time losses, zero disconnects across
+all 400 games and both binaries — grepped for the same failure classes as
+§6's 1,500-game check. **This is the first multi-hundred-game tournament
+result for the actually-released `v3.1.4` binary**, closing the gap left
+by §6 (whose robustness result belonged to `076defc`). Safe to reference
+in the release announcement now, and not before.
+
+PGN: `results/girone/tt_aging_v314_vs_076defc.pgn` (400 games, raw).
 
 ---
 
