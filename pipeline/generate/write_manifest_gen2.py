@@ -1,10 +1,10 @@
 """
-Manifest JSON per shard della GENERAZIONE 2: sia la
-valutazione nel self-play SIA le etichette di annotazione vengono dalla
-RETE GEN1 (non la classica, non Stockfish, non akimbo) -- il manifesto lo
-registra esplicitamente, con la provenienza del checkpoint/rete stessa.
+JSON manifest for a GENERATION 2 shard: both the self-play evaluation
+AND the annotation labels come from the GEN1 NET (not classical, not
+Stockfish, not akimbo) -- the manifest records this explicitly, along
+with the checkpoint/net's own provenance.
 
-Uso:
+Usage:
   python write_manifest_gen2.py --shard-id gen2_shard_00001 \
       --pgn shards/raw/gen2_shard_00001.pgn \
       --positions shards/raw/gen2_shard_00001_positions.txt \

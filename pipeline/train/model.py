@@ -47,17 +47,18 @@ class LunaHalfKA(nn.Module):
         # start), not so small that the initial output is negligible.
         nn.init.uniform_(self.feature_weights.weight, -0.2, 0.2)
 
-        # output_weights molto piu' piccolo: con
-        # +-0.2 e ~2048 termini sommati (2 x HIDDEN) l'uscita iniziale ha
-        # scarto tipo ~450cp -> sigmoid(K*pred) sparsa su quasi tutto
-        # [0,1] e scorrelata dai target, MSE iniziale ~0.22 contro una
-        # varianza dei target di ~0.087: la rete parte peggio di una
-        # costante e spende le prime epoche solo per rientrare, invece di
-        # imparare da una base vicina alla media. +-0.01 porta la
-        # predizione iniziale vicino a 0.5 (output_bias resta 0, mai
-        # toccato da un init separato), cosi' il gradiente lavora subito
-        # su segnale utile. feature_weights NON si tocca: il problema e'
-        # l'ampiezza in uscita moltiplicata per SCALE, non l'accumulatore.
+        # output_weights much smaller: with +-0.2 and ~2048 summed terms
+        # (2 x HIDDEN) the initial output has a spread of roughly
+        # ~450cp -> sigmoid(K*pred) spread over nearly all of [0,1] and
+        # uncorrelated with the targets, initial MSE ~0.22 against a
+        # target variance of ~0.087: the network starts worse than a
+        # constant and spends the first epochs just recovering, instead
+        # of learning from a base close to the mean. +-0.01 brings the
+        # initial prediction near 0.5 (output_bias stays 0, never
+        # touched by a separate init), so the gradient works on useful
+        # signal right away. feature_weights is NOT touched: the problem
+        # is the output amplitude multiplied by SCALE, not the
+        # accumulator.
         nn.init.uniform_(self.output_weights, -0.01, 0.01)
         nn.init.zeros_(self.output_bias)
 

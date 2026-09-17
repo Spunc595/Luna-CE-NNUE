@@ -1,9 +1,9 @@
 #!/bin/bash
-# Self-play per la generazione 2: valutazione della
-# RETE GEN1 (UseNNUE=true, rete caricata esternamente come ./engine/luna.nnue),
-# non la classica e non akimbo. Stessa struttura di run_selfplay_gen1.sh.
+# Self-play for generation 2: evaluation from the
+# GEN1 NET (UseNNUE=true, net loaded externally as ./engine/luna.nnue),
+# not classical and not akimbo. Same structure as run_selfplay_gen1.sh.
 #
-# Uso:
+# Usage:
 #   ./run_selfplay_gen2.sh <n_games> <output.pgn> <nodes> <openings.epd>
 set -euo pipefail
 
@@ -15,8 +15,8 @@ ENGINE="$HOME/gen2_classical/engine/luna"
 CONCURRENCY=4
 CUTECHESS="${CUTECHESS:-$HOME/cutechess/build/cutechess-cli}"
 
-# Prova, non supposizione: il binario deve confermare di aver caricato una
-# rete NNUE ESTERNA (la rete gen1, non quella embedded) prima di fidarsi.
+# Proof, not assumption: the binary must confirm it has loaded an
+# EXTERNAL NNUE net (the gen1 net, not the embedded one) before trusting it.
 PROBE=$(printf 'uci\nquit\n' | "$ENGINE" | grep -E "NNUE: loaded|External NNUE")
 echo "=== probe caricamento rete gen1: $PROBE ==="
 if ! echo "$PROBE" | grep -q "NNUE: loaded"; then

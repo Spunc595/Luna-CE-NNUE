@@ -1,9 +1,9 @@
 #!/bin/bash
-# Self-play per la generazione 3: rete gen2 (UseNNUE=true, rete
-# caricata esternamente come ./engine/luna.nnue). Stessa struttura di
-# run_selfplay_gen2.sh, solo cartella/rete diverse.
+# Self-play for generation 3: gen2 net (UseNNUE=true, net
+# loaded externally as ./engine/luna.nnue). Same structure as
+# run_selfplay_gen2.sh, only the folder/net differ.
 #
-# Uso:
+# Usage:
 #   ./run_selfplay_gen3.sh <n_games> <output.pgn> <nodes> <openings.epd>
 set -euo pipefail
 

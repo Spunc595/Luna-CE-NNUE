@@ -1,18 +1,18 @@
 """
-Annotazione incrementale a inseguimento della generazione 1 (dati conformi
-TCEC) — variante di annotate_incremental.py: motore Luna invece di
-Stockfish, limite a NODI (misurato: 10.000) invece che a profondita',
-UseNNUE=false forzato in ogni worker con probe di verifica. Stessa logica
-di dedup globale cross-shard e correzione WDL delle partite troncate (qui
-il giudice "indipendente" e' comunque Luna in valutazione classica, non
-Stockfish: scelta di metodo deliberata, "mai Stockfish, in nessun punto
-della catena, ne' per risolvere i risultati delle partite troncate" —
-nota, non un difetto nascosto).
+Incremental annotation tailing generation 1 (TCEC-compliant data) —
+variant of annotate_incremental.py: Luna engine instead of Stockfish,
+NODE limit (measured: 10,000) instead of depth, UseNNUE=false forced in
+every worker with a verification probe. Same global cross-shard dedup
+logic and WDL correction for truncated games (here the "independent"
+judge is still Luna in classical evaluation, not Stockfish: a deliberate
+choice of method, "never Stockfish, at no point in the chain, not even
+to resolve truncated game results" — a note, not a hidden defect).
 
-Cartella di stato SEPARATA (--out-dir dedicato, es. gen1_annotated/) dal
-dataset storico: il dedup globale non va mai mescolato fra i due.
+SEPARATE state folder (dedicated --out-dir, e.g. gen1_annotated/) from
+the historical dataset: the global dedup must never be mixed between
+the two.
 
-Uso (loop continuo, a inseguimento della generazione su Oracle):
+Usage (continuous loop, tailing the generation on Oracle):
   python annotate_incremental_gen1.py --shards-dir gen1_shards_backup \
       --out-dir gen1_annotated --luna "<path-to-luna-repo>/target/release/luna.exe" \
       --nodes 10000 --workers 4 --follow
@@ -78,7 +78,7 @@ def patch_manifest_with_annotation_commit(shards_dir: str, shard_id: str, annota
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
 
-WIDE_BAND_CP = 200  # stessa banda di pov.py/resolve_truncated_wdl.py
+WIDE_BAND_CP = 200  # same band as pov.py/resolve_truncated_wdl.py
 
 _WORKER_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_annotate_chunk_worker_gen1.py")
 
@@ -151,13 +151,12 @@ def annotate_batch(fens, luna_path, workers, nodes, tmp_dir,
                 proc.communicate(timeout=10)
             except Exception:
                 pass
-        # Anche se il worker e' stato terminato per timeout, il file di
-        # output puo' gia' contenere l'intero chunk (osservato: un worker
-        # bloccato in chiusura aveva comunque scritto tutte le righe prima
-        # di restare appeso) — leggerlo comunque invece di scartare
-        # risultati validi. Le eventuali righe davvero mancanti fanno
-        # fallire il controllo di completezza in process_shard, che ritenta
-        # l'intero shard al giro successivo.
+        # Even if the worker was killed for timing out, the output file
+        # may already hold the entire chunk (observed: a worker stuck on
+        # shutdown had still written every line before hanging) — read it
+        # anyway instead of discarding valid results. Any genuinely
+        # missing rows fail the completeness check in process_shard,
+        # which retries the whole shard next round.
         if os.path.exists(out_path):
             with open(out_path, "r", encoding="utf-8") as f:
                 for line in f:

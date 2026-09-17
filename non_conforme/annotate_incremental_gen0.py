@@ -1,36 +1,35 @@
 """
-Annotazione incrementale a inseguimento della generazione.
+Incremental annotation, tailing the generation.
 
-Per ogni shard, in ordine:
-  1. Salta se shard_NNNNN_annotated.tsv esiste gia' ed e' completo
-     (idempotente/ripartibile).
-  2. Dedup GLOBALE (fra shard, non solo dentro lo shard — quello lo fa
-     gia' extract_positions.py): una posizione gia' vista in uno shard
-     precedente non viene rianalizzata con Stockfish, a meno che non sia
-     l'ultima posizione di una partita troncata da -maxmoves (serve
-     comunque per correggere il WDL — vedi resolve_truncated_wdl.py).
-  3. Annota con Stockfish depth 8 SOLO le posizioni nuove.
-  4. Corregge il WDL delle partite troncate (stessa logica di
-     resolve_truncated_wdl.py: banda larga sull'eval Stockfish
-     dell'ultima posizione, non sul punteggio di Luna).
-  5. Scrive fen / eval_cp (POV lato a muovere) / bestmove / wdl_mover
-     (POV lato a muovere: 1/0/0.5) / depth — SOLO per le posizioni
-     nuove, non per i duplicati cross-shard (altrimenti si rianalizza
-     Stockfish per niente E si duplica nel dataset di training).
-  6. Scrittura su file temporaneo + rename finale: un'interruzione lascia
-     un .tmp scartabile, mai un file troncato che sembra completo.
-  7. Il conteggio (annotate + duplicati-saltati + fallite) deve
-     corrispondere alle righe in ingresso, altrimenti lo shard non e'
-     considerato completo e viene ritentato dal principio al prossimo giro.
-  8. Solo DOPO che lo shard e' completo, le sue posizioni nuove entrano
-     nello stato globale di dedup (persistito su disco) — cosi' un
-     riavvio a meta' shard non "consuma" hash che poi non risultano mai
-     scritti da nessuna parte.
+For each shard, in order:
+  1. Skip if shard_NNNNN_annotated.tsv already exists and is complete
+     (idempotent/resumable).
+  2. GLOBAL dedup (across shards, not just within a shard — that's
+     already done by extract_positions.py): a position already seen in
+     an earlier shard is not re-analyzed with Stockfish, unless it's the
+     last position of a game truncated by -maxmoves (still needed to
+     correct the WDL — see resolve_truncated_wdl.py).
+  3. Annotate with Stockfish depth 8 ONLY the new positions.
+  4. Correct the WDL of truncated games (same logic as
+     resolve_truncated_wdl.py: wide band on Stockfish's eval of the last
+     position, not on Luna's score).
+  5. Write fen / eval_cp (POV side to move) / bestmove / wdl_mover
+     (POV side to move: 1/0/0.5) / depth — ONLY for new positions, not
+     for cross-shard duplicates (otherwise Stockfish re-analyzes for
+     nothing AND the position gets duplicated in the training dataset).
+  6. Write to a temp file + final rename: an interruption leaves a
+     discardable .tmp, never a truncated file that looks complete.
+  7. The count (annotated + duplicates-skipped + failed) must match the
+     input rows, otherwise the shard isn't considered complete and gets
+     retried from scratch next round.
+  8. Only AFTER a shard is complete do its new positions enter the
+     global dedup state (persisted to disk) — so a restart mid-shard
+     doesn't "consume" hashes that then never get written anywhere.
 
-Uso (un giro sui shard disponibili, poi esce):
+Usage (one pass over available shards, then exits):
   python annotate_incremental.py --shards-dir shards_backup --out-dir annotated --workers 4
 
-Uso (loop continuo, a inseguimento della generazione):
+Usage (continuous loop, tailing the generation):
   python annotate_incremental.py --shards-dir shards_backup --out-dir annotated --workers 4 --follow
 """
 import argparse
@@ -43,13 +42,13 @@ import time
 import chess
 
 MATE_CP = 15000
-WIDE_BAND_CP = 200  # stessa banda di pov.py/resolve_truncated_wdl.py
+WIDE_BAND_CP = 200  # same band as pov.py/resolve_truncated_wdl.py
 DEPTH = 8
 
 
 def dedup_key_hash(fen: str) -> int:
-    # STESSA chiave di measure_uniqueness.py: pezzi + tratto + arrocco +
-    # en-passant, contatori halfmove/fullmove esclusi.
+    # SAME key as measure_uniqueness.py: pieces + side to move + castling +
+    # en passant, halfmove/fullmove counters excluded.
     parts = fen.split(" ")
     key = " ".join(parts[:4])
     return int.from_bytes(hashlib.blake2b(key.encode(), digest_size=8).digest(), "big")
@@ -76,11 +75,11 @@ _WORKER_SCRIPT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_anno
 
 
 def annotate_batch(fens, stockfish_path, workers, tmp_dir):
-    """Lancia N processi OS separati (non multiprocessing.Pool: su Windows
-    chess.engine dentro un worker di multiprocessing fallisce a creare il
-    sottoprocesso Stockfish — asyncio/ProactorEventLoop non sopravvive
-    allo spawn). Ogni worker scrive il proprio chunk su un file temporaneo
-    dedicato, letto qui a fine corsa."""
+    """Launches N separate OS processes (not multiprocessing.Pool: on
+    Windows, chess.engine inside a multiprocessing worker fails to spawn
+    the Stockfish subprocess — asyncio/ProactorEventLoop doesn't survive
+    the spawn). Each worker writes its own chunk to a dedicated temp
+    file, read back here at the end."""
     if not fens:
         return {}
     chunk_size = max(1, (len(fens) + workers - 1) // workers)
@@ -131,8 +130,8 @@ def wdl_mover_from_result(result: str, side_to_move_is_white: bool) -> str:
 
 def process_shard(shard_id: str, shards_dir: str, out_dir: str, stockfish_path: str,
                    workers: int, global_seen: set):
-    """Ritorna "already_done" / "missing" / False (riconciliazione fallita,
-    da ritentare) / una tupla di statistiche in caso di successo."""
+    """Returns "already_done" / "missing" / False (reconciliation failed,
+    to be retried) / a stats tuple on success."""
     pos_path = os.path.join(shards_dir, f"{shard_id}_positions.txt")
     out_path = os.path.join(out_dir, f"{shard_id}_annotated.tsv")
     tmp_path = out_path + ".tmp"
@@ -155,9 +154,9 @@ def process_shard(shard_id: str, shards_dir: str, out_dir: str, stockfish_path: 
 
     n_input = len(rows)
 
-    # Ultima riga per game_id (nell'ordine del file): serve per la
-    # correzione delle partite troncate, anche se quella posizione
-    # risultasse un duplicato cross-shard.
+    # Last row per game_id (in file order): needed for correcting
+    # truncated games, even if that position turns out to be a
+    # cross-shard duplicate.
     last_row_idx_by_game = {}
     for i, row in enumerate(rows):
         last_row_idx_by_game[row[2]] = i
@@ -165,11 +164,12 @@ def process_shard(shard_id: str, shards_dir: str, out_dir: str, stockfish_path: 
         idx for game_id, idx in last_row_idx_by_game.items() if rows[idx][3] == "1"
     }
 
-    # Partizione ESAUSTIVA delle righe in ingresso, per costruzione:
-    # ogni riga e' "new" (mai vista, verra' annotata e scritta), "force"
-    # (duplicato cross-shard ma ultima posizione di una partita troncata:
-    # va annotata per la correzione WDL, ma non scritta ne' committata
-    # allo stato globale) o "dup" (duplicato puro, saltata del tutto).
+    # EXHAUSTIVE partition of the input rows, by construction: every row
+    # is "new" (never seen, will be annotated and written), "force"
+    # (cross-shard duplicate but the last position of a truncated game:
+    # needs annotating for the WDL correction, but not written nor
+    # committed to the global state) or "dup" (pure duplicate, skipped
+    # entirely).
     hashes = [dedup_key_hash(row[0]) for row in rows]
     status = []
     for i, h in enumerate(hashes):
@@ -184,10 +184,10 @@ def process_shard(shard_id: str, shards_dir: str, out_dir: str, stockfish_path: 
     to_annotate_fens = [rows[i][0] for i in to_annotate_idx]
     fen_results = annotate_batch(to_annotate_fens, stockfish_path, workers, out_dir)
 
-    # Verifica che OGNI fen mandata ad annotare abbia una voce nei
-    # risultati (non solo che il valore non sia None): se manca una
-    # chiave intera, un worker e' morto a meta' senza completare il suo
-    # blocco — lo shard va scartato e ritentato, non salvato a meta'.
+    # Verify that EVERY fen sent for annotation has an entry in the
+    # results (not just that the value isn't None): if an entire key is
+    # missing, a worker died halfway without finishing its chunk — the
+    # shard must be discarded and retried, not saved half-done.
     if any(fen not in fen_results for fen in to_annotate_fens):
         print(f"  {shard_id}: risultati mancanti da un worker, scarto e ritento")
         return False
@@ -197,14 +197,14 @@ def process_shard(shard_id: str, shards_dir: str, out_dir: str, stockfish_path: 
     n_force_total = sum(1 for s in status if s == "force")
     n_failed = sum(1 for i in to_annotate_idx if fen_results[rows[i][0]][0] is None)
 
-    # Identita' per costruzione (new+force+dup esaurisce tutte le righe):
-    # non e' un controllo che possa fallire, ma lo lasciamo esplicito per
-    # far vedere subito se una futura modifica rompe la partizione.
+    # Identity by construction (new+force+dup exhausts all rows): not a
+    # check that can actually fail, but left explicit so a future change
+    # that breaks the partition shows up immediately.
     assert n_new_total + n_force_total + n_dup == n_input, \
         f"{shard_id}: partizione non esaustiva ({n_new_total}+{n_force_total}+{n_dup} != {n_input})"
 
-    # Correzione WDL delle partite troncate, usando l'eval Stockfish
-    # dell'ultima posizione (indipendente dal punteggio di Luna).
+    # WDL correction for truncated games, using Stockfish's eval of the
+    # last position (independent of Luna's score).
     fixed_result_by_game = {}
     for game_id, idx in last_row_idx_by_game.items():
         if rows[idx][3] != "1":
@@ -226,10 +226,10 @@ def process_shard(shard_id: str, shards_dir: str, out_dir: str, stockfish_path: 
     with open(tmp_path, "w") as fout:
         for i, (fen, result, game_id, truncated) in enumerate(rows):
             if status[i] != "new":
-                continue  # "dup": mai annotata; "force": annotata ma non scritta
+                continue  # "dup": never annotated; "force": annotated but not written
             eval_cp, bestmove = fen_results[fen]
             if eval_cp is None:
-                continue  # fallita, non scritta (conteggiata in n_failed)
+                continue  # failed, not written (counted in n_failed)
             final_result = fixed_result_by_game.get(game_id, result)
             board = chess.Board(fen)
             wdl_mover = wdl_mover_from_result(final_result, board.turn == chess.WHITE)
@@ -283,7 +283,7 @@ def main():
             if result in ("already_done", "missing"):
                 continue
             if result is False:
-                continue  # riconciliazione fallita, gia' segnalato, ritenta al prossimo giro
+                continue  # reconciliation failed, already reported, retry next round
             new_hashes, n_input, n_written, n_dup, n_force, n_failed = result
             append_global_seen(state_path, new_hashes)
             dt = time.time() - t0

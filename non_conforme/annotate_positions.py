@@ -1,18 +1,18 @@
 """
-Annota posizioni gia estratte/deduplicate (output di extract_positions.py:
-FEN <TAB> risultato <TAB> game_id <TAB> truncated, una per riga) con
-Stockfish: punteggio, profondita raggiunta, e bestmove (necessaria per il
-filtro "mossa migliore = cattura" di piu avanti — l'assenza di questo campo
-nella pipeline precedente ha reso quel filtro impossibile).
+Annotates already extracted/deduplicated positions (output of
+extract_positions.py: FEN <TAB> result <TAB> game_id <TAB> truncated, one
+per line) with Stockfish: score, depth reached, and bestmove (needed for
+the later "best move = capture" filter — the absence of this field in the
+earlier pipeline made that filter impossible).
 
-game_id/truncated passano invariati: servono a resolve_truncated_wdl.py per
-correggere il risultato delle partite troncate da -maxmoves usando la
-valutazione Stockfish gia' calcolata qui, non il punteggio di Luna.
+game_id/truncated pass through unchanged: needed by resolve_truncated_wdl.py
+to correct the result of games truncated by -maxmoves using the Stockfish
+evaluation already computed here, not Luna's score.
 
-Output: una riga per posizione, campi separati da TAB:
-  fen  risultato  game_id  truncated  eval_cp  is_mate  bestmove_uci
+Output: one row per position, TAB-separated fields:
+  fen  result  game_id  truncated  eval_cp  is_mate  bestmove_uci
 
-Uso:
+Usage:
   python annotate_positions.py --in positions.txt --out annotated.tsv \
       --stockfish /usr/games/stockfish --depth 8
 """

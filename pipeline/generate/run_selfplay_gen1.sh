@@ -1,22 +1,24 @@
 #!/bin/bash
-# Lancio self-play per generazione dati NNUE (correzioni del 2026-09-07).
-# Tre correzioni rispetto al run di calibrazione precedente:
+# Launches self-play for NNUE data generation (corrections of
+# 2026-09-07). Three corrections relative to the previous calibration
+# run:
 #
-#   1. -maxmoves 80  (80 mosse INTERE = 160 semi-mosse, verificato contro il
-#      sorgente di cutechess-cli: "Adjudicate ... if at least n full moves
-#      have been played" — elimina in un colpo la coda lunga di partite
-#      incartate, qualunque sia la causa specifica.
-#   2. -draw / -resign: soglie ragionevoli scelte guardando 2-3 partite reali
-#      (non ottimizzate: la precisione qui conta poco, il risultato pesa solo
-#      il 30% dell'etichetta finale con eval_lambda=0.7).
-#   3. Jitter sul passo di campionamento: gestito in extract_positions.py,
-#      non qui.
+#   1. -maxmoves 80  (80 FULL moves = 160 half-moves, verified against
+#      cutechess-cli's source: "Adjudicate ... if at least n full moves
+#      have been played" — eliminates in one shot the long tail of
+#      stuck games, whatever the specific cause.
+#   2. -draw / -resign: reasonable thresholds chosen by looking at 2-3
+#      real games (not optimized: precision matters little here, the
+#      result weighs only 30% of the final label with eval_lambda=0.7).
+#   3. Jitter on the sampling step: handled in extract_positions.py,
+#      not here.
 #
-# Le partite troncate dal limite -maxmoves vengono ri-aggiudicate con banda
-# larga sul punteggio al punto di taglio da extract_positions.py (cutechess
-# le marca sempre "Draw by adjudication" a prescindere dal punteggio reale).
+# Games truncated by the -maxmoves limit are re-adjudicated with a wide
+# band on the score at the cutoff point by extract_positions.py
+# (cutechess always marks them "Draw by adjudication" regardless of the
+# actual score).
 #
-# Uso:
+# Usage:
 #   ./run_selfplay.sh <n_games> <output.pgn>
 #   ./run_selfplay.sh 500 verify_games.pgn
 
@@ -30,11 +32,11 @@ ENGINE=./target/release/luna
 CONCURRENCY=4
 CUTECHESS="${CUTECHESS:-$HOME/cutechess/build/cutechess-cli}"
 
-# Soglia di resign alzata da 400 a 800 (misura 1, 2026-09-07): a 400 il
-# 76,2% delle partite (le vinte per aggiudicazione) contribuiva solo il 3,6%
-# delle posizioni di vero finale (<=8 pezzi) — le partite gia' decise
-# venivano chiuse prima della fase di conversione, che e' esattamente il
-# difetto di Luna che questo dataset deve correggere.
+# Resign threshold raised from 400 to 800 (correction 1, 2026-09-07): at
+# 400, 76.2% of games (those won by adjudication) contributed only 3.6%
+# of true-endgame positions (<=8 pieces) — already-decided games were
+# being closed before the conversion phase, which is exactly the defect
+# in Luna this dataset is meant to correct.
 time "$CUTECHESS" \
   -engine cmd=$ENGINE name=Luna_A \
   -engine cmd=$ENGINE name=Luna_B \

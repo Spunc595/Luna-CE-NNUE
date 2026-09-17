@@ -1,11 +1,11 @@
 """
-Worker interno di annotate_incremental_gen1.py: variante di
-_annotate_chunk_worker.py per la generazione 1 — motore Luna invece di
-Stockfish, limite a NODI invece che a profondita', UseNNUE=false forzato
-(con probe di verifica prima di processare: non dare per assunta una
-configurazione, dimostrala).
+Internal worker for annotate_incremental_gen1.py: variant of
+_annotate_chunk_worker.py for generation 1 — Luna engine instead of
+Stockfish, NODE limit instead of depth, UseNNUE=false forced (with a
+verification probe before processing: don't assume a configuration,
+prove it).
 
-Uso: python _annotate_chunk_worker_gen1.py <input_fens.txt> <output.tsv> <luna_path> <nodes>
+Usage: python _annotate_chunk_worker_gen1.py <input_fens.txt> <output.tsv> <luna_path> <nodes>
 """
 import sys
 
@@ -22,7 +22,7 @@ def main():
     engine = chess.engine.SimpleEngine.popen_uci(luna_path)
     engine.configure({"UseNNUE": False})
 
-    # Probe: stessa posizione, UseNNUE opposto, i punteggi devono differire.
+    # Probe: same position, UseNNUE flipped, the scores must differ.
     probe = chess.Board()
     probe.push_san("e4"); probe.push_san("e5"); probe.push_san("Nf3")
     s_off = engine.analyse(probe, chess.engine.Limit(nodes=5000))["score"]

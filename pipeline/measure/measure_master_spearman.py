@@ -1,13 +1,13 @@
 """
-Gate: Spearman del MAESTRO della generazione 2 —
-Luna con la rete gen1 caricata, in RICERCA (go nodes N, non "eval" statico)
-contro Stockfish, sullo stesso insieme di posizioni di gen0/gen1/akimbo
-(val_final.tsv). Misurato a tre valori di nodi: 10.000, 20.000, 50.000.
+Gate: the MASTER's Spearman for generation 2 —
+Luna with the gen1 net loaded, in SEARCH (go nodes N, not static "eval")
+against Stockfish, on the same position set as gen0/gen1/akimbo
+(val_final.tsv). Measured at three node values: 10,000, 20,000, 50,000.
 
-Stockfish qui e' solo strumento di misura (non entra nei dati di
-addestramento) — non tocca la linea guida TCEC.
+Stockfish here is only a measurement tool (never enters the training
+data) — doesn't touch the TCEC guideline.
 
-Uso:
+Usage:
   python measure_master_spearman.py --val val_final.tsv --n-sample 2000 --seed 7 \
       --engine "<path-to-candidate-engine>/luna.exe" \
       --nodes 10000 20000 50000

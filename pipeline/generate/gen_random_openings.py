@@ -1,15 +1,15 @@
 """
-Genera posizioni di apertura casuali per la diversificazione del self-play:
-Luna e deterministica oltre il proprio
-libro interno (3183 posizioni), quindi senza una vera randomizzazione
-delle aperture il self-play produce partite quasi identiche.
+Generates random opening positions for self-play diversification: Luna
+is deterministic beyond its own internal book (3183 positions), so
+without genuine opening randomization self-play produces nearly
+identical games.
 
-Per ogni posizione: gioca N semi-mosse LEGALI scelte a caso dalla
-posizione iniziale, poi scarta se la posizione risultante e gia decisa
-(valutazione Stockfish a profondita bassa oltre la soglia) e riprova.
-Scrive un file EPD, una posizione per riga (FEN, senza mosse in coda).
+For each position: plays N random LEGAL half-moves from the starting
+position, then discards the resulting position if it's already decided
+(low-depth Stockfish evaluation past the threshold) and retries. Writes
+an EPD file, one position per line (FEN, no trailing moves).
 
-Uso:
+Usage:
   python gen_random_openings.py --count 5000 --plies 9 --out openings.epd \
       --stockfish /usr/games/stockfish --eval-limit 200 --depth 6
 """
@@ -20,10 +20,10 @@ import sys
 
 
 def quick_eval_cp(stockfish_proc, fen: str, depth: int) -> int | None:
-    """Invia una posizione a un processo Stockfish gia avviato (UCI) e
-    legge la valutazione a una profondita bassa. Riusa lo stesso processo
-    per tutte le posizioni invece di riavviarlo ogni volta (che sarebbe
-    il vero collo di bottiglia qui, non la ricerca in se)."""
+    """Sends a position to an already-running Stockfish process (UCI) and
+    reads the evaluation at a low depth. Reuses the same process for all
+    positions instead of restarting it every time (which would be the
+    real bottleneck here, not the search itself)."""
     stockfish_proc.stdin.write(f"position fen {fen}\n")
     stockfish_proc.stdin.write(f"go depth {depth}\n")
     stockfish_proc.stdin.flush()
@@ -38,7 +38,7 @@ def quick_eval_cp(stockfish_proc, fen: str, depth: int) -> int | None:
             idx = parts.index("cp")
             last_score = int(parts[idx + 1])
         elif "score mate" in line:
-            last_score = 10000  # decisamente deciso, scartare comunque
+            last_score = 10000  # decisively decided, discard regardless
         if line.startswith("bestmove"):
             return last_score
 
@@ -93,8 +93,8 @@ def main():
                     break
                 rejected += 1
             else:
-                # non ha trovato nulla di accettabile in N tentativi:
-                # prosegue comunque, non blocca l'intero batch per questo
+                # found nothing acceptable in N attempts: proceeds anyway,
+                # doesn't block the whole batch over this
                 pass
 
             if accepted % 500 == 0 and accepted > 0:

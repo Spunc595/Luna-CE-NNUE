@@ -1,17 +1,17 @@
 #!/bin/bash
-# Generazione a shard per la GENERAZIONE 2: self-play + estrazione
-# + manifesto qui su Oracle (4 CPU dedicate). Annotazione a inseguimento sul
-# PC (annotate_incremental_gen2.py, rete gen1 a 50k nodi) — stesso pattern
-# gia' collaudato della gen1, solo la rete cambia. Aperture SENZA
-# reinserimento (build_shard_openings_gen2.py): pool esaurito = errore
-# fatale, non wrap-around silenzioso.
+# Shard generation for GENERATION 2: self-play + extraction
+# + manifest here on Oracle (4 dedicated CPUs). Annotation tailing on
+# the PC (annotate_incremental_gen2.py, gen1 net at 50k nodes) — same
+# pattern already proven for gen1, only the net changes. Openings
+# WITHOUT replacement (build_shard_openings_gen2.py): exhausted pool =
+# fatal error, not a silent wrap-around.
 #
-# Uso: ./generate_shards_gen2.sh [games_per_shard]
+# Usage: ./generate_shards_gen2.sh [games_per_shard]
 set -euo pipefail
 cd ~/gen2_classical
 
 GAMES_PER_SHARD="${1:-5000}"
-MAX_SHARDS="${2:-0}"  # 0 = nessun limite; usato per il checkpoint sui primi 5
+MAX_SHARDS="${2:-0}"  # 0 = no limit; used for the checkpoint on the first 5
 NODES_SELFPLAY=3000
 STATE=shards/next_id.txt
 OCI_BUCKET=luna-nnue-data
@@ -20,11 +20,11 @@ OCI="$HOME/bin/oci"
 mkdir -p shards/raw shards/backed_up
 [ -f "$STATE" ] || echo 0 > "$STATE"
 
-# Assert di dimensionamento pool: il gate di unicita'
-# sui primi shard non dimostra che il pool basti fino in fondo — solo
-# l'aritmetica lo fa. Confronta la dimensione dei pool con la domanda totale
-# attesa per MAX_SHARDS shard e si rifiuta di partire se non torna, PRIMA di
-# consumare nulla.
+# Pool-sizing assert: the uniqueness gate on the first shards doesn't
+# prove the pool will hold out to the end — only the arithmetic does.
+# Compares pool size against the total expected demand for MAX_SHARDS
+# shards and refuses to start if it doesn't add up, BEFORE consuming
+# anything.
 if [ "$MAX_SHARDS" -gt 0 ]; then
   ENDGAME_FRAC=0.30
   NEED_TOTAL=$((MAX_SHARDS * GAMES_PER_SHARD))

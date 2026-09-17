@@ -1,10 +1,10 @@
 """
-Misura la distribuzione per fase di gioco (per numero di pezzi) su uno o
-piu' file positions.txt (formato extract_positions.py: FEN<TAB>...).
-Da misurare sui primi shard, PRIMA di lanciare il resto della
-generazione.
+Measures the distribution by game phase (by piece count) over one or
+more positions.txt files (extract_positions.py format: FEN<TAB>...).
+To be measured on the first shards, BEFORE launching the rest of the
+generation.
 
-Uso:
+Usage:
   python measure_phase_distribution.py shards/raw/shard_00001_positions.txt shards/raw/shard_00002_positions.txt
 """
 import sys

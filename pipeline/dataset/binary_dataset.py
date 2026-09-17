@@ -1,9 +1,9 @@
 """
-Lettore del formato binario prodotto da convert_to_binary.py. Dataset a
-accesso casuale su array numpy memory-mapped (nessun parsing, nessuna
-chess.Board() per riga): il collate ricostruisce il formato "ragged"
-(indici+offset) che EmbeddingBag si aspetta con operazioni vettoriali
-(maschera booleana + cumsum), non un ciclo Python per posizione.
+Reader for the binary format produced by convert_to_binary.py. Random-
+access dataset over memory-mapped numpy arrays (no parsing, no
+chess.Board() per row): the collate function rebuilds the "ragged"
+format (indices+offsets) that EmbeddingBag expects using vectorized
+operations (boolean mask + cumsum), not a Python loop per position.
 """
 import numpy as np
 import torch

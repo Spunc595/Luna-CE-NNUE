@@ -1,14 +1,14 @@
 """
-Worker interno di annotate_incremental.py: annota un elenco di FEN (un file
-di input, una riga per FEN) e scrive fen\teval_cp\tbestmove per riga
-("NONE" al posto di eval_cp/bestmove se l'analisi fallisce). Lanciato come
-PROCESSO OS SEPARATO (non multiprocessing.Pool): su Windows, chess.engine
-dentro un worker di multiprocessing.Pool fallisce a creare il sottoprocesso
-Stockfish (asyncio + ProactorEventLoop non sopravvive allo spawn) — lo
-stesso schema a processi separati gia' usato altrove in questa pipeline
-evita il problema.
+Internal worker for annotate_incremental.py: annotates a list of FENs (an
+input file, one FEN per line) and writes fen\teval_cp\tbestmove per line
+("NONE" in place of eval_cp/bestmove if analysis fails). Launched as a
+SEPARATE OS PROCESS (not multiprocessing.Pool): on Windows, chess.engine
+inside a multiprocessing.Pool worker fails to spawn the Stockfish
+subprocess (asyncio + ProactorEventLoop doesn't survive the spawn) — the
+same separate-process pattern already used elsewhere in this pipeline
+avoids the problem.
 
-Uso: python _annotate_chunk_worker.py <input_fens.txt> <output.tsv> <stockfish_path> <depth>
+Usage: python _annotate_chunk_worker.py <input_fens.txt> <output.tsv> <stockfish_path> <depth>
 """
 import sys
 

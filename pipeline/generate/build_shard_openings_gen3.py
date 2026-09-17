@@ -1,13 +1,12 @@
 """
-Costruisce il file di aperture per UNO shard della generazione 2, con
-CONSUMO SENZA REINSERIMENTO (garantisce riuso <=1x per costruzione invece
-di sperarci): ogni pool viene mescolato UNA VOLTA sola
-(seed fisso, alla prima chiamata) e poi consumato in sequenza tramite un
-cursore persistito su disco (data/*_offset.txt) — ogni posizione di
-apertura usata al massimo una volta in tutta la run, indipendentemente da
-quanti shard la consumano.
+Builds the opening file for ONE shard of generation 2, with
+CONSUMPTION WITHOUT REPLACEMENT (guarantees <=1x reuse by construction
+instead of hoping for it): each pool is shuffled ONCE ONLY (fixed seed,
+on the first call) and then consumed in sequence via a cursor persisted
+to disk (data/*_offset.txt) — every opening position used at most once
+across the whole run, regardless of how many shards consume it.
 
-Uso (chiamato una volta per shard, in ordine):
+Usage (called once per shard, in order):
   python build_shard_openings_gen2.py --normal-pool data/normal_openings.epd \
       --endgame-pool data/endgame_positions.epd --count 5000 --endgame-frac 0.30 \
       --out shards/raw/gen2_shard_00001_openings.epd
@@ -18,10 +17,10 @@ import random
 
 
 def load_or_shuffle_pool(path, seed):
-    """Se non esiste ancora <path>.shuffled, mescola <path> una volta (seed
-    fisso) e lo scrive come <path>.shuffled — tutte le chiamate successive
-    (per ogni shard) leggono lo STESSO ordine mescolato, garantendo che il
-    cursore di offset sia coerente run dopo run."""
+    """If <path>.shuffled doesn't exist yet, shuffles <path> once (fixed
+    seed) and writes it as <path>.shuffled — every subsequent call (for
+    each shard) reads the SAME shuffled order, guaranteeing the offset
+    cursor stays consistent run after run."""
     shuffled_path = path + ".shuffled"
     if os.path.exists(shuffled_path):
         with open(shuffled_path, "r", encoding="utf-8") as f:
@@ -37,10 +36,10 @@ def load_or_shuffle_pool(path, seed):
 
 
 def consume(pool, offset_path, n):
-    """Legge il cursore corrente, prende le prossime N righe, avanza e
-    persiste il cursore. Fallisce rumorosamente (non wrap-around silenzioso)
-    se il pool si esaurisce: significa che e' stato dimensionato troppo
-    piccolo per il numero di partite pianificato."""
+    """Reads the current cursor, takes the next N lines, advances and
+    persists the cursor. Fails loudly (not a silent wrap-around) if the
+    pool runs out: it means it was sized too small for the planned
+    number of games."""
     offset = 0
     if os.path.exists(offset_path):
         with open(offset_path, "r") as f:
@@ -82,10 +81,10 @@ def main():
     chosen_endgame = consume(endgame_pool, endgame_offset_path, n_endgame)
 
     combined = chosen_endgame + chosen_normal
-    # Shuffle SOLO dell'ordine all'interno del file di questo shard (quale
-    # partita la usa prima), non ri-mescola i pool sorgente: l'assegnazione
-    # posizione->shard resta quella del cursore, deterministica e senza
-    # reinserimento.
+    # Shuffle ONLY the order within this shard's file (which game uses it
+    # first), doesn't re-shuffle the source pools: the position->shard
+    # assignment stays the cursor's, deterministic and without
+    # replacement.
     random.Random(args.shuffle_seed + 1000).shuffle(combined)
 
     with open(args.out, "w") as f:

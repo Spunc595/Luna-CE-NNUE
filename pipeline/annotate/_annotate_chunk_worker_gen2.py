@@ -1,10 +1,10 @@
 """
-Worker interno di annotate_incremental_gen2.py: variante di
-_annotate_chunk_worker_gen1.py per la generazione 2 -- rete gen1
-(UseNNUE=true, caricata esternamente accanto al binario) invece di
-classica, 50.000 nodi di default. Probe di verifica prima di processare.
+Internal worker for annotate_incremental_gen2.py: variant of
+_annotate_chunk_worker_gen1.py for generation 2 -- gen1 net
+(UseNNUE=true, loaded externally alongside the binary) instead of
+classical, 50,000 nodes by default. Verification probe before processing.
 
-Uso: python _annotate_chunk_worker_gen2.py <input_fens.txt> <output.tsv> <luna_path> <nodes>
+Usage: python _annotate_chunk_worker_gen2.py <input_fens.txt> <output.tsv> <luna_path> <nodes>
 """
 import sys
 
@@ -21,9 +21,9 @@ def main():
     engine = chess.engine.SimpleEngine.popen_uci(luna_path)
     engine.configure({"UseNNUE": True})
 
-    # Probe: stessa posizione, UseNNUE opposto, i punteggi devono differire
-    # -- prova che la rete gen1 e' davvero attiva, non solo l'opzione
-    # accettata senza effetto.
+    # Probe: same position, UseNNUE flipped, the scores must differ --
+    # proves the gen1 net is genuinely active, not just the option
+    # accepted with no effect.
     probe = chess.Board()
     probe.push_san("e4"); probe.push_san("e5"); probe.push_san("Nf3")
     s_on = engine.analyse(probe, chess.engine.Limit(nodes=5000))["score"]

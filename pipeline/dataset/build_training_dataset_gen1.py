@@ -1,22 +1,23 @@
 """
-Assembla il dataset di training dagli shard annotati: join di ogni
+Assembles the training dataset from the annotated shards: joins every
 shard_NNNNN_annotated.tsv (fen, eval_cp, bestmove,
-wdl_mover, depth) con lo shard_NNNNN_positions.txt originale (fen, result,
-game_id, truncated) per recuperare il game_id — necessario per lo split
-treno/validazione PER PARTITA, non per posizione: posizioni della stessa
-partita sono correlate, se finiscono sparse fra treno e validazione la
-validation loss misura memorizzazione, non generalizzazione.
+wdl_mover, depth) with the original shard_NNNNN_positions.txt (fen,
+result, game_id, truncated) to recover the game_id — needed for the
+train/validation split PER GAME, not per position: positions from the
+same game are correlated, if they end up scattered across train and
+validation the validation loss measures memorization, not
+generalization.
 
-Il game_id di extract_positions.py e' locale allo shard (riparte da 1 ogni
-volta): qui viene reso globale col prefisso "<shard_id>_", stessa
-convenzione di resolve_truncated_wdl.py --shard-tag.
+extract_positions.py's game_id is local to the shard (restarts from 1
+each time): here it's made global with the "<shard_id>_" prefix, the
+same convention as resolve_truncated_wdl.py --shard-tag.
 
-Scrive train.tsv/val.tsv (5 colonne, stesso formato degli shard annotati,
-game_id NON incluso: serve solo per lo split, non per il training) e un
-dataset_composition.json con la composizione esatta (shard inclusi,
-posizioni per shard, totali, data).
+Writes train.tsv/val.tsv (5 columns, same format as the annotated
+shards, game_id NOT included: only needed for the split, not for
+training) and a dataset_composition.json with the exact composition
+(shards included, positions per shard, totals, date).
 
-Uso:
+Usage:
   python build_training_dataset.py --shards-dir shards_backup --annotated-dir annotated \
       --start 1 --end 67 --train-out train.tsv --val-out val.tsv \
       --composition-out dataset_composition.json --val-fraction 0.03 --seed 42
@@ -41,7 +42,7 @@ def main():
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
 
-    rows_by_game = {}  # game_id globale -> lista di righe (5 colonne)
+    rows_by_game = {}  # global game_id -> list of rows (5 columns)
     per_shard_counts = []
     total_positions = 0
 
@@ -95,7 +96,7 @@ def main():
         target = val_rows if game_id in val_games else train_rows
         target.extend(rows)
 
-    rng.shuffle(train_rows)  # shuffle del solo training set, non della validazione
+    rng.shuffle(train_rows)  # shuffle only the training set, not validation
 
     with open(args.train_out, "w") as f:
         for row in train_rows:

@@ -1,9 +1,9 @@
 """
-Verifica di unicita' sui primi N shard della generazione 2: deve stare
-sopra il 95%. Se non ci sta, il problema non era il riuso e va capito
-prima di generare il resto.
+Uniqueness check on the first N shards of generation 2: must stay above
+95%. If it doesn't, the problem wasn't reuse and needs to be understood
+before generating the rest.
 
-Uso:
+Usage:
   python check_uniqueness_gen2.py --shards-dir shards/backed_up --num-shards 5
 """
 import argparse

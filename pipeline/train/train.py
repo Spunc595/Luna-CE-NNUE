@@ -1,14 +1,14 @@
 """
-Allena la rete HalfKA di Luna (768x4 king-bucket x2 prospettive -> 1024
-hidden -> 1) sul formato TSV a 6 colonne prodotto da
+Trains Luna's HalfKA network (768x4 king-bucket x2 perspectives -> 1024
+hidden -> 1) on the 6-column TSV format produced by
 extract_positions.py -> annotate_positions.py -> resolve_truncated_wdl.py
 -> split_train_val.py.
 
-Uso:
+Usage:
   python train.py --train train.tsv --val val.tsv --epochs 3 --out checkpoint.pt
 
-Richiede una GPU per tempi ragionevoli (CPU funziona ma è lento). Dopo
-l'allenamento, usa export.py per produrre un net.bin compatibile con
+Requires a GPU for reasonable times (CPU works but is slow). After
+training, use export.py to produce a net.bin compatible with
 src/nnue.rs.
 """
 import argparse
@@ -22,53 +22,54 @@ import chess
 import torch
 from torch.utils.data import DataLoader
 
-sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)  # emoji su Windows + log leggibile
-# in tempo reale anche quando stdout e' rediretto su file (nohup ...
-# > log 2>&1): senza line_buffering, Python bufferizza a blocchi quando
-# non scrive su un terminale, e i tre numeri di pre-volo (che servono a
-# referto SUBITO, non a fine run) restano invisibili per ore.
+sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)  # emoji on Windows + readable log
+# in real time even when stdout is redirected to a file (nohup ...
+# > log 2>&1): without line_buffering, Python buffers in blocks when
+# not writing to a terminal, and the three preflight numbers (needed
+# for a report RIGHT AWAY, not at the end of the run) stay invisible
+# for hours.
 
 from model import LunaHalfKA
 from dataset import HalfKADataset, collate_fn, K, TARGET_EVAL_CLAMP_CP
 from binary_dataset import BinaryHalfKADataset, binary_collate_fn
 from feature_set import active_features
 
-# Valori di materiale classici, differenza dal punto di vista del lato a
-# muovere -- stessa convenzione dei target: serve per il preflight, non
-# per allenare.
+# Classical material values, difference from the side-to-move's point
+# of view -- same convention as the targets: needed for preflight, not
+# for training.
 PIECE_VALUES = {chess.PAWN: 100, chess.KNIGHT: 320, chess.BISHOP: 330,
                  chess.ROOK: 500, chess.QUEEN: 900, chess.KING: 0}
 
-# Soglia per l'assert di sanita' sul modello appena inizializzato: la
-# rete ben inizializzata parte a ~1.0x la varianza (misurato: 0.088 contro
-# 0.087), quella rotta (output_weights troppo grandi) partiva a ~2.5x
-# (0.22 contro 0.087) -- 1.5x lascia margine per rumore statistico senza
-# lasciar passare una regressione dell'inizializzazione.
+# Threshold for the sanity assert on the freshly-initialized model: a
+# properly initialized net starts at ~1.0x the variance (measured: 0.088
+# vs 0.087), the broken one (output_weights too large) started at ~2.5x
+# (0.22 vs 0.087) -- 1.5x leaves margin for statistical noise without
+# letting an initialization regression through.
 UNTRAINED_MSE_MAX_RATIO = 1.5
 
-# Limite di clipping sui pesi in dominio normalizzato float: garantisce
-# |peso_i16| = |peso_float * QB| <= 1.98*64 = 126.7 -> il gate SIMD-safe di
-# nnue.rs (soglia 128) non puo' mai scattare, invece di scoprirlo dopo 20
-# epoche su Colab. Il net akimbo imbarcato
-# arriva a |peso_i16|=126 (peso_float~1.97): reti vere sfiorano il limite,
-# non lo sfiorano di poco per caso.
+# Clipping limit on weights in the normalized float domain: guarantees
+# |weight_i16| = |weight_float * QB| <= 1.98*64 = 126.7 -> nnue.rs's
+# SIMD-safe gate (threshold 128) can never trip, instead of discovering
+# it after 20 epochs on Colab. The embedded akimbo net
+# reaches |weight_i16|=126 (weight_float~1.97): real nets skim the
+# limit, they don't skim it closely by accident.
 WEIGHT_CLIP = 1.98
 
 
-LR_MIN = 1e-5  # decadimento a ~1e-5, non a zero
+LR_MIN = 1e-5  # decays to ~1e-5, not to zero
 
 
 def make_scheduler(optimizer, epochs):
-    # Discesa a coseno sull'intera durata dell'allenamento fino a LR_MIN
-    # (non a zero): nessun iperparametro aggiuntivo da tarare, adeguata
-    # per un run corto quanto per uno lungo.
+    # Cosine decay over the whole training duration down to LR_MIN
+    # (not to zero): no extra hyperparameter to tune, suits a short run
+    # just as well as a long one.
     return torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=max(epochs, 1), eta_min=LR_MIN)
 
 
 def count_clamped_weights(model):
-    # Quanti pesi hanno effettivamente toccato il clamp a +/-WEIGHT_CLIP:
-    # attesa zero o quasi. Se fossero molti, il clamp sta deformando
-    # l'addestramento, non solo proteggendo il gate SIMD.
+    # How many weights actually hit the +/-WEIGHT_CLIP clamp: expected
+    # zero or close to it. If many did, the clamp is distorting
+    # training, not just protecting the SIMD gate.
     with torch.no_grad():
         fw = model.feature_weights.weight
         ow = model.output_weights
@@ -78,11 +79,11 @@ def count_clamped_weights(model):
 
 
 def sigmoid_loss(pred_cp, target_prob, loss_fn):
-    # pred_cp e' l'uscita grezza in centipedine di forward() (giusto cosi',
-    # non va toccato model.py — vedi commento li). target_prob e' gia' in
-    # [0,1] (dataset.py). La STESSA K trasforma la predizione nella stessa
-    # scala del target prima del confronto: se le due K divergessero la
-    # loss confronterebbe due spazi diversi.
+    # pred_cp is forward()'s raw output in centipawns (correct as is,
+    # don't touch model.py — see the comment there). target_prob is
+    # already in [0,1] (dataset.py). The SAME K transforms the
+    # prediction into the same scale as the target before comparing: if
+    # the two K's diverged the loss would compare two different spaces.
     pred_prob = torch.sigmoid(K * pred_cp)
     return loss_fn(pred_prob, target_prob)
 
@@ -239,11 +240,11 @@ def main():
 
     model = LunaHalfKA().to(device)
 
-    # Sul modello appena inizializzato, prima di caricare un --resume:
-    # misurato SEMPRE sull'init fresca, non su uno stato gia' allenato,
-    # cosi' il confronto resta significativo indipendentemente da come
-    # parte questo run specifico. Richiede sempre un TSV (serve il FEN
-    # per il materiale), anche quando il training vero usa --format binary.
+    # On the freshly-initialized model, before loading a --resume:
+    # ALWAYS measured on the fresh init, not on an already-trained
+    # state, so the comparison stays meaningful regardless of how this
+    # specific run starts. Always needs a TSV (the FEN is needed for
+    # material), even when the actual training uses --format binary.
     preflight_val = args.preflight_val or (args.val if args.format == "tsv" else None)
     preflight_checks(model, preflight_val, args.eval_lambda, device)
 
@@ -311,9 +312,9 @@ def main():
             scheduler.step()
             elapsed = time.time() - t0
 
-            # 4 decimali, non 2: con 2 le epoche 3/4/5 di un run precedente
-            # stampavano tutte "0.09" e il plateau si notava solo dalla
-            # riga "Nuovo migliore" mancante.
+            # 4 decimals, not 2: with 2, epochs 3/4/5 of a previous run
+            # all printed "0.09" and the plateau only showed up from the
+            # missing "New best" line.
             val_str = f"{val_loss:.4f}" if val_loss is not None else "n/d"
             print(f"✅ Epoca {epoch+1}/{args.epochs} completata — train_loss={train_loss:.4f}  val_loss={val_str}  "
                   f"lr={scheduler.get_last_lr()[0]:.2e}  {n_positions:,} posizioni  {elapsed:.1f}s  "
@@ -348,12 +349,12 @@ def main():
 
 
 def save_checkpoint(path, model, optimizer, scheduler, epoch):
-    # Pesi + stato ottimizzatore + stato scheduler + epoca: un resume deve
-    # ripartire esattamente da dove si era interrotto (momenti di Adam e
-    # LR compresi), non solo dai pesi — un salvataggio di soli pesi e'
-    # quello che va su Google Drive nel run vero: qui e' lo stesso file,
-    # e' la destinazione (Drive vs disco locale della runtime Colab) a
-    # fare la differenza, non il formato.
+    # Weights + optimizer state + scheduler state + epoch: a resume must
+    # restart exactly where it left off (Adam moments and LR included),
+    # not just from the weights — a weights-only save is what goes to
+    # Google Drive in the real run: here it's the same file, it's the
+    # destination (Drive vs the Colab runtime's local disk) that makes
+    # the difference, not the format.
     torch.save({
         "model": model.state_dict(),
         "optimizer": optimizer.state_dict(),

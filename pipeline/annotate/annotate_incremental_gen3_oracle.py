@@ -1,27 +1,29 @@
 """
-Variante Oracle di annotate_incremental_gen2.py: stessa logica (rete gen1,
-UseNNUE=true, 20.000 nodi di default, dedup globale cross-shard, correzione
-WDL partite troncate), adattata per girare su Oracle invece che sul PC:
+Oracle variant of annotate_incremental_gen2.py: same logic (gen1 net,
+UseNNUE=true, 20,000 nodes by default, global cross-shard dedup, WDL
+correction for truncated games), adapted to run on Oracle instead of the
+PC:
 
-- LUNA_REPO_DIR punta al repo git vero su Oracle (~/gen1_classical/luna-src),
-  non al percorso Windows del PC, cosi' get_annotation_engine_commit() legge
-  il commit giusto invece di restituire sempre "UNKNOWN".
-- Il manifesto patchato porta anche "annotation_machine": "oracle" (sul PC
-  era implicitamente "pc", ora reso esplicito nei due, come richiesto: sia
-  macchina sia commit vanno registrati per ogni shard).
-- Scrive un file di stato JSON (--status-file) ad ogni shard completato:
-  shard fatti/totali, posizioni annotate, ritmo pos/s, timestamp ultimo
-  aggiornamento, ultimo errore (shard+messaggio), campo "stato"
-  (in_corso/completato/errore). Upload su bucket lasciato al chiamante
-  (run_annotate_gen2_oracle.sh, dopo ogni scrittura) per tenere questo
-  script indipendente da OCI CLI.
+- LUNA_REPO_DIR points at the real git repo on Oracle
+  (~/gen1_classical/luna-src), not the PC's Windows path, so
+  get_annotation_engine_commit() reads the right commit instead of
+  always returning "UNKNOWN".
+- The patched manifest also carries "annotation_machine": "oracle" (on
+  the PC it was implicitly "pc", now made explicit on both, as required:
+  both machine and commit must be recorded for every shard).
+- Writes a JSON status file (--status-file) after every completed shard:
+  shards done/total, positions annotated, pos/s rate, last-update
+  timestamp, last error (shard+message), a "stato" field
+  (in_corso/completato/errore). Bucket upload is left to the caller
+  (run_annotate_gen2_oracle.sh, after every write) to keep this script
+  independent of the OCI CLI.
 
-Stato globale (global_seen.bin) SEPARATO da quello del PC (gen2_annotated/
-su Oracle e' una cartella distinta) -- per costruzione, ciascuna macchina
-deduplica solo al proprio interno; la deduplica globale sull'unione va fatta
-in fase di assemblaggio.
+Global state (global_seen.bin) SEPARATE from the PC's (gen2_annotated/
+on Oracle is a distinct folder) -- by construction, each machine
+deduplicates only against itself; the global dedup over the union
+happens at assembly time.
 
-Uso:
+Usage:
   python3 annotate_incremental_gen2_oracle.py \
       --shards-dir ~/gen2_classical/shards/backed_up \
       --out-dir ~/gen2_classical/annotated_oracle \

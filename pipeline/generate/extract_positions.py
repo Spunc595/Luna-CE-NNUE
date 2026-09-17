@@ -1,17 +1,17 @@
 """
-Estrazione + deduplica + filtri, PRIMA dell'annotazione — a differenza
-del primo giro, qui si scarta tutto quello che non serve prima di
-spendere tempo di Stockfish, non dopo.
+Extraction + dedup + filters, BEFORE annotation — unlike the first
+round, everything that isn't needed is discarded here before spending
+Stockfish time on it, not after.
 
-Le partite troncate da -maxmoves non vengono ri-aggiudicate qui: il
-punteggio di Luna e' un giudice correlato al suo stesso bias (una partita
-+320/+370cp mai convertita insegnerebbe alla rete a sbagliare esattamente
-dove sbaglia Luna). Ogni riga porta invece game_id + truncated: chi tronca
-la partita viene deciso poi da resolve_truncated_wdl.py usando la
-valutazione INDIPENDENTE di Stockfish sull'ultima posizione campionata,
-gia' calcolata gratis nello stadio di annotazione successivo.
+Games truncated by -maxmoves are not re-adjudicated here: Luna's score
+is a judge correlated with its own bias (a +320/+370cp game never
+converted would teach the network to be wrong exactly where Luna is
+wrong). Each row instead carries game_id + truncated: which games get
+truncated is decided later by resolve_truncated_wdl.py using Stockfish's
+INDEPENDENT evaluation of the last sampled position, already computed
+for free in the following annotation stage.
 
-Uso:
+Usage:
   python extract_positions.py --pgn partite.pgn --out positions.txt \
       --step 10 --skip-opening 11
 """
@@ -23,16 +23,15 @@ import chess.pgn
 
 
 def dedup_key(board: chess.Board) -> str:
-    """FEN senza i contatori di mossa (halfmove clock + fullmove number):
-    due posizioni identiche a parte quanto tempo ci si e messi ad
-    arrivarci sono la STESSA posizione per una rete di valutazione
-    statica."""
+    """FEN without the move counters (halfmove clock + fullmove number):
+    two positions identical apart from how long it took to reach them
+    are the SAME position for a static evaluation network."""
     full_fen = board.fen()
     parts = full_fen.split(" ")
     return " ".join(parts[:4])  # pieces, side to move, castling, en passant
 
 
-MAXMOVES_PLY = 160  # deve combaciare con -maxmoves 80 in run_selfplay.sh (80 mosse intere)
+MAXMOVES_PLY = 160  # must match -maxmoves 80 in run_selfplay.sh (80 full moves)
 
 
 def main():
@@ -70,11 +69,11 @@ def main():
             ply = 0
             extracted_this_game = 0
             hit_cap_this_game = False
-            game_rows = []  # fen per riga di questa partita, nell'ordine di gioco
-            # passo variabile (N + scarto 0-3) invece di N fisso: rompe la
-            # risonanza con i cicli di navetta nei finali che altrimenti
-            # moltiplicano una partita incartata in una decina di duplicati.
-            # --step resta il valore base, non toccato.
+            game_rows = []  # fen per row of this game, in play order
+            # variable step (N + 0-3 jitter) instead of a fixed N: breaks
+            # the resonance with shuttling cycles in endgames that
+            # otherwise multiply a stuck-in-a-loop game into a dozen
+            # duplicates. --step stays the base value, untouched.
             next_sample_ply = args.skip_opening + args.step + random.randint(0, 3)
             while node.variations:
                 node = node.variation(0)
@@ -107,10 +106,10 @@ def main():
             if hit_cap_this_game:
                 long_games_capped += 1
 
-            # FEN <TAB> risultato <TAB> game_id <TAB> truncated: il risultato
-            # delle partite troncate e' provvisorio (cutechess aggiudica
-            # sempre patta per -maxmoves) e verra' corretto da
-            # resolve_truncated_wdl.py dopo l'annotazione Stockfish.
+            # FEN <TAB> result <TAB> game_id <TAB> truncated: the result of
+            # truncated games is provisional (cutechess always adjudicates
+            # a draw for -maxmoves) and will be corrected by
+            # resolve_truncated_wdl.py after Stockfish annotation.
             for fen in game_rows:
                 fout.write(f"{fen}\t{result}\t{game_id}\t{int(truncated)}\n")
 

@@ -1,15 +1,15 @@
 """
-Errore di valutazione statica in cp contro Stockfish, per un net: quanto
-la rete guida bene la scelta della mossa non e' verificato da
-round-trip/simmetria/saturazione (verificano solo che il motore riproduca
-fedelmente la rete) -- questo confronta la rete stessa contro la verita' di
-riferimento (Stockfish depth 8, gia' presente in val_final.tsv).
+Static evaluation error in cp against Stockfish, for a net: how well the
+net guides move selection isn't verified by round-trip/symmetry/
+saturation checks (they only verify the engine faithfully reproduces the
+net) -- this compares the net itself against a reference ground truth
+(Stockfish depth 8, already present in val_final.tsv).
 
-Usa UNA sessione persistente per motore (non un sottoprocesso per posizione):
-"position fen X" + "eval" per la valutazione statica, "go depth N" +
-"bestmove" per la concordanza sulla mossa migliore.
+Uses ONE persistent session per engine (not a subprocess per position):
+"position fen X" + "eval" for the static evaluation, "go depth N" +
+"bestmove" for best-move agreement.
 
-Uso:
+Usage:
   python measure_eval_error.py --val val_final.tsv --n-sample 2000 \
       --engine-a candidate/luna.exe --label-a SelfTrained \
       --engine-b baseline_akimbo_fresh/luna.exe --label-b Akimbo \
@@ -34,15 +34,15 @@ def sample_rows(path, n, seed):
 
 
 def query_engine(engine_path, rows, bestmove_depth):
-    """Una sessione persistente, ma SINCRONA riga per riga: scrivi un
-    comando, leggi la sua risposta, poi il prossimo -- non scrivere tutti
-    i comandi in un colpo solo prima di leggere. Con poche posizioni la
-    pipe assorbe tutto e sembra funzionare (il test a 20 posizioni e'
-    passato); a 2000 il buffer si riempie e si blocca: il processo
-    padre e' fermo in scrittura aspettando che il motore consumi, il
-    motore e' fermo in scrittura sul proprio stdout aspettando che il
-    padre legga -- un classico deadlock bidirezionale sulle pipe, non
-    una posizione che manda in crash il motore."""
+    """One persistent session, but SYNCHRONOUS line by line: write a
+    command, read its response, then the next -- don't write every
+    command in one shot before reading. With few positions the pipe
+    absorbs it all and seems to work (the 20-position test passed); at
+    2000 the buffer fills up and blocks: the parent process is stuck
+    writing, waiting for the engine to consume, the engine is stuck
+    writing to its own stdout waiting for the parent to read -- a
+    classic bidirectional pipe deadlock, not a position that crashes
+    the engine."""
     proc = subprocess.Popen(
         [engine_path], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
         text=True, bufsize=1, encoding="utf-8", errors="replace",
@@ -81,16 +81,16 @@ def query_engine(engine_path, rows, bestmove_depth):
     return evals, bestmoves
 
 
-CLAMP = 2000  # stesso TARGET_EVAL_CLAMP_CP usato per costruire il target di training:
-              # ~0,6% delle posizioni ha score di matto (+-15000) nel riferimento
-              # Stockfish, che un eval STATICO (nessuna ricerca, non "vede" il matto)
-              # non puo' avvicinare per costruzione -- non e' imprecisione della
-              # rete, e senza il clamp un paio di questi casi dominano l'RMS.
+CLAMP = 2000  # same TARGET_EVAL_CLAMP_CP used to build the training target:
+              # ~0.6% of positions have a mate score (+-15000) in the Stockfish
+              # reference, which a STATIC eval (no search, can't "see" the
+              # mate) can't approach by construction -- not a net inaccuracy,
+              # and without the clamp a couple of these cases dominate the RMS.
 
 
 def ranks(values):
-    # Rango medio in caso di parita' (standard per Spearman): ordina, assegna
-    # posizioni, poi fa la media dei ranghi per i valori uguali.
+    # Average rank on ties (standard for Spearman): sort, assign
+    # positions, then average the ranks for equal values.
     order = sorted(range(len(values)), key=lambda i: values[i])
     r = [0.0] * len(values)
     i = 0
@@ -122,10 +122,10 @@ def report(label, engine_evals, stockfish_evals, engine_bestmoves, stockfish_bes
     mae = statistics.mean(abs(e) for e in errors)
     rmse = (statistics.mean(e ** 2 for e in errors)) ** 0.5
     std = statistics.pstdev(errors)
-    # Spearman su tutto il campione, SENZA clamp: e' scale/offset-free per
-    # costruzione (dipende solo dall'ordinamento), quindi i punteggi di
-    # matto non hanno bisogno dello stesso trattamento speciale del MAE/RMS
-    # -- un matto vero dovrebbe comunque finire in cima all'ordinamento.
+    # Spearman over the whole sample, WITHOUT clamping: it's scale/offset-
+    # free by construction (depends only on ordering), so mate scores
+    # don't need the same special treatment as MAE/RMS -- a genuine mate
+    # should end up at the top of the ordering regardless.
     rho = spearman(engine_evals, stockfish_evals)
     print(f"=== {label} (n={len(errors):,}, {n_clamped} posizioni con |riferimento|>{CLAMP} clampate su MAE/RMS) ===")
     print(f"  errore medio assoluto: {mae:.2f} cp")

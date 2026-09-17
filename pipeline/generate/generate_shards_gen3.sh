@@ -1,16 +1,16 @@
 #!/bin/bash
-# Generazione a shard per la GENERAZIONE 3: self-play + estrazione
-# + manifesto + annotazione, TUTTO su Oracle (una sola macchina, un solo
-# global_seen.bin -- regola di metodo, non un ripiego).
-# Aperture SENZA reinserimento (build_shard_openings_gen3.py): pool esaurito
-# = errore fatale, non wrap-around silenzioso.
+# Shard generation for GENERATION 3: self-play + extraction
+# + manifest + annotation, ALL on Oracle (a single machine, a single
+# global_seen.bin -- a method rule, not a shortcut).
+# Openings WITHOUT replacement (build_shard_openings_gen3.py): exhausted
+# pool = fatal error, not a silent wrap-around.
 #
-# Uso: ./generate_shards_gen3.sh [games_per_shard] [max_shards]
+# Usage: ./generate_shards_gen3.sh [games_per_shard] [max_shards]
 set -euo pipefail
 cd ~/gen3_classical
 
 GAMES_PER_SHARD="${1:-5000}"
-MAX_SHARDS="${2:-0}"  # 0 = nessun limite; usato per il checkpoint sui primi shard di controllo
+MAX_SHARDS="${2:-0}"  # 0 = no limit; used for the checkpoint on the first control shards
 NODES_SELFPLAY=3000
 STATE=shards/next_id.txt
 OCI_BUCKET=luna-nnue-data
@@ -19,18 +19,17 @@ OCI="$HOME/bin/oci"
 mkdir -p shards/raw shards/backed_up
 [ -f "$STATE" ] || echo 0 > "$STATE"
 
-# Assert di dimensionamento pool: aritmetico, non il gate
-# di unicita' sui primi shard (che da' falso verde finche' il pool non si
-# esaurisce davvero). Si rifiuta di partire se non torna, PRIMA di consumare
-# nulla.
+# Pool-sizing assert: arithmetic, not the uniqueness gate on the first
+# shards (which gives a false green until the pool actually runs out).
+# Refuses to start if it doesn't add up, BEFORE consuming anything.
 if [ "$MAX_SHARDS" -gt 0 ]; then
   ENDGAME_FRAC=0.30
-  # Fattore di consumo misurato sui 5 shard di controllo (2026-09-15):
-  # offset normale 17.500/17.500 attese, offset finale 7.500/7.500 attese --
-  # nessuno scarto, le aperture sono assegnate prima del self-play, non per
-  # partita completata, quindi partite fallite/ritentate non consumano righe
-  # in piu'. Non e' un'assunzione: e' il valore misurato, va ricontrollato se
-  # la logica di assegnazione aperture cambia in futuro.
+  # Consumption factor measured on the 5 control shards (2026-09-15):
+  # normal offset 17,500/17,500 expected, endgame offset 7,500/7,500
+  # expected -- no drift, openings are assigned before self-play, not
+  # per completed game, so failed/retried games don't consume extra
+  # lines. Not an assumption: it's the measured value, needs rechecking
+  # if the opening-assignment logic changes in the future.
   CONSUMPTION_FACTOR=1.0000
   NEED_TOTAL_NOMINAL=$((MAX_SHARDS * GAMES_PER_SHARD))
   NEED_ENDGAME=$(awk -v t="$NEED_TOTAL_NOMINAL" -v f="$ENDGAME_FRAC" -v c="$CONSUMPTION_FACTOR" 'BEGIN{printf "%d", t*f*c + 0.5}')

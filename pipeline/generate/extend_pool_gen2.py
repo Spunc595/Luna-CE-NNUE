@@ -1,14 +1,15 @@
 """
-Estende in modo sicuro il pool normal_openings.epd SENZA invalidare lo stato
-gia' consumato (data/normal_openings.epd.offset + .shuffled), usato dai 5
-shard di controllo gia' generati. NON reshuffla il pool esistente: quello
-romperebbe la garanzia "senza reinserimento" (una posizione gia' assegnata
-a offset [0, cursore) potrebbe ricomparire in [cursore, fine) sotto una
-nuova permutazione). Aggiunge solo le righe NUOVE in coda, sia al file
-raw sia al file .shuffled (mescolate fra loro con un seed mai usato prima),
-lasciando offset e le prime N righe di .shuffled invariate.
+Safely extends the normal_openings.epd pool WITHOUT invalidating the
+already-consumed state (data/normal_openings.epd.offset + .shuffled),
+used by the 5 control shards already generated. Does NOT reshuffle the
+existing pool: that would break the "without replacement" guarantee (a
+position already assigned at offset [0, cursor) could reappear in
+[cursor, end) under a new permutation). Only appends the NEW lines at
+the end, to both the raw file and the .shuffled file (shuffled among
+themselves with a seed never used before), leaving the offset and the
+first N lines of .shuffled unchanged.
 
-Uso:
+Usage:
   python3 extend_pool_gen2.py --base data/normal_openings.epd \
       --extension data/normal_openings_200k.epd data/normal_openings_topup20k.epd \
       --shuffle-seed 101

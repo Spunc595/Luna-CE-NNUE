@@ -14,6 +14,10 @@ data/
 datasets/
 shards/
 
+# Python bytecode cache (created locally by running/compiling any script)
+__pycache__/
+*.pyc
+
 # Secrets and local configuration
 *.pem
 *_rsa

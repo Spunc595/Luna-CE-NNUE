@@ -1,25 +1,24 @@
 """
-Converte un TSV a 5 colonne (fen, eval_cp, bestmove, wdl_mover, depth) in un
-formato binario compatto, leggibile senza parsing riga-per-riga: il collo
-di bottiglia del training
-non e' il calcolo, e' il dataloader che apre il TSV, spacca le righe,
-costruisce una chess.Board() e richiama active_features() in Python puro
-per ogni singola posizione.
+Converts a 5-column TSV (fen, eval_cp, bestmove, wdl_mover, depth) into a
+compact binary format, readable without row-by-row parsing: training's
+bottleneck isn't the computation, it's the dataloader opening the TSV,
+splitting rows, building a chess.Board() and calling active_features()
+in pure Python for every single position.
 
-Formato: tre array memory-mappabili, stesso ordine di riga del TSV.
-  - <out>.us.npy      (N, 32) int32, indici della prospettiva di chi muove,
-                        padding a -1 (il numero massimo di pezzi su una
-                        scacchiera e' 32, quindi 32 e' un tetto esatto,
-                        non una stima)
-  - <out>.them.npy    (N, 32) int32, indici della prospettiva avversaria
-  - <out>.targets.npy (N,) float32, stesso target di dataset.py
+Format: three memory-mappable arrays, same row order as the TSV.
+  - <out>.us.npy      (N, 32) int32, indices from the side-to-move's
+                        perspective, padded with -1 (the maximum number
+                        of pieces on a board is 32, so 32 is an exact
+                        cap, not an estimate)
+  - <out>.them.npy    (N, 32) int32, indices from the opponent's
+                        perspective
+  - <out>.targets.npy (N,) float32, same target as dataset.py
 
-Usa le STESSE funzioni di dataset.py/feature_set.py per calcolare indici e
-target, non una reimplementazione — cosi' la verifica di equivalenza
-verifica un problema di formato, non due logiche diverse che per caso
-danno lo stesso risultato.
+Uses the SAME functions as dataset.py/feature_set.py to compute indices
+and targets, not a reimplementation — so the equivalence check verifies
+a format issue, not two different pieces of logic that happen to agree.
 
-Uso:
+Usage:
   python convert_to_binary.py --in train.tsv --out train_bin
 """
 import argparse
@@ -32,7 +31,7 @@ import numpy as np
 from feature_set import active_features
 from dataset import K, TARGET_EVAL_CLAMP_CP
 
-MAX_ACTIVE = 32  # tetto esatto: una scacchiera non ha mai piu' di 32 pezzi
+MAX_ACTIVE = 32  # exact cap: a board never has more than 32 pieces
 
 
 def row_to_arrays(fen, eval_cp_str, wdl_mover_str, eval_lambda):

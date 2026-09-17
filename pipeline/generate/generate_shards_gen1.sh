@@ -1,44 +1,43 @@
 #!/bin/bash
-# Generazione continua a shard per il run su scala ("regola anti-perdita"
-# mai implementata prima di questo run — vedi anche l'incidente di
-# perdita dati del round precedente).
+# Continuous shard generation for the at-scale run ("anti-loss rule"
+# never implemented before this run — see also the previous round's
+# data-loss incident).
 #
-# Ogni shard viene marcato .done SOLO dopo che sia il PGN che l'estrazione
-# sono scritti per intero: il watcher di backup (sync_shards.sh, sul PC di
-# Daniele) non deve mai poter copiare un file a meta'. L'id di shard e'
-# persistito su disco (shards/next_id.txt), quindi un riavvio dello script
-# riprende dal punto giusto senza rigenerare o saltare shard.
+# Each shard is marked .done ONLY after both the PGN and the extraction
+# are written in full: the backup watcher (sync_shards.sh, on Daniele's
+# PC) must never be able to copy a half-written file. The shard id is
+# persisted to disk (shards/next_id.txt), so a script restart resumes
+# from the right point without regenerating or skipping shards.
 #
-# Configurazione definitiva (2026-09-07): 3000 nodi, --step 4 + jitter,
+# Final configuration (2026-09-07): 3000 nodes, --step 4 + jitter,
 # -resign 800, -maxmoves 80.
 #
-# FIX 2026-09-07 (urgente, correzione a run in corso): prima ogni shard
-# riusava lo stesso pool fisso di 3000 aperture (calib_openings.epd) su
-# 5000 partite/shard. Luna e' deterministica oltre il proprio libro
-# interno: due partite con l'apertura identica sono la STESSA partita
-# rigiocata mossa per mossa. Misurato su shard_00001: 2000 aperture
-# riusate su 3000, 4000 partite su 5000 coinvolte in un replay esatto —
-# il 40% del tempo di generazione non produceva informazione nuova. Il
-# jitter sul passo di campionamento maschera il problema nella metrica di
-# unicita' (campiona ply diversi da partite identiche, quindi FEN diversi
-# che pero' sono campioni CORRELATI, non indipendenti) — non e' visibile
-# senza guardare la lista di mosse. Fix: un pool di aperture FRESCO per
-# ogni shard, grande quanto il numero di
-# partite dello shard stesso, cosi' nessuna partita nello shard puo'
-# condividere l'apertura con un'altra (ne' dentro lo shard ne' con shard
-# precedenti, dato che ogni pool e' nuovo).
+# FIX 2026-09-07 (urgent, correction to a run in progress): previously
+# every shard reused the same fixed pool of 3000 openings
+# (calib_openings.epd) across 5000 games/shard. Luna is deterministic
+# beyond its own internal book: two games with an identical opening are
+# the SAME game replayed move for move. Measured on shard_00001: 2000
+# openings reused out of 3000, 4000 games out of 5000 involved in an
+# exact replay — 40% of generation time produced no new information.
+# The jitter on the sampling step masks the problem in the uniqueness
+# metric (samples different plies from identical games, so different
+# FENs that are nonetheless CORRELATED samples, not independent) — not
+# visible without looking at the move list. Fix: a FRESH opening pool
+# for every shard, as large as the shard's own game count, so no game in
+# the shard can share its opening with another (neither within the
+# shard nor with earlier shards, since every pool is new).
 #
-# FIX 2026-09-07: terza copia su OCI Object Storage
-# (Instance Principal, nessuna chiave sul disco) oltre a disco-istanza e
-# PC locale. NON BLOCCANTE: se l'upload fallisce (rete, quota, bucket non
-# ancora creato) lo script registra l'errore e prosegue — non deve mai
-# fermare la generazione per un problema di archiviazione. IDEMPOTENTE:
-# --force sovrascrive senza errore se lo shard e' gia' nel bucket, quindi
-# un riavvio dello script non si rompe. Ogni shard porta il suo manifest
-# JSON (versione motore, parametri, sorgente aperture) — senza, fra sei
-# mesi non si saprebbe piu' quale shard viene da quale configurazione.
+# FIX 2026-09-07: a third copy on OCI Object Storage
+# (Instance Principal, no key on disk) in addition to instance disk and
+# local PC. NON-BLOCKING: if the upload fails (network, quota, bucket
+# not yet created) the script logs the error and continues — it must
+# never stop generation for an archiving problem. IDEMPOTENT: --force
+# overwrites without error if the shard is already in the bucket, so a
+# script restart doesn't break. Every shard carries its JSON manifest
+# (engine version, parameters, opening source) — without it, six months
+# from now nobody would know which shard came from which configuration.
 #
-# Uso: ./generate_shards.sh [games_per_shard]
+# Usage: ./generate_shards.sh [games_per_shard]
 set -euo pipefail
 cd ~/rust-chess
 
@@ -86,14 +85,14 @@ while true; do
   ./run_selfplay.sh "$GAMES_PER_SHARD" "$PGN" "$NODES" "$OPENINGS"
 
   echo "=== $SID: estrazione (step 4 + jitter) ==="
-  # --max-per-game alzato da 15 a 38: il tetto era tarato per --step 10
-  # (11 + 15*10 = 161 ply, copriva l'intera partita fino al tetto -maxmoves).
-  # Lasciato a 15 con --step 4 taglierebbe l'estrazione intorno al ply 71,
-  # cioe' PRIMA della fase di conversione — vanificherebbe silenziosamente
-  # il motivo per cui il resign e' stato alzato a 800 (vedi smoke test
-  # shard_00001: cap gia' raggiunto nel 16% delle partite anche a 50 partite).
-  # Sicuro ora perche' i duplicati sono gia' sotto controllo via -maxmoves 80
-  # + jitter, non piu' via questo tetto.
+  # --max-per-game raised from 15 to 38: the cap was tuned for --step 10
+  # (11 + 15*10 = 161 ply, covered the whole game up to the -maxmoves
+  # cap). Left at 15 with --step 4 would cut extraction around ply 71,
+  # i.e. BEFORE the conversion phase — silently defeating the reason
+  # resign was raised to 800 (see the shard_00001 smoke test: cap
+  # already reached in 16% of games even at 50 games). Safe now because
+  # duplicates are already under control via -maxmoves 80 + jitter, no
+  # longer via this cap.
   ~/nnue-data-venv/bin/python extract_positions.py --pgn "$PGN" --out "$POS" --step 4 --skip-opening 11 --max-per-game 38
 
   MANIFEST="shards/raw/${SID}.manifest.json"
@@ -103,7 +102,7 @@ while true; do
   echo "$ID" > "$STATE"
   echo "=== $SID completato e marcato .done ==="
 
-  # Terza copia (bucket), PRIMA che il watcher locale prenda in carico lo
-  # shard — non bloccante, vedi upload_to_bucket().
+  # Third copy (bucket), BEFORE the local watcher picks up the shard —
+  # non-blocking, see upload_to_bucket().
   upload_to_bucket "$SID" "$PGN" "$POS" "$MANIFEST"
 done
