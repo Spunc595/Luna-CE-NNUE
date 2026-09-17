@@ -564,3 +564,13 @@ PGN: `results/girone/tt_aging_v314_vs_076defc.pgn` (400 games, raw).
 - `results/scripts/` — code that produces the CSVs above and computes
   Spearman. See `COMPLIANCE.md` for why "stockfish" appearing here isn't
   a violation.
+- `manifests/` — **amended 2026-09-17**: 214 citations to unpublished
+  private working notes (e.g. "gen3.md", "gen2-passaggio-a-oracle.md")
+  were removed from four prose fields (`compliance_note`,
+  `commit_mismatch_note`, `gen2_expected_spearman_vs_stockfish`,
+  `gen3_expected_spearman_vs_stockfish`) across 107 of the 153 manifest
+  files — same reasoning kept, citation only removed. **No other field
+  was touched**: every hash, commit, count, node value, timestamp, and
+  Spearman figure is unchanged (verified field-by-field against the
+  prior commit, not by inspection). git history holds the original text
+  if anyone needs to see exactly what changed.

@@ -21,7 +21,7 @@
     },
     "annotation_nodes_chosen": 20000,
     "annotation_nodes_chosen_rationale": "knee of the curve: still a large gain over 10k, keeps cost/time margin to iterate rather than spending it all on the smaller 50k->20k increment.",
-    "gen2_expected_spearman_vs_stockfish": "0.76-0.78 (fixed in advance, gen2.md follow-up: would put gen2 on par with gen0 (Stockfish-trained, 0.7850) but with fully TCEC-compliant data)",
+    "gen2_expected_spearman_vs_stockfish": "0.76-0.78 (fixed in advance: would put gen2 on par with gen0 (Stockfish-trained, 0.7850) but with fully TCEC-compliant data)",
     "note": "This net is the SELF-PLAY EVALUATION AND ANNOTATION SOURCE for generation 2. Neither Stockfish nor akimbo are used anywhere in this shard's generation or labeling \u2014 Stockfish appears only in the separate, offline gate measurement (measure_master_spearman.py) as a measurement tool, never as a label source."
   },
   "self_play_nodes": 3000,
@@ -59,6 +59,6 @@
   "annotation_engine_commit": "076defcb93d4a1dc834d4ecd5132f45ba9a311d2",
   "annotation_nodes_actual": 20000,
   "annotated_at": "2026-09-15T05:31:43.762898+00:00",
-  "commit_mismatch_note": "Self-play used engine commit b0cfb9378fad417bf03d6bf662d4738d7adadc66; labels were annotated with commit 076defcb93d4a1dc834d4ecd5132f45ba9a311d2 on machine oracle. Positions extracted under the self-play commit remain valid; only the label comes from the annotation commit. Reconciled 2026-09-15: an earlier redundant PC annotation pass for this shard was superseded by the complete, consistent Oracle pass (gen2-passaggio-a-oracle.md).",
+  "commit_mismatch_note": "Self-play used engine commit b0cfb9378fad417bf03d6bf662d4738d7adadc66; labels were annotated with commit 076defcb93d4a1dc834d4ecd5132f45ba9a311d2 on machine oracle. Positions extracted under the self-play commit remain valid; only the label comes from the annotation commit. Reconciled 2026-09-15: an earlier redundant PC annotation pass for this shard was superseded by the complete, consistent Oracle pass.",
   "annotation_machine": "oracle"
 }
