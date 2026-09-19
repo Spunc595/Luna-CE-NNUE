@@ -24,6 +24,7 @@ from model import LunaHalfKA, NUM_FEATURES, HIDDEN, QA, QB, QAB
 
 I16_MAX = 32767
 I16_MIN = -32768
+MAX_ACTIVE_FEATURES = 32  # one feature per piece, at most 32 pieces on the board
 
 
 def quantize_i16(tensor: torch.Tensor, scale: float):
@@ -41,6 +42,27 @@ def quantize_i16(tensor: torch.Tensor, scale: float):
     saturated = int(((rounded >= I16_MAX) | (rounded <= I16_MIN)).sum().item())
     clamped = torch.clamp(rounded, I16_MIN, I16_MAX)
     return clamped.to(torch.int16), saturated
+
+
+def accumulator_bounds(feature_weights: torch.Tensor, feature_bias: torch.Tensor,
+                       max_active: int = MAX_ACTIVE_FEATURES):
+    """Worst-case i16 accumulator value per neuron, for any position.
+
+    The engine's accumulator for neuron j is feature_bias[j] plus the weights
+    of the active features of one perspective; a position has at most
+    `max_active` of them (32 pieces). The upper bound is therefore the bias
+    plus the `max_active` largest POSITIVE weights of column j (negative
+    weights can only lower it); the lower bound is the bias plus the
+    `max_active` most negative weights. Computed in int32 so the bound itself
+    cannot overflow. This ignores which feature sets can co-occur, so it is a
+    true upper limit, not a tight one.
+
+    Returns (upper[HIDDEN], lower[HIDDEN]) as int32 tensors."""
+    w = feature_weights.to(torch.int32)            # (NUM_FEATURES, HIDDEN)
+    bias = feature_bias.to(torch.int32)            # (HIDDEN,)
+    top = torch.topk(w, max_active, dim=0).values.clamp(min=0).sum(dim=0)
+    bottom = torch.topk(w, max_active, dim=0, largest=False).values.clamp(max=0).sum(dim=0)
+    return bias + top, bias + bottom
 
 
 def i16_tensor_to_le_bytes(tensor: torch.Tensor) -> bytes:
@@ -101,6 +123,27 @@ def main():
                         ("output_weights", sat_ow), ("output_bias", sat_ob)):
         if count:
             problems.append(f"{name}: {count} element(s) saturate at the i16 limits")
+
+    # ACCUMULATOR GATE: the accumulator is stored in i16 and summed without
+    # overflow checks, so for EVERY neuron the worst-case sum (bias plus the 32
+    # largest positive weights of its column, and the downward analogue) must
+    # stay inside the i16 range. Saturation of single weights is checked above;
+    # this checks their SUM.
+    upper, lower = accumulator_bounds(feature_weights, feature_bias)
+    acc_max, acc_min = int(upper.max().item()), int(lower.min().item())
+    margin_up, margin_down = I16_MAX - acc_max, acc_min - I16_MIN
+    print(f"max |feature_weight| = {int(feature_weights.abs().to(torch.int32).max().item())}, "
+          f"max |feature_bias| = {int(feature_bias.abs().to(torch.int32).max().item())}")
+    print(f"accumulator worst case (32 features): max = {acc_max:+d}, min = {acc_min:+d}; "
+          f"margin to i16 limits: up {margin_up} ({I16_MAX / max(acc_max, 1):.1f}x), "
+          f"down {margin_down} ({-I16_MIN / max(-acc_min, 1):.1f}x)")
+    if margin_up < 0:
+        n = int((upper > I16_MAX).sum().item())
+        problems.append(f"accumulator upper bound {acc_max} exceeds {I16_MAX} ({n} neuron(s))")
+    if margin_down < 0:
+        n = int((lower < I16_MIN).sum().item())
+        problems.append(f"accumulator lower bound {acc_min} is below {I16_MIN} ({n} neuron(s))")
+
     if problems:
         print("EXPORT REFUSED (no file written): " + "; ".join(problems), file=sys.stderr)
         sys.exit(1)

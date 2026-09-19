@@ -62,6 +62,14 @@ def set_ob(value):
     return f
 
 
+def set_column(col, rows, int_value):
+    """Puts `rows` weights of one column at int_value (i16 units): none saturates alone."""
+    def f(m):
+        for r in rows:
+            m.feature_weights.weight[r, col] = int_value / QA
+    return f
+
+
 # 32767 / QA(255) = 128.5; 32767 / QB(64) = 512.0; 32767 / QAB(16320) = 2.008
 CASES = [
     ("feature_weights positive", set_fw(5, 7, 200.0)),
@@ -74,6 +82,9 @@ CASES = [
     ("output_weights negative", set_ow(1, 4, -600.0)),
     ("output_bias positive", set_ob(3.0)),
     ("output_bias negative", set_ob(-3.0)),
+    # no single weight saturates (1500 << 32767) but 32 of them in one column sum to 48000
+    ("accumulator upper bound exceeded", set_column(2, range(32), 1500)),
+    ("accumulator lower bound exceeded", set_column(2, range(32), -1500)),
 ]
 
 
@@ -86,6 +97,18 @@ class ExportGate(unittest.TestCase):
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
             self.assertTrue(os.path.exists(out))
             self.assertEqual(os.path.getsize(out), 6_297_664)
+
+    def test_accumulator_margin_is_printed_and_column_just_inside_passes(self):
+        with tempfile.TemporaryDirectory() as d:
+            ckpt, out = os.path.join(d, "c.pt"), os.path.join(d, "n.bin")
+            # 32 * 1000 = 32000 < 32767: inside the limit, must be exported
+            make_checkpoint(ckpt, set_column(2, range(32), 1000))
+            r = run_export(ckpt, out)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertIn("accumulator worst case", r.stdout)
+            # 33 would not matter: only 32 features can be active, the bound uses the top 32
+            make_checkpoint(ckpt, set_column(2, range(33), 1000))
+            self.assertEqual(run_export(ckpt, out).returncode, 0)
 
     def test_saturating_checkpoints_are_refused_and_write_nothing(self):
         for name, mutate in CASES:
