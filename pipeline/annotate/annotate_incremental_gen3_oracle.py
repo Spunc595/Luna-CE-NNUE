@@ -14,7 +14,8 @@ PC:
 - Writes a JSON status file (--status-file) after every completed shard:
   shards done/total, positions annotated, pos/s rate, last-update
   timestamp, last error (shard+message), a "stato" field
-  (in_corso/completato/errore). Bucket upload is left to the caller
+  (in_corso/completato/errore -- protocol tokens read by external watchers,
+  kept in Italian on purpose, see write_status). Bucket upload is left to the caller
   (run_annotate_gen2_oracle.sh, after every write) to keep this script
   independent of the OCI CLI.
 
@@ -110,6 +111,12 @@ def append_global_seen(state_path: str, new_hashes) -> None:
             f.write(h.to_bytes(8, "big"))
 
 
+# PROTOCOL TOKEN, NOT TEXT: the field name "stato" and its values "in_corso" /
+# "completato" / "errore" are deliberately Italian. They are read by watchers
+# OUTSIDE this repository (the status-file / bucket watcher on the server), which
+# match those exact strings. Translating them breaks those consumers silently.
+# Do not "fix" them in a translation pass; change them only together with the
+# consumers.
 def write_status(status_path, **fields):
     if not status_path:
         return
