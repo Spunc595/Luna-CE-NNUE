@@ -1,0 +1,14 @@
+sweep start 2026-09-19T15:13:31Z commit ff6d3c9
+A1 seed=101 start 2026-09-19T15:13:31Z
+A1 train exit=0 end 2026-09-19T15:32:19Z
+A1 export exit=0 a5580def88bb1b80ba4b08fbae14e8def55491f34513ecbf5f99aacfb740a66e
+B seed=202 start 2026-09-19T15:32:22Z
+B train exit=0 end 2026-09-19T15:51:12Z
+B export exit=0 a8b4ad4458ca789219313ab36e6b69f270a46eaa5f716254ac2f0fb3e9975cbc
+C seed=303 start 2026-09-19T15:51:14Z
+C train exit=0 end 2026-09-19T16:10:03Z
+C export exit=0 6ffa016023a8e0dcdfee4c4bf94880aff4da14efe37e335fd7de2a00a7d4f675
+A2 seed=101 start 2026-09-19T16:10:05Z
+A2 train exit=0 end 2026-09-19T16:28:43Z
+A2 export exit=0 a5580def88bb1b80ba4b08fbae14e8def55491f34513ecbf5f99aacfb740a66e
+sweep phase1 done 2026-09-19T16:28:45Z

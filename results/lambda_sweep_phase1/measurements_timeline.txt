@@ -1,0 +1,12 @@
+engine sha256 f9edde89027b781e3640fd8de809b03d37b4952ab8ff9724af42c7e85d44f55b
+embedded sha256 f9edde89027b781e3640fd8de809b03d37b4952ab8ff9724af42c7e85d44f55b
+A1 net sha256 a5580def88bb1b80ba4b08fbae14e8def55491f34513ecbf5f99aacfb740a66e start 17:14:25
+A1 done 17:15:46: {"label": "A1", "rho": 0.6932, "n_rho": 2000, "ratio": 1.6551, "n_capture": 513, "n_quiet": 1474}  | identity gate: 20/20 positions differ between external and embedded network
+B net sha256 a8b4ad4458ca789219313ab36e6b69f270a46eaa5f716254ac2f0fb3e9975cbc start 17:15:46
+B done 17:17:06: {"label": "B", "rho": 0.7025, "n_rho": 2000, "ratio": 1.5852, "n_capture": 512, "n_quiet": 1474}  | identity gate: 20/20 positions differ between external and embedded network
+C net sha256 6ffa016023a8e0dcdfee4c4bf94880aff4da14efe37e335fd7de2a00a7d4f675 start 17:17:06
+C done 17:18:22: {"label": "C", "rho": 0.7035, "n_rho": 2000, "ratio": 1.3244, "n_capture": 521, "n_quiet": 1468}  | identity gate: 20/20 positions differ between external and embedded network
+A2 net sha256 a5580def88bb1b80ba4b08fbae14e8def55491f34513ecbf5f99aacfb740a66e start 17:18:22
+A2 done 17:19:44: {"label": "A2", "rho": 0.6932, "n_rho": 2000, "ratio": 1.6551, "n_capture": 513, "n_quiet": 1474}  | identity gate: 20/20 positions differ between external and embedded network
+gen3ref net sha256 82aa1bf0d4e0a4351d070f08b51c7ccbaa41f2c02a68ad3fbbbd1eb7e7320954 start 17:19:44
+gen3ref done 17:21:00: {"label": "gen3ref", "rho": 0.7005, "n_rho": 2000, "ratio": 1.3622, "n_capture": 490, "n_quiet": 1496}  | identity gate: 20/20 positions differ between external and embedded network
