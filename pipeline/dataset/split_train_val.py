@@ -11,7 +11,9 @@ in the same format. Games are shuffled with random.Random(seed) and the first
 round(n_games * val_fraction) go to validation.
 
 Usage:
-  python split_train_val.py --in shard1.tsv shard2.tsv --train-out train.tsv       --val-out val.tsv --val-fraction 0.05 --seed 42
+  python split_train_val.py --in shard1.tsv shard2.tsv --train-out train.tsv \n      --val-out val.tsv --val-fraction 0.05 --seed 42
+
+(0.05 here is only the example of the old 6-column chain; the published datasets used 0.025.)
 """
 import argparse
 import random
@@ -23,8 +25,10 @@ def main():
     ap.add_argument("--in", dest="inputs", nargs="+", required=True)
     ap.add_argument("--train-out", required=True)
     ap.add_argument("--val-out", required=True)
-    ap.add_argument("--val-fraction", type=float, default=0.05)
-    ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--val-fraction", type=float, required=True,
+                    help="no default on purpose: it changes the output")
+    ap.add_argument("--seed", type=int, required=True,
+                    help="no default on purpose: it changes the output")
     args = ap.parse_args()
 
     rows_by_game = defaultdict(list)

@@ -21,6 +21,10 @@ Usage:
   python build_training_dataset.py --shards-dir shards_backup --annotated-dir annotated \
       --start 1 --end 67 --train-out train.tsv --val-out val.tsv \
       --composition-out dataset_composition.json --val-fraction 0.03 --seed 42
+
+--val-fraction and --seed have no default and must be given explicitly (they change
+the output and are recorded in the composition file). The values in the example are
+the ones of the dataset_composition.json of the first gen0 run, not a recommendation.
 """
 import argparse
 import datetime
@@ -38,8 +42,10 @@ def main():
     ap.add_argument("--train-out", required=True)
     ap.add_argument("--val-out", required=True)
     ap.add_argument("--composition-out", required=True)
-    ap.add_argument("--val-fraction", type=float, default=0.03)
-    ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--val-fraction", type=float, required=True,
+                    help="no default on purpose: it changes the output and is recorded in the composition file")
+    ap.add_argument("--seed", type=int, required=True,
+                    help="no default on purpose: it changes the output and is recorded in the composition file")
     args = ap.parse_args()
 
     rows_by_game = {}  # global game_id -> list of rows (5 columns)

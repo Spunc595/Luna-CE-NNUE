@@ -88,8 +88,12 @@ imports), but **they are not what produced the gen1-gen3 datasets**:
 scripts. Per-game split, `random.Random(42)` over the games in file order, the
 first `round(n_games * 0.025)` games to validation (recorded in each
 generation's `dataset_composition` file as `val_fraction_requested: 0.025`,
-`seed: 42`; the argparse default of `0.03` and the `0.03` in the scripts'
-usage examples were NOT the value used, and the examples now say so).
+`seed: 42`). Until 2026-09-19 the scripts had `--val-fraction` defaulting to
+`0.03` (and `split_train_val.py` to `0.05`): running them without the flag
+silently gave a split different from the published one. Both `--val-fraction`
+and `--seed` are now required on the command line, in all five scripts, so the
+value that ends up in the composition file has always been declared by whoever
+ran the command.
 Checked on 2026-09-19, re-running the published scripts on the
 data on hand, into a scratch directory:
 

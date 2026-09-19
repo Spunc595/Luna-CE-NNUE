@@ -24,8 +24,8 @@ Usage:
 
 The arguments above are the ones actually used for the published gen2 dataset
 (recorded in its composition file: val_fraction_requested 0.025, seed 42).
-The argparse default (0.03) is NOT the value that was used; always pass
---val-fraction 0.025 explicitly to reproduce it.
+--val-fraction and --seed have no default and must be given explicitly: a default
+would silently produce a split different from the published one (see LINEAGE.md).
 """
 import argparse
 import datetime
@@ -43,8 +43,10 @@ def main():
     ap.add_argument("--train-out", required=True)
     ap.add_argument("--val-out", required=True)
     ap.add_argument("--composition-out", required=True)
-    ap.add_argument("--val-fraction", type=float, default=0.03)
-    ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--val-fraction", type=float, required=True,
+                    help="no default on purpose: it changes the output and is recorded in the composition file")
+    ap.add_argument("--seed", type=int, required=True,
+                    help="no default on purpose: it changes the output and is recorded in the composition file")
     args = ap.parse_args()
 
     rows_by_game = {}  # global game_id -> list of rows (5 columns)
