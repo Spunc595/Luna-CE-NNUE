@@ -1,0 +1,65 @@
+K = 0.005756462732485115  (`K = math.log(10) / 400.0`)   bootstrap seed = 20260919, resamples = 10000
+
+################ gen2 (n=1989) ################
+
+[1] gap distribution per class
+  class         n    mean  median     p75     p90     p95     p99     max    >0.10   >0.20   >0.30      err%
+  capture     543  0.1268  0.0887  0.1679  0.2754  0.3666  0.7802  0.9566    46.4%   19.2%    8.1%     44.5%
+  quiet      1444  0.0895  0.0640  0.1249  0.1971  0.2560  0.4055  0.6688    33.2%    9.9%    3.0%     54.3%
+  (promotion, n=2, excluded from class comparisons: under-powered, n<100)
+
+[2] composition of the top of the gap ranking
+  top decile    k= 199  capture   90 quiet  108 promotion  1   capture share  45.2% vs 27.3% overall  (lift 1.66x)
+  top 5%        k=  99  capture   49 quiet   49 promotion  1   capture share  49.5% vs 27.3% overall  (lift 1.81x)
+  top quartile  k= 497  capture  178 quiet  317 promotion  2   capture share  35.8% vs 27.3% overall  (lift 1.31x)
+
+[3] bootstrap 95% CIs (10000 resamples, each class resampled within itself)
+  capture/quiet ratio of MEDIANS (first rule's (a))            1.3848   95% CI [1.2232, 1.5965]
+  capture/quiet ratio of 90th percentiles (condition B)        1.3971   95% CI [1.2154, 1.5993]
+  Spearman difference capture - quiet                         -0.1438   95% CI [-0.2050, -0.0882]
+
+[4] filter by gap threshold vs filter by move class (squared error removed)
+  discarded share         by gap threshold    by move class (expected)   difference
+    10.0%                            62.8%                       16.3%       +46.5pp
+    27.3%                            86.2%                       44.5%       +41.7pp
+    40.0%                            93.4%                       54.2%       +39.2pp
+
+[5] counterfactual Spearman (NOT used to decide: removing a class changes the sample dispersion, so this is confounded by range restriction; the valid comparison is within-class)
+  all positions 0.8226   without captures 0.8716
+
+################ gen3 (n=1988) ################
+
+[1] gap distribution per class
+  class         n    mean  median     p75     p90     p95     p99     max    >0.10   >0.20   >0.30      err%
+  capture     490  0.1289  0.0867  0.1693  0.2881  0.3860  0.6531  0.8382    44.9%   19.4%    9.4%     40.9%
+  quiet      1496  0.0887  0.0636  0.1210  0.1911  0.2547  0.4638  0.9263    31.9%    8.8%    3.0%     57.6%
+  (promotion, n=2, excluded from class comparisons: under-powered, n<100)
+
+[2] composition of the top of the gap ranking
+  top decile    k= 199  capture   91 quiet  107 promotion  1   capture share  45.7% vs 24.6% overall  (lift 1.86x)
+  top 5%        k=  99  capture   49 quiet   49 promotion  1   capture share  49.5% vs 24.6% overall  (lift 2.01x)
+  top quartile  k= 497  capture  169 quiet  326 promotion  2   capture share  34.0% vs 24.6% overall  (lift 1.38x)
+
+[3] bootstrap 95% CIs (10000 resamples, each class resampled within itself)
+  capture/quiet ratio of MEDIANS (first rule's (a))            1.3622   95% CI [1.1692, 1.5646]
+  capture/quiet ratio of 90th percentiles (condition B)        1.5075   95% CI [1.3057, 1.7360]
+  Spearman difference capture - quiet                         -0.1156   95% CI [-0.1772, -0.0588]
+
+[4] filter by gap threshold vs filter by move class (squared error removed)
+  discarded share         by gap threshold    by move class (expected)   difference
+    10.0%                            65.4%                       16.6%       +48.8pp
+    24.6%                            85.0%                       40.9%       +44.1pp
+    40.0%                            93.8%                       52.9%       +40.9pp
+
+[5] counterfactual Spearman (NOT used to decide: removing a class changes the sample dispersion, so this is confounded by range restriction; the valid comparison is within-class)
+  all positions 0.8169   without captures 0.8537
+
+================ VERDICT ACCORDING TO THE REGISTERED RULE ================
+  gen2: (A) top-decile capture lift 1.66x (need >= 2.0) -> not met;  (B) p90 ratio 1.397, CI [1.215, 1.599] lower bound > 1.2 -> MET
+  gen3: (A) top-decile capture lift 1.86x (need >= 2.0) -> not met;  (B) p90 ratio 1.507, CI [1.306, 1.736] lower bound > 1.2 -> MET
+  (C) (A) and (B) on BOTH networks -> not met
+  => capture class is the right filtering instrument: False
+
+  Separately registered question (threshold filter removes >= 10pp more squared error than class filter, at the capture share):
+  gen2: margin at the capture share = +41.7pp -> YES, wide margin
+  gen3: margin at the capture share = +44.1pp -> YES, wide margin

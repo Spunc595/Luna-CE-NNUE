@@ -355,7 +355,68 @@ under-powered in the reports and support no conclusion.
 
 Limits, stated plainly: condition (a) compares **medians**, and squared
 error lives in the tail, so (a) and (c) measure different things — (c)
-was signalling a concentration that (a) could not see.
+was signalling a concentration that (a) could not see. Follow-up
+(decided after seeing this divergence, so not independent): 5.13.
+
+## 5.13 The tail of the gap (follow-up to 5.12, NOT independent of it)
+
+**Declaration.** This analysis was decided **after** seeing that conditions
+(a) and (c) of the 5.12 rule diverged: (a) compared medians (1.362, threshold
+1.5), while (c) read 1.657 — squared error lives in the tail, not the median,
+so (a) measured the wrong thing. It is a data-prompted follow-up, not a
+fresh independent test. Its rule was committed **before** the script was run
+(`results/gap_tail_decision_rule.md`, commit `66484fb`); the 5.12 verdict
+("do not filter") stands for the decision taken at that time, and nothing
+below authorizes filtering by itself — at most it informs the design of the
+gen4 experiment, whose proof is a training run, not a statistic. Analysis
+only on the committed per-position CSVs (no new engine computation):
+`pipeline/measure/analyze_gap_tail.py`, report `results/gap_tail_report.txt`,
+bootstrap seed 20260919, 10,000 resamples.
+
+| | gen2 | gen3 |
+|---|---|---|
+| capture / quiet, p90 of gap | 0.275 / 0.197 | 0.288 / 0.191 |
+| capture positions with gap > 0.20 | 19.2% | 19.4% |
+| quiet positions with gap > 0.20 | 9.9% | 8.8% |
+| capture share of the top decile (overall share) | 45.2% (27.3%), lift 1.66x | 45.7% (24.6%), lift 1.86x |
+| capture share of the top 5% | 49.5%, lift 1.81x | 49.5%, lift 2.01x |
+| ratio of medians, 95% CI | 1.385 [1.223, 1.597] | 1.362 [1.169, 1.565] |
+| ratio of 90th percentiles, 95% CI | 1.397 [1.215, 1.599] | 1.507 [1.306, 1.736] |
+| Spearman capture − quiet, 95% CI | −0.144 [−0.205, −0.088] | −0.116 [−0.177, −0.059] |
+
+**Verdict under the registered rule:** (A) top-decile capture lift >= 2x —
+**not met** on either net (1.66x, 1.86x); (B) the p90 ratio's CI excludes 1.2
+— met on both (lower bounds 1.215 and 1.306; gen2 only just); (C) both nets —
+**not met**. So the capture class is not the right filtering instrument by
+the rule, and the 5.12 verdict is confirmed a second time. Two things worth
+keeping in view: the capture tail *is* fatter (p90 ratio ~1.4-1.5, robustly
+above 1.2), it just does not concentrate the top of the ranking by the
+factor the rule required; and the CI of the ratio of medians is
+[1.17, 1.56] on gen3, so the 5.12 miss of (a) (1.362 vs 1.5) was **not
+statistically distinguishable from the threshold** — it was a point-estimate
+miss inside the noise, not a firm negative on that condition.
+
+**Separately registered question — filter by gap threshold vs by move
+class, same share of positions discarded:** at the capture share (27.3% /
+24.6%) the threshold filter removes 86.2% / 85.0% of the squared error
+against an expected 44.5% / 40.9% for the class filter (+41.7pp / +44.1pp,
+"wide margin" fixed in advance as >= 10pp); at 10% discarded: 62.8% / 65.4%
+vs 16.3% / 16.6%; at 40%: 93.4% / 93.8% vs 54.2% / 52.9%. **Yes, by a wide
+margin — the move class is the wrong instrument for concentrating this
+error.** Read with the two caveats that matter: (1) selecting on the gap and
+then summing the gap's own square is nearly guaranteed to look this good, so
+the size of the margin says the error is very heavy-tailed (10% of positions
+carry ~63-65% of it), not that a threshold filter would help training; and
+(2) a gap-threshold filter is defined with the STATIC evaluation of the
+network about to be replaced — a circular dependency (a curriculum choice,
+not an error) that must be declared, and applying it to the real dataset
+would need the static evaluation of all 3.11M positions, a separate job.
+A large static-vs-search gap is also not the same thing as label noise: part
+of it may be exactly the tactical content the student should learn. The
+counterfactual Spearman without captures (0.817 → 0.854 on gen3) is reported
+in the file only; it is confounded by range restriction and was not used.
+The only cells below n = 100 (promotion moves, n = 2) were excluded from all
+class comparisons.
 
 ## 5.8 Generation 3's confound
 
