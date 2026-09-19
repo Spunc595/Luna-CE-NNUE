@@ -418,6 +418,86 @@ in the file only; it is confounded by range restriction and was not used.
 The only cells below n = 100 (promotion moves, n = 2) were excluded from all
 class comparisons.
 
+## 5.14 Did the annotator lose positions? (Block B, 2026-09-19)
+
+The annotators (`annotate_incremental_gen{1,2,3}*.py`) drop a position silently when
+its annotation fails, and compute `n_failed` without storing it: the published
+manifests do not have it. A small but *systematic* loss would leave a hole of a
+definite shape in the dataset, which the next generation would inherit. Measured
+here, read-only, with `pipeline/measure/reconstruct_annotation_failures.py`.
+
+**Where the ground truth exists (B.0).** Only in the stdout log of the annotator,
+`input= ... fallite=` per shard:
+
+| Generation | Original counts | Where |
+|---|---|---|
+| gen1 | all 46 shards | PC log of the run |
+| gen2 | shards 1-9 only, and of a first PC run that was superseded (see below) | PC log |
+| gen2 shards 10-53, gen3 (54 shards) | **do not exist** | the Oracle runs redirected stdout to a file without flushing: both logs are 0 bytes; the status file has no `n_failed` |
+
+**Method (B.2).** A position is dropped either because it is a duplicate (its hash
+is in `global_seen`) or because it failed (it is not). Rebuilding `global_seen`
+from the outputs in processing order, "input row, not in `global_seen`, missing
+from the output" is a failure. Limits: a position that fails in one shard and
+succeeds in a later one is counted as a duplicate where it failed; the key is the
+first four FEN fields; the order of processing must be right; a failed
+"force" row (a duplicate re-annotated only to correct the result of a truncated
+game) is indistinguishable from a duplicate.
+
+**Gate on the method.** Against the original counts: gen1, 46 of 46 shards match
+on input, written, duplicates+forced and failed, and the rebuilt `global_seen` is
+identical to `global_seen.bin` (2,135,009 hashes); gen2's PC run, 9 of 9. A gate
+whose truth is all zeros cannot see a method that never reports a failure, so it
+was also tried where it must find something: 37 random rows removed from a scratch
+copy of a gen1 shard were recovered exactly, and the log comparison flagged that
+shard. **Processing order matters and was wrong for gen2**: read in numeric order
+the reconstruction reported 5,542 "failures", all in shards 1 and 2. The order
+recovered from `global_seen.bin` (appended shard by shard) is 3, 4, ..., 53, 1, 2:
+the Oracle run annotated shards 1 and 2 last, so the per-shard duplicate counts of
+the Oracle outputs differ from those in the PC log (numeric order). That is exactly
+what `LINEAGE.md` says about gen2 (shards 1-2 were redone on Oracle after the
+others, under the same `global_seen.bin`), now confirmed from the data. With the
+recovered order the reconstruction gives zero. gen3 was annotated in numeric order.
+
+**Result (B.1).**
+
+| Generation | Machine | Input rows | Written | Failed | Source |
+|---|---|---|---|---|---|
+| gen1 | PC | 3,300,643 | 2,135,009 | **0** | measured (original log) and reconstructed, equal |
+| gen2 | Oracle (shards 1-9 also on PC) | 3,083,063 | 2,972,944 | **0** | reconstructed only (order recovered), not validated against an original count |
+| gen3 | Oracle | 3,210,755 | 3,112,004 | **0** | reconstructed only |
+
+Per shard: `results/annotation_failures_gen{1,2,3}.csv`. There is no drift and no
+difference between machines to explain: nothing to drift. A stronger statement
+that does not depend on the order or on the "fails then succeeds" limit: the
+number of **distinct dedup keys present in the inputs equals the number of keys
+written** in all three generations (2,135,009; 2,972,944; 3,112,004), so no
+position was lost for good anywhere. What this cannot exclude: a *transient*
+failure later recovered (harmless for the dataset), and a failed "force" row in
+gen2/gen3 (its game keeps the game result instead of the corrected one; the gen1
+log shows 0 of 21,716 forced rows failing, gen2/gen3 have no count). With zero
+failures observed among at least 2.1M (gen1: new+forced), 2.97M and 3.11M
+annotations, the 95% upper bound on a per-annotation failure probability, if
+failures were independent, is about 1.4e-6, 1.0e-6 and 1.0e-6.
+
+**B.3 / B.4 (clusters, bias): not applicable.** There are no failed positions, so
+there is no contiguity to measure and no distribution to compare; no decision
+rule was written for B.4 because there was nothing to apply it to. The premise
+that a timeout silently loses a batch and counts as failures is not what the code
+does: a worker that times out or dies leaves positions without any result and the
+annotator discards the shard and retries (visible in the PC log of gen2, shards
+10 and 11: `worker failed`, then `results missing ... retry`). Only a per-position
+exception is counted as failed, and if the engine process itself dies mid-chunk
+every later position of that chunk raises too, so real failures would arrive in
+contiguous runs. That risk is real and did not occur.
+
+**What follows (B.5).** `annotate_incremental_gen4_oracle.py` records every failed
+FEN in a separate file, writes the counts into the manifest, refuses a shard above
+a declared failure rate, and flushes stdout; the threshold is in `LINEAGE.md`.
+Nothing was regenerated and no published manifest was touched.
+
+---
+
 ## 5.8 Generation 3's confound
 
 The gen3 normal-opening pool was **regenerated from scratch** with the
