@@ -101,17 +101,23 @@ silently gave a split different from the published one. Both `--val-fraction`
 and `--seed` are now required on the command line, in all five scripts, so the
 value that ends up in the composition file has always been declared by whoever
 ran the command.
-Checked on 2026-09-19, re-running the published scripts on the
-data on hand, into a scratch directory:
+Checked on 2026-09-19, re-running the published scripts (as at commit `644c923`) on
+the original data, into scratch directories, with the exact arguments recorded in
+each generation's composition file:
 
-| Generation | Command (run from `pipeline/dataset/`) | Result |
-|---|---|---|
-| gen1 | `build_training_dataset_gen1.py --start 1 --end 46 --val-fraction 0.025 --seed 42` | `gen1_train.tsv` / `gen1_val.tsv` **byte-identical** to `checksums/gen1/dataset.txt` (built on Windows: CRLF line endings) |
-| gen3 | `build_training_dataset_gen3.py --start 1 --end 54 --val-fraction 0.025 --seed 42` | `gen3_train.tsv` / `gen3_val.tsv` **byte-identical** to `checksums/gen3/dataset.txt` (built on Linux: LF line endings; a re-run on Windows gives the same rows in the same order, CRLF, hence a different hash unless converted) |
-| gen2 | not re-run here (the annotated shards live on the Oracle server); the composition file gives `0.025`, seed 42, shards 1-53 | not verified |
+| Generation | Run on | Command (from `pipeline/dataset/`) | Result |
+|---|---|---|---|
+| gen1 | PC (Windows) | `build_training_dataset_gen1.py --start 1 --end 46 --val-fraction 0.025 --seed 42` | `gen1_train.tsv` / `gen1_val.tsv` **byte-identical** to `checksums/gen1/dataset.txt` |
+| gen2 | Oracle (Linux) | `build_training_dataset_gen2.py --start 1 --end 53 --val-fraction 0.025 --seed 42` | `gen2_train.tsv` / `gen2_val.tsv` **byte-identical** to `checksums/gen2/dataset.txt` (row counts and game counts also equal to the composition file) |
+| gen3 | PC (Windows) | `build_training_dataset_gen3.py --start 1 --end 54 --val-fraction 0.025 --seed 42` | rows identical, in the same order; hash equal to `checksums/gen3/dataset.txt` after converting CRLF to LF (see below) |
 
-Consequently no list of train/validation game IDs is published: the split is
-regenerated exactly by the command above.
+All three published splits are regenerated exactly by the scripts in this repository.
+Consequently no list of train/validation game IDs is published.
+
+**Line endings.** The published checksums differ in line endings because gen1 was built on
+Windows (CRLF) and gen2/gen3 on Linux (LF): the scripts open their output without specifying the
+terminator. Rebuilding gen3 on Windows therefore gives the same rows with a different hash unless
+the CRs are removed first.
 
 ## Generation 1
 
