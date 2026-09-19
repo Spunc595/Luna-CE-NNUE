@@ -114,10 +114,19 @@ each generation's composition file:
 All three published splits are regenerated exactly by the scripts in this repository.
 Consequently no list of train/validation game IDs is published.
 
-**Line endings.** The published checksums differ in line endings because gen1 was built on
-Windows (CRLF) and gen2/gen3 on Linux (LF): the scripts open their output without specifying the
-terminator. Rebuilding gen3 on Windows therefore gives the same rows with a different hash unless
-the CRs are removed first.
+**Line endings.** The published checksums differ in line endings for a historical
+reason: gen1 was built on Windows (CRLF checksums), gen2 and gen3 on Linux (LF), because
+the scripts opened their output files without specifying the terminator and Python
+translates `
+` on Windows. Since 2026-09-19 every write-mode `open()` in the
+split scripts passes `newline="
+"`, so **the output is LF on every platform**.
+After that change, gen3 rebuilt on Windows matches `checksums/gen3/dataset.txt` raw,
+with no conversion, and gen2 rebuilt again on Linux is unchanged. The gen1 CRLF
+checksums stay as they are: they are a historical fact about how that file was
+produced, not an error to correct and not something to regenerate. Rebuilt with the
+current scripts, gen1 gives the same rows with LF endings, whose hash is the published
+one computed after removing the CRs (`310e0476...` / `3b4a2398...`).
 
 ## Generation 1
 

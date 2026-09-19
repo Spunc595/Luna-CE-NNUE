@@ -105,10 +105,10 @@ def main():
 
     rng.shuffle(train_rows)  # shuffle only the training set, not validation
 
-    with open(args.train_out, "w") as f:
+    with open(args.train_out, "w", newline="\n") as f:
         for row in train_rows:
             f.write("\t".join(row) + "\n")
-    with open(args.val_out, "w") as f:
+    with open(args.val_out, "w", newline="\n") as f:
         for row in val_rows:
             f.write("\t".join(row) + "\n")
 
@@ -126,7 +126,7 @@ def main():
         "val_fraction_requested": args.val_fraction,
         "seed": args.seed,
     }
-    with open(args.composition_out, "w") as f:
+    with open(args.composition_out, "w", newline="\n") as f:
         json.dump(composition, f, indent=2)
 
     print()

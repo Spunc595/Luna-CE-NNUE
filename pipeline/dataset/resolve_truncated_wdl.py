@@ -72,7 +72,7 @@ def main():
     n_fixed_games = 0
     n_fixed_rows = 0
     seen_fixed_games = set()
-    with open(args.out, "w") as fout:
+    with open(args.out, "w", newline="\n") as fout:
         for fen, result, game_id, truncated, eval_cp, is_mate, bestmove in rows:
             if game_id in fixed_result_by_game:
                 new_result = fixed_result_by_game[game_id]

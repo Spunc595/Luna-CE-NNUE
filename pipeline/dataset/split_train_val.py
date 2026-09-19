@@ -59,7 +59,7 @@ def main():
     val_games = set(game_ids[:n_val_games])
 
     n_train_rows = n_val_rows = 0
-    with open(args.train_out, "w") as ftrain, open(args.val_out, "w") as fval:
+    with open(args.train_out, "w", newline="\n") as ftrain, open(args.val_out, "w", newline="\n") as fval:
         for game_id, rows in rows_by_game.items():
             target = fval if game_id in val_games else ftrain
             for line in rows:
