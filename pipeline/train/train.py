@@ -1,13 +1,25 @@
 """
 Trains Luna's HalfKA network (768x4 king-bucket x2 perspectives -> 1024
-hidden -> 1) on the 6-column TSV format produced by
-extract_positions.py -> annotate_positions.py -> resolve_truncated_wdl.py
--> split_train_val.py.
+hidden -> 1) on TSV or binary datasets.
+
+Input formats (dataset.py reads ONLY the 5-column layout):
+  * 5-column TSV (fen, eval_cp, bestmove, wdl_mover, nodes): what the gen1-gen3
+    datasets use. Produced by extract_positions.py -> annotate_incremental_gen*
+    (the WDL correction of truncated games lives inside the annotator) ->
+    pipeline/dataset/build_training_dataset_gen*.py (per-game train/val split,
+    seed 42, val fraction 0.025).
+  * binary (--format binary): convert_to_binary.py output of the above.
+
+The older 6-column chain (fen, result, game_id, eval_cp, is_mate, bestmove:
+extract_positions.py -> annotate_positions.py -> resolve_truncated_wdl.py ->
+split_train_val.py) is published in pipeline/dataset/ for the record; its
+output is NOT readable by this train.py as it stands.
 
 Usage:
   python train.py --train train.tsv --val val.tsv --epochs 3 --out checkpoint.pt
 
-Requires a GPU for reasonable times (CPU works but is slow). After
+A GPU is used if found; all published networks (gen1-gen3) were trained
+on CPU, see LINEAGE.md. After
 training, use export.py to produce a net.bin compatible with
 src/nnue.rs.
 """

@@ -65,6 +65,43 @@ did not contribute any training data to gen1 or later networks — it
 predates the TCEC rule applied from gen1 onward within this project
 (details in `non_conforme/README.md`).
 
+## Train/validation split, and the two scripts `train.py` used to name
+
+`train.py`'s docstring used to name a chain `extract_positions.py ->
+annotate_positions.py -> resolve_truncated_wdl.py -> split_train_val.py`, and
+the last two scripts were not in this repository. They have been found and are
+now published in `pipeline/dataset/` (with `pov.py`, which `resolve_truncated_wdl.py`
+imports), but **they are not what produced the gen1-gen3 datasets**:
+
+* They belong to the older 6-column chain (`fen, result, game_id, eval_cp,
+  is_mate, bestmove`), whose first annotation step, `annotate_positions.py`,
+  is the Stockfish-based one kept in `non_conforme/`. The 6-column output cannot
+  be read by the current `dataset.py`, which accepts 5 columns only.
+* For gen1-gen3 the correction of the result of truncated games is done inside
+  the annotators (`annotate_incremental_gen*.py`, same 200 cp band as `pov.py`),
+  and the per-game split is done by `pipeline/dataset/build_training_dataset_gen{1,2,3}.py`.
+  What cannot be established from the files that still exist is whether
+  `resolve_truncated_wdl.py` was also executed on any gen1 data before the
+  annotators took over its job; the published annotators do not call it.
+
+**The split of the published datasets is reproducible**, without those two
+scripts. Per-game split, `random.Random(42)` over the games in file order, the
+first `round(n_games * 0.025)` games to validation (recorded in each
+generation's `dataset_composition` file as `val_fraction_requested: 0.025`,
+`seed: 42`; the argparse default of `0.03` and the `0.03` in the scripts'
+usage examples were NOT the value used, and the examples now say so).
+Checked on 2026-09-19, re-running the published scripts on the
+data on hand, into a scratch directory:
+
+| Generation | Command (run from `pipeline/dataset/`) | Result |
+|---|---|---|
+| gen1 | `build_training_dataset_gen1.py --start 1 --end 46 --val-fraction 0.025 --seed 42` | `gen1_train.tsv` / `gen1_val.tsv` **byte-identical** to `checksums/gen1/dataset.txt` (built on Windows: CRLF line endings) |
+| gen3 | `build_training_dataset_gen3.py --start 1 --end 54 --val-fraction 0.025 --seed 42` | `gen3_train.tsv` / `gen3_val.tsv` **byte-identical** to `checksums/gen3/dataset.txt` (built on Linux: LF line endings; a re-run on Windows gives the same rows in the same order, CRLF, hence a different hash unless converted) |
+| gen2 | not re-run here (the annotated shards live on the Oracle server); the composition file gives `0.025`, seed 42, shards 1-53 | not verified |
+
+Consequently no list of train/validation game IDs is published: the split is
+regenerated exactly by the command above.
+
 ## Generation 1
 
 | Field | Value |

@@ -19,8 +19,13 @@ training) and a dataset_composition.json with the exact composition
 
 Usage:
   python build_training_dataset.py --shards-dir shards_backup --annotated-dir annotated \
-      --start 1 --end 67 --train-out train.tsv --val-out val.tsv \
-      --composition-out dataset_composition.json --val-fraction 0.03 --seed 42
+      --start 1 --end 46 --train-out train.tsv --val-out val.tsv \
+      --composition-out dataset_composition.json --val-fraction 0.025 --seed 42
+
+The arguments above are the ones actually used for the published gen1 dataset
+(recorded in its composition file: val_fraction_requested 0.025, seed 42).
+The argparse default (0.03) is NOT the value that was used; always pass
+--val-fraction 0.025 explicitly to reproduce it.
 """
 import argparse
 import datetime
