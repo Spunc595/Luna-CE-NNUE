@@ -127,14 +127,14 @@ def report(label, engine_evals, stockfish_evals, engine_bestmoves, stockfish_bes
     # don't need the same special treatment as MAE/RMS -- a genuine mate
     # should end up at the top of the ordering regardless.
     rho = spearman(engine_evals, stockfish_evals)
-    print(f"=== {label} (n={len(errors):,}, {n_clamped} posizioni con |riferimento|>{CLAMP} clampate su MAE/RMS) ===")
-    print(f"  errore medio assoluto: {mae:.2f} cp")
+    print(f"=== {label} (n={len(errors):,}, {n_clamped} positions with |reference|>{CLAMP} clamped for MAE/RMS) ===")
+    print(f"  mean absolute error:  {mae:.2f} cp")
     print(f"  RMS:                   {rmse:.2f} cp")
-    print(f"  deviazione standard:   {std:.2f} cp")
-    print(f"  correlazione di rango (Spearman) vs Stockfish: {rho:.4f}")
+    print(f"  standard deviation:    {std:.2f} cp")
+    print(f"  rank correlation (Spearman) vs Stockfish: {rho:.4f}")
     if engine_bestmoves and stockfish_bestmoves:
         agree = sum(1 for a, b in zip(engine_bestmoves, stockfish_bestmoves) if a == b)
-        print(f"  concordanza mossa migliore: {agree}/{len(engine_bestmoves)} ({agree/len(engine_bestmoves)*100:.1f}%)")
+        print(f"  best-move agreement: {agree}/{len(engine_bestmoves)} ({agree/len(engine_bestmoves)*100:.1f}%)")
     print()
 
 
@@ -148,7 +148,7 @@ def main():
     ap.add_argument("--engine-b", required=True)
     ap.add_argument("--label-b", default="B")
     ap.add_argument("--bestmove-depth", type=int, default=0,
-                     help="0 = salta la concordanza sulla mossa migliore (piu' lento)")
+                     help="0 = skip the best-move agreement (slower)")
     args = ap.parse_args()
 
     rows = sample_rows(args.val, args.n_sample, args.seed)

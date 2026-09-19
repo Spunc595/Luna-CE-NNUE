@@ -53,7 +53,7 @@ def main():
     ap.add_argument("--count", type=int, required=True)
     ap.add_argument("--plies", type=int, default=9)
     ap.add_argument("--out", default="normal_openings.epd")
-    ap.add_argument("--engine", required=True, help="binario Luna (UCI) con la rete gen1 caricata esternamente")
+    ap.add_argument("--engine", required=True, help="Luna binary (UCI) with the gen1 network loaded externally")
     ap.add_argument("--eval-limit", type=int, default=200)
     ap.add_argument("--depth", type=int, default=6)
     ap.add_argument("--seed", type=int, default=42)
@@ -74,10 +74,10 @@ def main():
         if "uciok" in line:
             break
     if not nnue_confirmed:
-        print("[ERRORE FATALE] Il motore non conferma di aver caricato una rete NNUE esterna. Interrompo.")
+        print("[FATAL ERROR] The engine does not confirm it loaded an external NNUE network. Aborting.")
         proc.terminate()
         sys.exit(1)
-    print("[PROVA] rete NNUE esterna confermata caricata prima di generare le aperture (self-play della gen2 la usera' per davvero).")
+    print("[PROOF] external NNUE network confirmed loaded before generating the openings (gen2 self-play will really use it).")
 
     accepted = 0
     rejected = 0
@@ -95,12 +95,12 @@ def main():
                 pass
 
             if accepted % 2000 == 0 and accepted > 0:
-                print(f"  {accepted}/{args.count} aperture accettate ({rejected} scartate finora)")
+                print(f"  {accepted}/{args.count} openings accepted ({rejected} discarded so far)")
 
     proc.stdin.write("quit\n"); proc.stdin.flush()
     proc.wait(timeout=5)
 
-    print(f"Fatto: {accepted} aperture accettate, {rejected} scartate ({args.out})")
+    print(f"Done: {accepted} openings accepted, {rejected} discarded ({args.out})")
 
 
 if __name__ == "__main__":

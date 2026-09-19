@@ -12,7 +12,7 @@ INDEPENDENT evaluation of the last sampled position, already computed
 for free in the following annotation stage.
 
 Usage:
-  python extract_positions.py --pgn partite.pgn --out positions.txt \
+  python extract_positions.py --pgn games.pgn --out positions.txt \
       --step 10 --skip-opening 11
 """
 import argparse
@@ -41,10 +41,10 @@ def main():
     ap.add_argument("--step", type=int, default=10)
     ap.add_argument("--skip-opening", type=int, default=11)
     ap.add_argument("--max-per-game", type=int, default=15,
-                     help="tetto di posizioni estratte da una singola partita, indipendente "
-                          "dalla sua lunghezza — protezione strutturale contro le partite "
-                          "lunghe/ripetitive che altrimenti dominano il dataset di duplicati "
-                          "(causa reale della bassa unicita nelle prime generazioni)")
+                     help="cap on positions extracted from a single game, independent "
+                          "of its length — structural protection against long/repetitive "
+                          "games that would otherwise dominate the dataset with duplicates "
+                          "(the real cause of the low uniqueness in the first generations)")
     args = ap.parse_args()
 
     seen = set()
@@ -115,12 +115,12 @@ def main():
 
     unique = len(seen)
     pct = (unique / total_extracted * 100) if total_extracted else 0.0
-    print(f"Partite: {total_games}")
-    print(f"Posizioni estratte (prima della dedup): {total_extracted}")
-    print(f"Scartate perche sotto scacco: {discarded_check}")
-    print(f"Scartate per tetto max-per-partita ({args.max_per_game}): {discarded_max_per_game}")
-    print(f"Partite che hanno raggiunto il tetto: {long_games_capped} ({long_games_capped/max(total_games,1)*100:.1f}%)")
-    print(f"Uniche: {unique} ({pct:.1f}%)")
+    print(f"Games: {total_games}")
+    print(f"Positions extracted (before dedup): {total_extracted}")
+    print(f"Discarded because in check: {discarded_check}")
+    print(f"Discarded by the max-per-game cap ({args.max_per_game}): {discarded_max_per_game}")
+    print(f"Games that reached the cap: {long_games_capped} ({long_games_capped/max(total_games,1)*100:.1f}%)")
+    print(f"Unique: {unique} ({pct:.1f}%)")
     print(f"Output: {args.out}")
 
 

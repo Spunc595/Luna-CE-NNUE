@@ -79,12 +79,12 @@ def main():
     ap.add_argument("--checkpoint", required=True)
     ap.add_argument("--out", default="net.bin")
     ap.add_argument("--alpha", type=float, default=1.0,
-                     help="riscalatura post-training: "
-                          "W->W/alpha, b->b/alpha, v->v*alpha^2. Esatta solo dove il clamp "
-                          "SCReLU non morde (clamp(acc,0,1)==clamp(acc/alpha,0,1)) — le unita' "
-                          "gia' clampate a 0 restano invarianti per costruzione, quelle vicine "
-                          "al bordo superiore possono cambiare stato; verificare sempre con "
-                          "verify_roundtrip.py, non fidarsi della sola algebra.")
+                     help="post-training rescaling: "
+                          "W->W/alpha, b->b/alpha, v->v*alpha^2. Exact only where the SCReLU clamp "
+                          "does not bite (clamp(acc,0,1)==clamp(acc/alpha,0,1)) — units "
+                          "already clamped to 0 stay invariant by construction, those near "
+                          "the upper edge can change state; always verify with "
+                          "verify_roundtrip.py, do not trust the algebra alone.")
     args = ap.parse_args()
 
     model = LunaHalfKA()
@@ -160,8 +160,8 @@ def main():
     expected_size = NUM_FEATURES * HIDDEN * 2 + HIDDEN * 2 + 2 * HIDDEN * 2 + 2 + 62
     import os
     actual_size = os.path.getsize(args.out)
-    status = "✅" if actual_size == expected_size else "❌ DIMENSIONE ERRATA"
-    print(f"{status} {args.out}: {actual_size} byte (atteso: {expected_size})")
+    status = "✅" if actual_size == expected_size else "❌ WRONG SIZE"
+    print(f"{status} {args.out}: {actual_size} bytes (expected: {expected_size})")
 
     # SIMD safety gate (see nnue.rs, MAX_SAFE_OUTPUT_WEIGHT): above 128
     # the AVX2/NEON kernels truncate the intermediate product to 16 bits
@@ -169,8 +169,8 @@ def main():
     # the net on its own at load time, but better to know here too.
     MAX_SAFE_OUTPUT_WEIGHT = 128
     max_output_weight = output_weights.abs().max().item()
-    gate_status = "✅" if max_output_weight <= MAX_SAFE_OUTPUT_WEIGHT else "❌ OLTRE IL LIMITE SIMD-SAFE"
-    print(f"{gate_status} max |output_weight| = {max_output_weight} (limite: {MAX_SAFE_OUTPUT_WEIGHT})")
+    gate_status = "✅" if max_output_weight <= MAX_SAFE_OUTPUT_WEIGHT else "❌ ABOVE THE SIMD-SAFE LIMIT"
+    print(f"{gate_status} max |output_weight| = {max_output_weight} (limit: {MAX_SAFE_OUTPUT_WEIGHT})")
 
 
 if __name__ == "__main__":

@@ -47,10 +47,10 @@ def consume(pool, offset_path, n):
     end = offset + n
     if end > len(pool):
         raise SystemExit(
-            f"[ERRORE FATALE] pool esaurito: servono {n} posizioni da offset {offset} "
-            f"ma il pool ne ha solo {len(pool)}. Dimensiona il pool piu' grande prima di "
-            f"continuare — nessun wrap-around automatico (rientrerebbe nel riuso che "
-            f"questo script esiste per evitare)."
+            f"[FATAL ERROR] pool exhausted: {n} positions needed from offset {offset} "
+            f"but the pool only has {len(pool)}. Size the pool larger before "
+            f"continuing — no automatic wrap-around (it would bring back the reuse that "
+            f"this script exists to avoid)."
         )
     slice_ = pool[offset:end]
     with open(offset_path, "w") as f:
@@ -91,7 +91,7 @@ def main():
         for line in combined:
             f.write(line + "\n")
 
-    print(f"[FATTO] {args.out}: {len(combined)} aperture ({len(chosen_endgame)} finale, {len(chosen_normal)} normali, senza reinserimento)")
+    print(f"[DONE] {args.out}: {len(combined)} openings ({len(chosen_endgame)} endgame, {len(chosen_normal)} normal, without replacement)")
     print(f"ENDGAME_LINES={len(chosen_endgame)}")
 
 

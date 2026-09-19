@@ -74,6 +74,16 @@ class HalfKADataset(IterableDataset):
         self.eval_lambda = eval_lambda
 
     def __iter__(self):
+        # An IterableDataset is copied into EVERY DataLoader worker, and each
+        # copy would iterate the whole file list: with num_workers > 0 every
+        # position would be seen num_workers times per epoch (and batches
+        # would repeat data), with no error. train.py uses num_workers=0; this
+        # makes any other value fail loudly instead of silently duplicating
+        # the data. Sharding by worker id would be the way to lift the limit.
+        if torch.utils.data.get_worker_info() is not None:
+            raise RuntimeError(
+                "HalfKADataset does not shard across DataLoader workers: "
+                "use num_workers=0 (each worker would iterate the whole dataset)")
         for fen, eval_cp_str, bestmove, wdl_mover_str, depth in _read_rows(self.tsv_paths):
             eval_cp = max(-TARGET_EVAL_CLAMP_CP, min(TARGET_EVAL_CLAMP_CP, float(eval_cp_str)))
             eval_wdl_mover = 1.0 / (1.0 + math.exp(-K * eval_cp))

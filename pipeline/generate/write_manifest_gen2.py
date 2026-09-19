@@ -160,7 +160,7 @@ def main():
 
     with open(args.out, "w") as f:
         json.dump(manifest, f, indent=2)
-    print(f"Manifest scritto: {args.out}")
+    print(f"Manifest written: {args.out}")
 
 
 if __name__ == "__main__":

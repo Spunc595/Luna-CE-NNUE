@@ -52,13 +52,13 @@ def row_to_arrays(fen, eval_cp_str, wdl_mover_str, eval_lambda):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--in", dest="inp", required=True)
-    ap.add_argument("--out", required=True, help="prefisso di output (senza estensione)")
+    ap.add_argument("--out", required=True, help="output prefix (no extension)")
     ap.add_argument("--eval-lambda", type=float, default=0.7)
     args = ap.parse_args()
 
     with open(args.inp, "r", errors="ignore") as f:
         n_lines = sum(1 for line in f if line.strip())
-    print(f"Righe da convertire: {n_lines:,}")
+    print(f"Rows to convert: {n_lines:,}")
 
     us_arr = np.full((n_lines, MAX_ACTIVE), -1, dtype=np.int32)
     them_arr = np.full((n_lines, MAX_ACTIVE), -1, dtype=np.int32)
@@ -90,7 +90,7 @@ def main():
     np.save(args.out + ".targets.npy", targets_arr[:i])
 
     dt = time.time() - t0
-    print(f"Fatto: {i:,} posizioni convertite in {dt:.1f}s ({i/dt:.0f} pos/s)")
+    print(f"Done: {i:,} positions converted in {dt:.1f}s ({i/dt:.0f} pos/s)")
     print(f"Output: {args.out}.us.npy  {args.out}.them.npy  {args.out}.targets.npy")
 
 

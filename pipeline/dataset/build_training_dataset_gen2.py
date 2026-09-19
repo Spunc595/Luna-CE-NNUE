@@ -56,7 +56,7 @@ def main():
         ann_path = os.path.join(args.annotated_dir, f"{sid}_annotated.tsv")
         pos_path = os.path.join(args.shards_dir, f"{sid}_positions.txt")
         if not os.path.exists(ann_path) or not os.path.exists(pos_path):
-            print(f"  {sid}: mancante (annotato o positions.txt), salto")
+            print(f"  {sid}: missing (annotated or positions.txt), skipping")
             continue
 
         fen_to_gameid = {}
@@ -87,7 +87,7 @@ def main():
         per_shard_counts.append({"shard_id": sid, "positions": shard_count,
                                   "join_mancanti": missing_join})
         if missing_join:
-            print(f"  {sid}: {missing_join} righe annotate senza game_id corrispondente (scartate)")
+            print(f"  {sid}: {missing_join} annotated rows without a matching game_id (discarded)")
 
     game_ids = list(rows_by_game.keys())
     rng = random.Random(args.seed)
@@ -128,11 +128,11 @@ def main():
         json.dump(composition, f, indent=2)
 
     print()
-    print(f"Shard inclusi: {args.start:05d}..{args.end:05d} ({len(per_shard_counts)} shard)")
-    print(f"Posizioni totali: {total_positions:,}  (partite: {len(game_ids):,})")
-    print(f"Train: {len(train_rows):,} posizioni, {len(game_ids) - len(val_games):,} partite ({args.train_out})")
-    print(f"Val:   {len(val_rows):,} posizioni, {len(val_games):,} partite ({args.val_out})")
-    print(f"Composizione: {args.composition_out}")
+    print(f"Shards included: {args.start:05d}..{args.end:05d} ({len(per_shard_counts)} shard)")
+    print(f"Total positions: {total_positions:,}  (games: {len(game_ids):,})")
+    print(f"Train: {len(train_rows):,} positions, {len(game_ids) - len(val_games):,} games ({args.train_out})")
+    print(f"Val:   {len(val_rows):,} positions, {len(val_games):,} games ({args.val_out})")
+    print(f"Composition: {args.composition_out}")
 
 
 if __name__ == "__main__":

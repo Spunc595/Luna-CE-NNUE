@@ -31,7 +31,7 @@ def main():
         sid = f"gen2_shard_{i:05d}"
         pos_path = os.path.join(args.shards_dir, f"{sid}_positions.txt")
         if not os.path.exists(pos_path):
-            print(f"  [SALTO] {sid}: mancante")
+            print(f"  [SKIP] {sid}: missing")
             continue
         shard_raw = 0
         shard_unique = 0
@@ -53,9 +53,9 @@ def main():
     pct = (total_unique / total_raw * 100) if total_raw else 0.0
     print(f"\nTOTALE ({args.num_shards} shard): grezze={total_raw:,}  uniche={total_unique:,}  ({pct:.1f}%)")
     if pct >= 95:
-        print("[OK] Sopra la soglia 95% attesa.")
+        print("[OK] Above the expected 95% threshold.")
     else:
-        print("[ATTENZIONE] SOTTO la soglia 95% attesa — il problema non era (solo) il riuso, fermarsi e capire prima di generare il resto.")
+        print("[WARNING] BELOW the expected 95% threshold — the problem was not (only) reuse, stop and understand before generating the rest.")
 
 
 if __name__ == "__main__":

@@ -58,7 +58,7 @@ def get_annotation_engine_commit():
 def patch_manifest_with_annotation_commit(shards_dir: str, shard_id: str, annotation_nodes: int):
     manifest_path = os.path.join(shards_dir, f"{shard_id}.manifest.json")
     if not os.path.exists(manifest_path):
-        print(f"  [ATTENZIONE] manifesto mancante per {shard_id} ({manifest_path}), salto il patch")
+        print(f"  [WARNING] manifest missing for {shard_id} ({manifest_path}), skipping the patch")
         return
 
     with open(manifest_path, "r", encoding="utf-8") as f:
@@ -147,10 +147,10 @@ def annotate_batch(fens, luna_path, workers, nodes, tmp_dir,
         try:
             _, stderr = proc.communicate(timeout=worker_timeout)
             if proc.returncode != 0:
-                print(f"  worker fallito (rc={proc.returncode}): {stderr[-500:] if stderr else ''}")
+                print(f"  worker failed (rc={proc.returncode}): {stderr[-500:] if stderr else ''}")
         except subprocess.TimeoutExpired:
-            print(f"  worker oltre il timeout ({worker_timeout:.0f}s per {n_fens:,} posizioni) — "
-                  f"lo termino e controllo comunque quanto ha gia' scritto")
+            print(f"  worker over the timeout ({worker_timeout:.0f}s for {n_fens:,} positions) — "
+                  f"terminating it and checking anyway how much it has already written")
             proc.kill()
             try:
                 proc.communicate(timeout=10)
@@ -290,7 +290,7 @@ def main():
     os.makedirs(args.out_dir, exist_ok=True)
     state_path = os.path.join(args.out_dir, "global_seen.bin")
     global_seen = load_global_seen(state_path)
-    print(f"[gen2/oracle] Stato globale caricato: {len(global_seen):,} hash gia' visti (nodes={args.nodes})")
+    print(f"[gen2/oracle] Global state loaded: {len(global_seen):,} hashes already seen (nodes={args.nodes})")
 
     def find_all_shard_ids():
         return sorted(

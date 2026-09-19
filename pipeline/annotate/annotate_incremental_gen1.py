@@ -32,10 +32,10 @@ LUNA_REPO_DIR = os.path.expanduser("~/Desktop/rust-chess")
 
 
 def get_annotation_engine_commit():
-    """Commit dell'eseguibile usato per ANNOTARE, non per il self-play — i
-    due possono divergere (es.: shard generati col binario pre-fix
-    076defc, etichette con quello corretto). La differenza va scritta nel
-    manifesto, non lasciata implicita."""
+    """Commit of the executable used to ANNOTATE, not for self-play — the two
+    can diverge (e.g.: shards generated with the pre-fix binary 076defc,
+    labels produced with the corrected one). The difference must be written
+    in the manifest, not left implicit."""
     try:
         result = subprocess.run(["git", "-C", LUNA_REPO_DIR, "rev-parse", "HEAD"],
                                  capture_output=True, text=True, check=True)
@@ -45,15 +45,15 @@ def get_annotation_engine_commit():
 
 
 def patch_manifest_with_annotation_commit(shards_dir: str, shard_id: str, annotation_nodes: int):
-    """Aggiunge al manifesto (gia' scritto al momento del self-play) i campi
-    relativi all'annotazione: commit del motore usato qui, nodi, timestamp,
-    e una nota esplicita se il commit di self-play e quello di annotazione
-    non coincidono (la differenza va scritta, non lasciata implicita). Se
-    il manifesto non esiste (non dovrebbe succedere, ma non
-    e' un errore fatale per l'annotazione stessa) lo segnala e prosegue."""
+    """Adds to the manifest (already written at self-play time) the fields
+    concerning annotation: commit of the engine used here, nodes, timestamp,
+    and an explicit note if the self-play commit and the annotation commit
+    differ (the difference must be written, not left implicit). If the
+    manifest does not exist (it should not happen, but it is not a fatal
+    error for the annotation itself) it reports it and carries on."""
     manifest_path = os.path.join(shards_dir, f"{shard_id}.manifest.json")
     if not os.path.exists(manifest_path):
-        print(f"  [ATTENZIONE] manifesto mancante per {shard_id} ({manifest_path}), salto il patch")
+        print(f"  [WARNING] manifest missing for {shard_id} ({manifest_path}), skipping the patch")
         return
 
     with open(manifest_path, "r", encoding="utf-8") as f:
@@ -142,10 +142,10 @@ def annotate_batch(fens, luna_path, workers, nodes, tmp_dir,
         try:
             _, stderr = proc.communicate(timeout=worker_timeout)
             if proc.returncode != 0:
-                print(f"  worker fallito (rc={proc.returncode}): {stderr[-500:] if stderr else ''}")
+                print(f"  worker failed (rc={proc.returncode}): {stderr[-500:] if stderr else ''}")
         except subprocess.TimeoutExpired:
-            print(f"  worker oltre il timeout ({worker_timeout:.0f}s per {n_fens:,} posizioni) — "
-                  f"lo termino e controllo comunque quanto ha gia' scritto")
+            print(f"  worker over the timeout ({worker_timeout:.0f}s for {n_fens:,} positions) — "
+                  f"terminating it and checking anyway how much it has already written")
             proc.kill()
             try:
                 proc.communicate(timeout=10)
@@ -290,7 +290,7 @@ def main():
     os.makedirs(args.out_dir, exist_ok=True)
     state_path = os.path.join(args.out_dir, "global_seen.bin")
     global_seen = load_global_seen(state_path)
-    print(f"[gen1] Stato globale caricato: {len(global_seen):,} hash gia' visti (nodes={args.nodes})")
+    print(f"[gen1] Global state loaded: {len(global_seen):,} hashes already seen (nodes={args.nodes})")
 
     def find_pending_shards():
         ids = sorted(

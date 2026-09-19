@@ -37,12 +37,12 @@ def main():
     offset_path = args.base + ".offset"
 
     if not os.path.exists(shuffled_path):
-        raise SystemExit(f"[ERRORE] {shuffled_path} non esiste: nulla e' ancora stato consumato, "
-                          f"non serve questo script — basta rigenerare il pool da zero.")
+        raise SystemExit(f"[ERROR] {shuffled_path} does not exist: nothing has been consumed yet, "
+                          f"this script is not needed — just regenerate the pool from scratch.")
     shuffled_lines = read_lines(shuffled_path)
     if len(shuffled_lines) != len(base_lines):
-        raise SystemExit(f"[ERRORE FATALE] {shuffled_path} ({len(shuffled_lines)} righe) non combacia "
-                          f"con {args.base} ({len(base_lines)} righe) — stato incoerente, fermo tutto.")
+        raise SystemExit(f"[FATAL ERROR] {shuffled_path} ({len(shuffled_lines)} rows) does not match "
+                          f"{args.base} ({len(base_lines)} rows) — inconsistent state, stopping everything.")
 
     seen = set(base_set)
     delta = []
@@ -56,7 +56,7 @@ def main():
             delta.append(line)
 
     if not delta:
-        raise SystemExit("[ERRORE] nessuna riga nuova trovata nelle estensioni fornite — controllare gli input.")
+        raise SystemExit("[ERROR] no new row found in the extensions provided — check the inputs.")
 
     rng = random.Random(args.shuffle_seed)
     delta_shuffled = list(delta)
@@ -75,9 +75,9 @@ def main():
             f.write(line + "\n")
 
     new_total = len(base_lines) + len(delta)
-    print(f"[FATTO] base prima: {len(base_lines)} righe, delta aggiunto: {len(delta)} righe "
-          f"(scartati {dup_within_base_extension} duplicati gia' presenti), nuovo totale: {new_total}")
-    print(f"offset invariato: {offset_before} (ancora valido, punta dentro la parte non toccata)")
+    print(f"[DONE] base before: {len(base_lines)} rows, delta added: {len(delta)} rows "
+          f"({dup_within_base_extension} duplicates already present discarded), new total: {new_total}")
+    print(f"offset unchanged: {offset_before} (still valid, points inside the untouched part)")
     print(f"NEW_TOTAL={new_total}")
 
 

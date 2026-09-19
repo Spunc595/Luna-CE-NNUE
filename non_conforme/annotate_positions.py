@@ -93,7 +93,7 @@ def main():
     engine.quit()
     dt = time.time() - t0
     rate = annotated / dt if dt > 0 else 0
-    print(f"\nFatto: {annotated:,} posizioni annotate, {skipped} scartate, in {dt:.1f}s ({rate:.1f}/s)")
+    print(f"\nDone: {annotated:,} positions annotated, {skipped} discarded, in {dt:.1f}s ({rate:.1f}/s)")
     print(f"Output: {args.out}")
 
 

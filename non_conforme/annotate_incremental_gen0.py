@@ -102,7 +102,7 @@ def annotate_batch(fens, stockfish_path, workers, tmp_dir):
     for proc, in_path, out_path in procs:
         _, stderr = proc.communicate()
         if proc.returncode != 0:
-            print(f"  worker fallito (rc={proc.returncode}): {stderr[-500:] if stderr else ''}")
+            print(f"  worker failed (rc={proc.returncode}): {stderr[-500:] if stderr else ''}")
         if os.path.exists(out_path):
             with open(out_path, "r", encoding="utf-8") as f:
                 for line in f:
@@ -249,14 +249,14 @@ def main():
     ap.add_argument("--stockfish", required=True)
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--follow", action="store_true",
-                     help="dopo aver smaltito l'arretrato, continua a controllare nuovi shard")
+                     help="after clearing the backlog, keep checking for new shards")
     ap.add_argument("--poll-seconds", type=int, default=60)
     args = ap.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
     state_path = os.path.join(args.out_dir, "global_seen.bin")
     global_seen = load_global_seen(state_path)
-    print(f"Stato globale caricato: {len(global_seen):,} hash gia' visti")
+    print(f"Global state loaded: {len(global_seen):,} hashes already seen")
 
     def find_pending_shards():
         ids = sorted(

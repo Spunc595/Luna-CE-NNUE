@@ -54,11 +54,11 @@ mkdir -p shards/raw shards/backed_up
 upload_to_bucket() {
   local sid="$1" pgn="$2" pos="$3" manifest="$4"
   if [ ! -x "$OCI" ]; then
-    echo "=== $sid: oci CLI non trovato ($OCI), salto l'upload ==="
+    echo "=== $sid: oci CLI not found ($OCI), skipping the upload ==="
     return 0
   fi
   local pgn_gz="${pgn}.gz" pos_gz="${pos}.gz"
-  gzip -k -f "$pgn" "$pos" || { echo "=== $sid: gzip fallito, salto l'upload ==="; return 0; }
+  gzip -k -f "$pgn" "$pos" || { echo "=== $sid: gzip failed, skipping the upload ==="; return 0; }
   for f in "$pgn_gz" "$pos_gz" "$manifest"; do
     if ! "$OCI" os object put --auth instance_principal \
         --bucket-name "$OCI_BUCKET" \
@@ -77,11 +77,11 @@ while true; do
   POS="shards/raw/${SID}_positions.txt"
   OPENINGS="shards/raw/${SID}_openings.epd"
 
-  echo "=== $SID: generazione aperture fresche ($GAMES_PER_SHARD, seed=$ID) ==="
+  echo "=== $SID: generating fresh openings ($GAMES_PER_SHARD, seed=$ID) ==="
   ~/nnue-data-venv/bin/python gen_random_openings.py --count "$GAMES_PER_SHARD" --plies 9 \
       --out "$OPENINGS" --stockfish "$STOCKFISH" --eval-limit 200 --depth 6 --seed "$ID"
 
-  echo "=== $SID: generazione ($GAMES_PER_SHARD partite, $NODES nodi) ==="
+  echo "=== $SID: generation ($GAMES_PER_SHARD games, $NODES nodes) ==="
   ./run_selfplay.sh "$GAMES_PER_SHARD" "$PGN" "$NODES" "$OPENINGS"
 
   echo "=== $SID: estrazione (step 4 + jitter) ==="

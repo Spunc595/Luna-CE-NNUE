@@ -63,7 +63,7 @@ def main():
     ap.add_argument("--out", default="openings.epd")
     ap.add_argument("--stockfish", required=True)
     ap.add_argument("--eval-limit", type=int, default=200,
-                     help="scarta la posizione se |eval| supera questo (cp)")
+                     help="discard the position if |eval| exceeds this (cp)")
     ap.add_argument("--depth", type=int, default=6)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--max-attempts-per-opening", type=int, default=20)
@@ -98,12 +98,12 @@ def main():
                 pass
 
             if accepted % 500 == 0 and accepted > 0:
-                print(f"  {accepted}/{args.count} aperture accettate ({rejected} scartate finora)")
+                print(f"  {accepted}/{args.count} openings accepted ({rejected} discarded so far)")
 
     proc.stdin.write("quit\n"); proc.stdin.flush()
     proc.wait(timeout=5)
 
-    print(f"Fatto: {accepted} aperture accettate, {rejected} scartate ({args.out})")
+    print(f"Done: {accepted} openings accepted, {rejected} discarded ({args.out})")
 
 
 if __name__ == "__main__":

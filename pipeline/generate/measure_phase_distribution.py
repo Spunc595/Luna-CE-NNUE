@@ -17,12 +17,12 @@ def piece_count(fen):
 
 def bucket(n):
     if n <= 8:
-        return "endgame (<=8 pezzi)"
+        return "endgame (<=8 pieces)"
     if n <= 12:
-        return "endgame ampio (9-12 pezzi)"
+        return "wide endgame (9-12 pieces)"
     if n <= 20:
-        return "mediogioco (13-20 pezzi)"
-    return "apertura/primo mediogioco (>20 pezzi)"
+        return "middlegame (13-20 pieces)"
+    return "opening/early middlegame (>20 pieces)"
 
 
 def main():
@@ -43,21 +43,21 @@ def main():
                 counts[b] = counts.get(b, 0) + 1
                 total += 1
 
-    print(f"Totale posizioni: {total:,}\n")
-    order = ["endgame (<=8 pezzi)", "endgame ampio (9-12 pezzi)",
-             "mediogioco (13-20 pezzi)", "apertura/primo mediogioco (>20 pezzi)"]
+    print(f"Total positions: {total:,}\n")
+    order = ["endgame (<=8 pieces)", "wide endgame (9-12 pieces)",
+             "middlegame (13-20 pieces)", "opening/early middlegame (>20 pieces)"]
     for b in order:
         n = counts.get(b, 0)
         pct = (n / total * 100) if total else 0.0
         print(f"  {b:42s} {n:8,}  ({pct:5.1f}%)")
 
-    endgame_total = counts.get("endgame (<=8 pezzi)", 0) + counts.get("endgame ampio (9-12 pezzi)", 0)
+    endgame_total = counts.get("endgame (<=8 pieces)", 0) + counts.get("wide endgame (9-12 pieces)", 0)
     endgame_pct = (endgame_total / total * 100) if total else 0.0
-    print(f"\n  TOTALE FINALE (<=12 pezzi): {endgame_total:,} ({endgame_pct:.1f}%)")
+    print(f"\n  TOTAL ENDGAME (<=12 pieces): {endgame_total:,} ({endgame_pct:.1f}%)")
     if endgame_pct < 20:
-        print("  [ATTENZIONE] Sotto la soglia 20-25% attesa dal documento — rivedere la quota prima di generare il resto.")
+        print("  [WARNING] Below the 20-25% threshold expected by the plan — revisit the share before generating the rest.")
     else:
-        print("  [OK] Dentro o sopra il 20-25% atteso.")
+        print("  [OK] Within or above the expected 20-25%.")
 
 
 if __name__ == "__main__":

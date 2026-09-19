@@ -101,17 +101,16 @@ def sigmoid_loss(pred_cp, target_prob, loss_fn):
 
 
 def make_dataset(paths, fmt, eval_lambda):
-    """fmt="tsv": paths sono file .tsv (fen/eval_cp/bestmove/wdl_mover/depth),
-    parsati riga per riga -- lento, ma non richiede conversione.
-    fmt="binary": paths sono prefissi prodotti da convert_to_binary.py
-    (.us.npy/.them.npy/.targets.npy) -- ~11x piu' veloce (misurato:
-    6.982 contro 78.193 posizioni/secondo), perche' salta il parsing TSV
-    e la costruzione di una
-    chess.Board() per ogni riga. Un solo prefisso binario per chiamata
-    (a differenza del TSV, che accetta piu' file)."""
+    """fmt="tsv": paths are .tsv files (fen/eval_cp/bestmove/wdl_mover/nodes),
+    parsed row by row -- slow, but needs no conversion.
+    fmt="binary": paths are prefixes produced by convert_to_binary.py
+    (.us.npy/.them.npy/.targets.npy) -- ~11x faster (measured:
+    6,982 vs 78,193 positions/second), because it skips the TSV parsing
+    and the construction of a chess.Board() for every row. A single
+    binary prefix per call (unlike TSV, which accepts several files)."""
     if fmt == "binary":
         assert isinstance(paths, str) or len(paths) == 1, \
-            "formato binary: un solo prefisso per volta (converti e concatena a monte se servono piu' shard)"
+            "binary format: one prefix at a time (convert and concatenate upstream if several shards are needed)"
         prefix = paths if isinstance(paths, str) else paths[0]
         return BinaryHalfKADataset(prefix), binary_collate_fn
     return HalfKADataset(paths, eval_lambda=eval_lambda), collate_fn
@@ -145,14 +144,14 @@ def _material_diff_mover_pov(fen: str) -> int:
 
 
 def preflight_checks(model, val_paths, eval_lambda, device):
-    """Tre numeri prima di qualunque epoca: varianza dei target
-    (predittore costante), MSE del solo
-    materiale, MSE del modello appena inizializzato. Avrebbero intercettato
-    subito sia il bug us/them (val mai sotto il primo) sia
-    l'inizializzazione fuori scala (il terzo a 0.22 invece di ~0.087) senza
-    aspettare trenta epoche o una finestra GPU."""
+    """Three numbers before any epoch: target variance
+    (constant predictor), MSE of material alone, MSE of the freshly
+    initialised model. They would have caught right away both the us/them
+    bug (val never below the first) and the out-of-scale initialisation
+    (the third at 0.22 instead of ~0.087) without waiting thirty epochs
+    or a GPU window."""
     if not val_paths:
-        print("Preflight: nessun validation set, salto i tre numeri.")
+        print("Preflight: no validation set, skipping the three numbers.")
         return
 
     paths = [val_paths] if isinstance(val_paths, str) else list(val_paths)
@@ -193,54 +192,54 @@ def preflight_checks(model, val_paths, eval_lambda, device):
     model_preds = [1.0 / (1.0 + math.exp(-K * r)) for r in model_raw_outputs]
     mse_untrained = sum((p - t) ** 2 for p, t in zip(model_preds, targets)) / n
 
-    print(f"=== Preflight (n={n:,} posizioni di validazione) ===")
-    print(f"  1. Varianza target (predittore costante): {var_t:.6f}")
-    print(f"  2. MSE del solo materiale:                 {mse_material:.6f}")
-    print(f"  3. MSE del modello non addestrato:          {mse_untrained:.6f}")
-    print(f"  (per confronto dopo il training: la rete deve finire sotto il punto 2)")
+    print(f"=== Preflight (n={n:,} validation positions) ===")
+    print(f"  1. Target variance (constant predictor):   {var_t:.6f}")
+    print(f"  2. MSE of material alone:                {mse_material:.6f}")
+    print(f"  3. MSE of the untrained model:           {mse_untrained:.6f}")
+    print(f"  (for comparison after training: the network must end below number 2)")
 
     assert mse_untrained <= var_t * UNTRAINED_MSE_MAX_RATIO, (
-        f"STOP: MSE del modello non addestrato ({mse_untrained:.4f}) supera di piu' di "
-        f"{UNTRAINED_MSE_MAX_RATIO}x la varianza dei target ({var_t:.4f}) -- "
-        f"l'inizializzazione dello strato di uscita e' probabilmente fuori scala. "
-        f"Non proseguire: correggi prima di allenare."
+        f"STOP: MSE of the untrained model ({mse_untrained:.4f}) exceeds by more than "
+        f"{UNTRAINED_MSE_MAX_RATIO}x the target variance ({var_t:.4f}) -- "
+        f"the output layer initialisation is probably out of scale. "
+        f"Do not proceed: fix it before training."
     )
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--train", nargs="+", required=True,
-                     help="file .tsv (--format tsv) o un prefisso binario (--format binary)")
+                     help=".tsv files (--format tsv) or a binary prefix (--format binary)")
     ap.add_argument("--val", nargs="+", default=None,
-                     help="file .tsv (--format tsv) o un prefisso binario (--format binary)")
+                     help=".tsv files (--format tsv) or a binary prefix (--format binary)")
     ap.add_argument("--format", choices=["tsv", "binary"], default="tsv",
-                     help="tsv: parsing riga per riga (lento, nessuna conversione richiesta). "
-                          "binary: array precalcolati da convert_to_binary.py, ~11x piu' veloce")
+                     help="tsv: row-by-row parsing (slow, no conversion required). "
+                          "binary: arrays precomputed by convert_to_binary.py, ~11x faster")
     ap.add_argument("--preflight-val", default=None,
-                     help="file .tsv per i tre numeri di pre-volo (richiede il FEN, quindi sempre "
-                          "TSV anche con --format binary). Default: --val stesso se --format tsv, "
-                          "altrimenti nessun preflight.")
+                     help=".tsv file for the three preflight numbers (needs the FEN, hence always "
+                          "TSV even with --format binary). Default: --val itself if --format tsv, "
+                          "otherwise no preflight.")
     ap.add_argument("--out", default="checkpoint.pt")
     ap.add_argument("--log-csv", default=None,
-                     help="CSV train/val loss per epoca (default: <out>.csv)")
+                     help="CSV of train/val loss per epoch (default: <out>.csv)")
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--batch-size", type=int, default=8192)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--eval-lambda", type=float, default=0.7,
-                     help="peso della valutazione Stockfish vs risultato partita (1.0 = solo eval)")
+                     help="weight of the annotator's evaluation vs the game result (1.0 = eval only)")
     ap.add_argument("--patience", type=int, default=5,
-                     help="early stop se la validation loss non migliora per N epoche di fila")
+                     help="early stop if the validation loss does not improve for N epochs in a row")
     ap.add_argument("--best-out", default=None,
-                     help="checkpoint separato per l'epoca a validation loss migliore "
+                     help="separate checkpoint for the epoch with the best validation loss "
                           "(default: <out>.best.pt)")
-    ap.add_argument("--resume", default=None, help="checkpoint da cui riprendere")
+    ap.add_argument("--resume", default=None, help="checkpoint to resume from")
     ap.add_argument("--save-every", type=int, default=300,
-                     help="salva un checkpoint anche ogni N batch, non solo a fine epoca")
+                     help="also save a checkpoint every N batches, not only at the end of an epoch")
     ap.add_argument("--snapshot-epochs", default=None,
-                     help="lista separata da virgole (es. 1,5,10,20): oltre a --out, salva anche "
-                          "una copia <out>.epoch<N>.pt a fine di ciascuna di queste epoche — serve "
-                          "per confrontare una curva (es. round-trip Python/motore) invece del solo "
-                          "punto finale")
+                     help="comma-separated list (e.g. 1,5,10,20): besides --out, also save "
+                          "a copy <out>.epoch<N>.pt at the end of each of these epochs — useful "
+                          "to compare a curve (e.g. Python/engine round-trip) instead of the "
+                          "final point only")
     args = ap.parse_args()
     snapshot_epochs = set(int(x) for x in args.snapshot_epochs.split(",")) if args.snapshot_epochs else set()
 
@@ -248,7 +247,7 @@ def main():
     best_out = args.best_out or (os.path.splitext(args.out)[0] + ".best.pt")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Device: {device}" + ("" if device.type == "cuda" else "  (nessuna GPU trovata: sarà lento)"))
+    print(f"Device: {device}" + ("" if device.type == "cuda" else "  (no GPU found: it will be slow)"))
 
     model = LunaHalfKA().to(device)
 
@@ -274,11 +273,11 @@ def main():
         optimizer.load_state_dict(ckpt["optimizer"])
         scheduler.load_state_dict(ckpt["scheduler"])
         start_epoch = ckpt["epoch"] + 1
-        print(f"Ripreso da {args.resume} (epoca {start_epoch})")
+        print(f"Resumed from {args.resume} (epoch {start_epoch})")
 
     train_dataset, train_collate = make_dataset(args.train, args.format, args.eval_lambda)
-    print(f"Formato dati: {args.format}"
-          + ("  (~11x piu' veloce del TSV)" if args.format == "binary" else ""))
+    print(f"Data format: {args.format}"
+          + ("  (~11x faster than TSV)" if args.format == "binary" else ""))
 
     csv_is_new = not os.path.exists(log_csv)
     with open(log_csv, "a", newline="") as f_csv:
@@ -313,7 +312,7 @@ def main():
                 n_positions += targets.numel()
 
                 if n_batches % 200 == 0:
-                    print(f"  epoca {epoch+1}  batch {n_batches}  posizioni={n_positions:,}  loss={total_loss/n_batches:.4f}")
+                    print(f"  epoch {epoch+1}  batch {n_batches}  positions={n_positions:,}  loss={total_loss/n_batches:.4f}")
 
                 if n_batches % args.save_every == 0:
                     save_checkpoint(args.out, model, optimizer, scheduler, epoch)
@@ -327,10 +326,10 @@ def main():
             # 4 decimals, not 2: with 2, epochs 3/4/5 of a previous run
             # all printed "0.09" and the plateau only showed up from the
             # missing "New best" line.
-            val_str = f"{val_loss:.4f}" if val_loss is not None else "n/d"
-            print(f"✅ Epoca {epoch+1}/{args.epochs} completata — train_loss={train_loss:.4f}  val_loss={val_str}  "
-                  f"lr={scheduler.get_last_lr()[0]:.2e}  {n_positions:,} posizioni  {elapsed:.1f}s  "
-                  f"pesi_al_clamp: feature={n_clamped_fw} output={n_clamped_ow}")
+            val_str = f"{val_loss:.4f}" if val_loss is not None else "n/a"
+            print(f"✅ Epoch {epoch+1}/{args.epochs} completed — train_loss={train_loss:.4f}  val_loss={val_str}  "
+                  f"lr={scheduler.get_last_lr()[0]:.2e}  {n_positions:,} positions  {elapsed:.1f}s  "
+                  f"weights_at_clamp: feature={n_clamped_fw} output={n_clamped_ow}")
 
             save_checkpoint(args.out, model, optimizer, scheduler, epoch)
             csv_writer.writerow([epoch + 1, train_loss, val_loss, scheduler.get_last_lr()[0], f"{elapsed:.1f}",
@@ -341,7 +340,7 @@ def main():
             if (epoch + 1) in snapshot_epochs:
                 snapshot_path = f"{args.out}.epoch{epoch+1}.pt"
                 save_checkpoint(snapshot_path, model, optimizer, scheduler, epoch)
-                print(f"   Istantanea epoca {epoch+1}: {snapshot_path}")
+                print(f"   Snapshot of epoch {epoch+1}: {snapshot_path}")
 
             if val_loss is not None:
                 if val_loss < best_val_loss:
@@ -352,12 +351,12 @@ def main():
                 else:
                     epochs_without_improvement += 1
                     if epochs_without_improvement >= args.patience:
-                        print(f"\nEarly stop: nessun miglioramento su validation da {args.patience} epoche "
-                              f"(migliore: {best_val_loss:.4f})")
+                        print(f"\nEarly stop: no improvement on validation for {args.patience} epochs "
+                              f"(best: {best_val_loss:.4f})")
                         break
 
-    print(f"\nFatto. Ora esporta con:  python export.py --checkpoint {args.out} --out net.bin")
-    print(f"(oppure il checkpoint migliore su validation: python export.py --checkpoint {best_out} --out net.bin)")
+    print(f"\nDone. Now export with:  python export.py --checkpoint {args.out} --out net.bin")
+    print(f"(or the best checkpoint on validation: python export.py --checkpoint {best_out} --out net.bin)")
 
 
 def save_checkpoint(path, model, optimizer, scheduler, epoch):

@@ -16,9 +16,9 @@ CONCURRENCY=4
 CUTECHESS="${CUTECHESS:-$HOME/cutechess/build/cutechess-cli}"
 
 PROBE=$(printf 'uci\nquit\n' | "$ENGINE" | grep -E "NNUE: loaded|External NNUE")
-echo "=== probe caricamento rete gen2: $PROBE ==="
+echo "=== probe of the gen2 network load: $PROBE ==="
 if ! echo "$PROBE" | grep -q "NNUE: loaded"; then
-  echo "ERRORE FATALE: il motore non conferma il caricamento della rete esterna. Interrompo."
+  echo "FATAL ERROR: the engine does not confirm loading the external network. Aborting."
   exit 1
 fi
 

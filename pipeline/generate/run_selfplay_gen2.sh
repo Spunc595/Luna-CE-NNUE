@@ -18,9 +18,9 @@ CUTECHESS="${CUTECHESS:-$HOME/cutechess/build/cutechess-cli}"
 # Proof, not assumption: the binary must confirm it has loaded an
 # EXTERNAL NNUE net (the gen1 net, not the embedded one) before trusting it.
 PROBE=$(printf 'uci\nquit\n' | "$ENGINE" | grep -E "NNUE: loaded|External NNUE")
-echo "=== probe caricamento rete gen1: $PROBE ==="
+echo "=== probe of the gen1 network load: $PROBE ==="
 if ! echo "$PROBE" | grep -q "NNUE: loaded"; then
-  echo "ERRORE FATALE: il motore non conferma il caricamento della rete esterna. Interrompo."
+  echo "FATAL ERROR: the engine does not confirm loading the external network. Aborting."
   exit 1
 fi
 
