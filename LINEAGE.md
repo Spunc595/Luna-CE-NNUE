@@ -128,6 +128,36 @@ produced, not an error to correct and not something to regenerate. Rebuilt with 
 current scripts, gen1 gives the same rows with LF endings, whose hash is the published
 one computed after removing the CRs (`310e0476...` / `3b4a2398...`).
 
+## Annotation failures, and the rejection threshold for generation 4
+
+**What was measured** (details in `RESULTS.md` 5.14): the annotators drop a
+position silently when its annotation fails and never stored how many. The counts
+exist only for gen1 (all shards) and gen2 shards 1-9 (a superseded PC run); the Oracle
+logs of gen2 and gen3 are empty (stdout was redirected without flushing). Rebuilt
+from the surviving input and output files, validated where an original count exists:
+**zero failed annotations in gen1, gen2 and gen3**, and every distinct position of
+each input appears in its output, so no position was lost for good. The gen3
+annotator that ran on Oracle used a worker named `_annotate_chunk_worker_gen3.py`; it is
+byte-identical to the gen2 worker, and the published gen3 annotator points at the
+gen2 worker file (same code, one file fewer to publish).
+
+**What changes from generation 4** (`annotate_incremental_gen4_oracle.py`; nothing
+already published was regenerated or edited): failed FENs are written to a separate
+file, never into the dataset; the counts `annotation_n_input`, `_n_new`, `_n_dup`,
+`_n_force`, `_n_written`, `_n_failed` go into every shard manifest; stdout is
+line-buffered.
+
+**Rejection threshold, declared on 2026-09-19, before any generation-4 annotation
+exists:** a generation is **not used for training** if the failure rate
+`failed / (new + force)` exceeds **0.1%** (1 in 1,000). It is enforced twice: the
+annotator refuses to write any single shard above it and stops, and
+`pipeline/measure/check_annotation_failure_rate.py` checks the whole generation from
+the manifests (and refuses a generation whose manifests lack the counts). The number
+is arbitrary and was chosen before seeing any data of the generation it will judge:
+observing zero failures in about 8.5 million annotations, any measurable rate would
+point at the environment (crashes, memory, timeouts) and not at the positions, and at
+the limit the hole would be at most ~3,000 positions in 3 million.
+
 ## Generation 1
 
 | Field | Value |
