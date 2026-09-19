@@ -1,4 +1,9 @@
 """
+NOT the chain that produced the published gen1-gen3 datasets. Those used
+pipeline/dataset/build_training_dataset_gen*.py (per-game split, seed 42,
+val fraction 0.025) -- see train.py. This script works on the older
+6-column layout and is published for completeness, not as provenance.
+
 Score-relative -> absolute-result conversion, kept in a single place because
 it is the class of bug that poisons a dataset without any metric noticing (a
 sign inversion still produces a well-formed file, with plausible uniqueness

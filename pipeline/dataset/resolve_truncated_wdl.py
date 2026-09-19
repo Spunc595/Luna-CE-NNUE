@@ -1,4 +1,9 @@
 """
+NOT the chain that produced the published gen1-gen3 datasets. Those used
+pipeline/dataset/build_training_dataset_gen*.py (per-game split, seed 42,
+val fraction 0.025) -- see train.py. This script works on the older
+6-column layout and is published for completeness, not as provenance.
+
 Last step before training in the 6-column chain
 (extract_positions.py -> annotate -> resolve_truncated_wdl.py ->
 split_train_val.py): fixes the result of games truncated by -maxmoves using

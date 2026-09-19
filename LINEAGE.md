@@ -67,6 +67,13 @@ predates the TCEC rule applied from gen1 onward within this project
 
 ## Train/validation split, and the two scripts `train.py` used to name
 
+> **Provenance warning.** `split_train_val.py`, `resolve_truncated_wdl.py` and `pov.py`
+> in `pipeline/dataset/` are **not** the chain that produced the published gen1-gen3
+> datasets. Those used `build_training_dataset_gen*.py` (per-game split, seed 42,
+> val fraction 0.025). The three scripts work on the older 6-column layout and are
+> published for completeness, not as provenance; each carries the same warning in its
+> docstring.
+
 `train.py`'s docstring used to name a chain `extract_positions.py ->
 annotate_positions.py -> resolve_truncated_wdl.py -> split_train_val.py`, and
 the last two scripts were not in this repository. They have been found and are

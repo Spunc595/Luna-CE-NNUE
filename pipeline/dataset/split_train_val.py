@@ -1,4 +1,9 @@
 """
+NOT the chain that produced the published gen1-gen3 datasets. Those used
+pipeline/dataset/build_training_dataset_gen*.py (per-game split, seed 42,
+val fraction 0.025) -- see train.py. This script works on the older
+6-column layout and is published for completeness, not as provenance.
+
 Train/validation split PER GAME (not per row): all the positions of one game
 end up in the same set, otherwise the validation loss is optimistic
 (positions of the same game are correlated: the network could "recognize" a
