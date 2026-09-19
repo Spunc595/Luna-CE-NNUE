@@ -144,6 +144,17 @@ def main():
         n = int((lower < I16_MIN).sum().item())
         problems.append(f"accumulator lower bound {acc_min} is below {I16_MIN} ({n} neuron(s))")
 
+    # SIMD GATE (nnue.rs, MAX_SAFE_OUTPUT_WEIGHT): above 128 the AVX2/NEON
+    # kernels truncate the intermediate product to 16 bits and silently compute
+    # wrong evaluations (255 * 128 = 32640 still fits in i16; 255 * 129 does not
+    # in the worst case). The engine refuses such a net at load time; refusing
+    # it here means it is never produced.
+    MAX_SAFE_OUTPUT_WEIGHT = 128
+    max_output_weight = int(output_weights.to(torch.int32).abs().max().item())
+    print(f"max |output_weight| = {max_output_weight} (SIMD-safe limit: {MAX_SAFE_OUTPUT_WEIGHT})")
+    if max_output_weight > MAX_SAFE_OUTPUT_WEIGHT:
+        problems.append(f"output weight {max_output_weight} exceeds the SIMD-safe limit {MAX_SAFE_OUTPUT_WEIGHT}")
+
     if problems:
         print("EXPORT REFUSED (no file written): " + "; ".join(problems), file=sys.stderr)
         sys.exit(1)
@@ -162,15 +173,6 @@ def main():
     actual_size = os.path.getsize(args.out)
     status = "✅" if actual_size == expected_size else "❌ WRONG SIZE"
     print(f"{status} {args.out}: {actual_size} bytes (expected: {expected_size})")
-
-    # SIMD safety gate (see nnue.rs, MAX_SAFE_OUTPUT_WEIGHT): above 128
-    # the AVX2/NEON kernels truncate the intermediate product to 16 bits
-    # and silently compute wrong evaluations. The engine already refuses
-    # the net on its own at load time, but better to know here too.
-    MAX_SAFE_OUTPUT_WEIGHT = 128
-    max_output_weight = output_weights.abs().max().item()
-    gate_status = "✅" if max_output_weight <= MAX_SAFE_OUTPUT_WEIGHT else "❌ ABOVE THE SIMD-SAFE LIMIT"
-    print(f"{gate_status} max |output_weight| = {max_output_weight} (limit: {MAX_SAFE_OUTPUT_WEIGHT})")
 
 
 if __name__ == "__main__":
