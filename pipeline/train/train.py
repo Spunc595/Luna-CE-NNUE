@@ -233,6 +233,12 @@ def main():
                      help="separate checkpoint for the epoch with the best validation loss "
                           "(default: <out>.best.pt)")
     ap.add_argument("--resume", default=None, help="checkpoint to resume from")
+    ap.add_argument("--train-seed", type=int, required=True,
+                     help="seed of torch's RNG, set before the model is built: it decides the weight "
+                          "initialisation. No default on purpose (it changes the output and must be "
+                          "declared by whoever launches the run). The loader does NOT shuffle (as in the "
+                          "gen1-gen3 runs), so it does not change the order of the batches; the data split "
+                          "has its own seed (42) fixed when the dataset is built.")
     ap.add_argument("--save-every", type=int, default=300,
                      help="also save a checkpoint every N batches, not only at the end of an epoch")
     ap.add_argument("--snapshot-epochs", default=None,
@@ -249,6 +255,8 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}" + ("" if device.type == "cuda" else "  (no GPU found: it will be slow)"))
 
+    torch.manual_seed(args.train_seed)
+    print(f"Train seed: {args.train_seed}")
     model = LunaHalfKA().to(device)
 
     # On the freshly-initialized model, before loading a --resume:
