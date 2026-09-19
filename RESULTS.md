@@ -307,15 +307,55 @@ monotonicity means such a filter isn't just noise removal — it's also a
 normal-opening-derived, higher-piece-count positions lose over a fifth of
 their volume). Know that before applying it.
 
-**TODO, not done here**: verify the actual premise for filtering — that
-capture positions really do show a larger static-vs-search evaluation gap
-than quiet ones in this project's own data. This census establishes how
-much a filter would remove, not whether removing it would help.
+**The premise was then tested (see 5.12): negative result under the
+pre-registered rule.** This census establishes how much a filter would
+remove, not whether removing it would help; 5.12 measures the latter's
+premise.
 
 Script: `results/scripts/census_captures.py` (committed for
 recomputability; the underlying game_origins/positions/annotated files it
 reads are gen3's training data and are not committed, per this
 repository's standing rule).
+
+## 5.12 Static-vs-search gap by position class (pre-registered, negative)
+
+Question: are capture positions where the static evaluation disagrees with
+a 20,000-node search disproportionately (the premise behind a
+capture filter for gen4)? Method: `pipeline/measure/diagnose_static_search_gap.py`,
+2,000 positions of `results/eval_set.epd`, one engine process per network,
+`eval` (static) vs `go nodes 20000` (search), same network, side-to-move
+perspective (checked by hand), gap in **sigmoid space**
+`|sigmoid(K*search) - sigmoid(K*static)|` with `K = ln(10)/400` read from
+`pipeline/train/dataset.py`. Class from Luna's own bestmove. Identity gate
+20/20 (external vs embedded network differ on every gate position). Mate
+scores discarded (12 gen3, 11 gen2); nothing reached the 15000 clamp.
+Per-position data: `results/static_vs_search_gap_gen{2,3}.csv`; full
+report: `results/static_vs_search_gap_report_gen{2,3}.txt`.
+
+**The decision rule was committed before any number existed**
+(`results/static_vs_search_gap_decision_rule.md`, commit `2ab5773`).
+
+| | n | median gap (sigmoid) | Spearman(static, search) | share of positions | share of squared error |
+|---|---|---|---|---|---|
+| gen3 capture | 490 | 0.0867 | 0.741 | 24.6% | 40.9% |
+| gen3 quiet | 1,496 | 0.0636 | 0.856 | 75.3% | 57.6% |
+| gen2 capture | 543 | 0.0887 | 0.730 | 27.3% | 44.5% |
+| gen2 quiet | 1,444 | 0.0640 | 0.874 | 72.6% | 54.3% |
+
+Rule: (a) median gap capture/quiet >= 1.5 — **not met** (1.362 gen3, 1.385
+gen2); (b) Spearman lower by >= 0.05 — met (−0.116, −0.144); (c) error
+share / position share — 1.657 (gen3), 1.630 (gen2). The hypothesis needed
+(a) AND (b): **not supported; the filter was not implemented.** The profile
+is the same on gen2 and gen3, so it is a property of the position class, not
+of one fit. (Gen3's labels come from the gen2 search, so the gen2 gap is the
+one directly present in the data and the gen3 gap is the student's own; they
+agree.) Piece count showed no comparable concentration. Promotion moves
+(n=2) and the smallest move-class x piece-count cells (n<100) are flagged
+under-powered in the reports and support no conclusion.
+
+Limits, stated plainly: condition (a) compares **medians**, and squared
+error lives in the tail, so (a) and (c) measure different things — (c)
+was signalling a concentration that (a) could not see.
 
 ## 5.8 Generation 3's confound
 

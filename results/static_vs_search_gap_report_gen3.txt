@@ -1,0 +1,44 @@
+K = 0.005756462732485115   (from dataset.py: `K = math.log(10) / 400.0`)
+identity gate: 20/20 positions differ between external and embedded network
+  500/2000 (18s)
+  1000/2000 (35s)
+  1500/2000 (52s)
+  2000/2000 (70s)
+
+label=gen3  nodes=20000  positions=2000  discarded (mate score)=12  clamped (|value|>=15000)=0
+
+=== gen3: all positions (n=1988) ===
+  class                        n   med|dSig|  med|dcp| Spearman     pos%      err%
+  capture                    490      0.0867      89.0   0.7408    24.6%     40.9%
+  promotion                    2      0.4778     553.5      nan     0.1%      1.6%  UNDER-POWERED (n<100)
+  quiet                     1496      0.0636      64.0   0.8564    75.3%     57.6%
+  -- by piece count --
+  <=8                        197      0.0628      78.0   0.9126     9.9%      7.4%
+  9-12                       259      0.0559      61.0   0.8626    13.0%     14.3%
+  13-20                      662      0.0789      86.0   0.8081    33.3%     47.1%
+  21-32                      870      0.0685      57.0   0.7557    43.8%     31.2%
+  -- move class x piece count --
+  capture / <=8               17      0.1437     178.0   0.6634     0.9%      2.0%  UNDER-POWERED (n<100)
+  capture / 9-12              35      0.0912      95.0   0.7862     1.8%      4.5%  UNDER-POWERED (n<100)
+  capture / 13-20            175      0.0897     112.0   0.7819     8.8%     18.9%
+  capture / 21-32            263      0.0803      67.0   0.6989    13.2%     15.4%
+  promotion / <=8              0
+  promotion / 9-12             1      0.7894     821.0      nan     0.1%      1.5%  UNDER-POWERED (n<100)
+  promotion / 13-20            1      0.1662     286.0      nan     0.1%      0.1%  UNDER-POWERED (n<100)
+  promotion / 21-32            0
+  quiet / <=8                180      0.0579      76.5   0.9363     9.1%      5.3%
+  quiet / 9-12               223      0.0495      55.0   0.9054    11.2%      8.3%
+  quiet / 13-20              486      0.0768      80.5   0.8390    24.4%     28.1%
+  quiet / 21-32              607      0.0644      52.0   0.7911    30.5%     15.8%
+
+--- decision rule [gen3, all positions] ---
+  (a) median gap capture/quiet = 1.362  (need >= 1.5)  -> not met
+  (b) Spearman quiet - capture = +0.1156  (need >= 0.05) -> MET
+  (c) capture error share / position share = 40.9% / 24.6% = 1.657  (actionable only if >= 1.5) -> MET
+  hypothesis supported (a and b): False;  actionable (a, b and c): False
+
+--- decision rule [gen3, clamped excluded (sensitivity)] ---
+  (a) median gap capture/quiet = 1.362  (need >= 1.5)  -> not met
+  (b) Spearman quiet - capture = +0.1156  (need >= 0.05) -> MET
+  (c) capture error share / position share = 40.9% / 24.6% = 1.657  (actionable only if >= 1.5) -> MET
+  hypothesis supported (a and b): False;  actionable (a, b and c): False
