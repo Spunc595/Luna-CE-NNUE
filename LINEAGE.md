@@ -158,6 +158,38 @@ observing zero failures in about 8.5 million annotations, any measurable rate wo
 point at the environment (crashes, memory, timeouts) and not at the positions, and at
 the limit the hole would be at most ~3,000 positions in 3 million.
 
+## Training environment
+
+None of the training logs records the software they ran on, so the "Training
+machine" row of each generation is reconstructed, and this is how far it can be
+trusted:
+
+* **Hardware**: read from the machines that trained the networks (the PC for gen1,
+  the Oracle VM for gen2 and gen3); the logs confirm `Device: cpu` for all three, and
+  neither machine has a usable GPU.
+* **Python and torch versions: not recorded.** They are deduced from the only
+  installation on each machine and its install date: on Oracle torch 2.14.0+cu130 is
+  the only torch present (user site, `pip`), installed on 2026-09-09, before the gen2
+  training (ended 2026-09-15) and the gen3 training (2026-09-16), with no later
+  install or upgrade in the same site-packages; on the PC torch 2.13.0+cpu was
+  installed on 2026-08-06 and Python 3.14.0 on 2025-10-07, both before the gen1
+  training (2026-09-12), with no later install of either. This holds unless a
+  package was replaced without leaving a newer install record; it is an inference from
+  file dates, not a record.
+* **Not recorded and not deducible**: the number of torch threads used at the time
+  (the default on a 4-thread/4-core machine is 4), the load of the machine during
+  training (on Oracle a lichess bot shares the machine), the exact command line (it
+  is reconstructed from the logs: binary format, 25-epoch budget, batch size 8192,
+  learning rate 1e-3, eval lambda 0.7, patience 6 for gen3).
+
+Speed check of the environment as it is today (2026-09-19, Oracle): 300 batches of
+the gen3 training at gen3's parameters, batch 8192, ran at 3.06 batch/s (25,035
+positions/s) with 4 torch threads, i.e. about 121 s of training per epoch of 371
+batches plus about 1.7 s of validation, consistent with the 122.5-128.6 s per epoch
+that the gen3 log records. Re-exporting the gen3 best checkpoint (`gen3_checkpoint.best.pt`,
+37,791,889 bytes) with today's `model.py` and `export.py` reproduces
+`nets/luna_gen3.nnue` byte for byte (sha256 `82aa1bf0...`).
+
 ## Generation 1
 
 | Field | Value |
@@ -170,6 +202,7 @@ the limit the hole would be at most ~3,000 positions in 3 million.
 | Self-play nodes | 3,000 |
 | Annotation nodes | 10,000 |
 | Machine | Oracle (self-play and annotation) |
+| Training machine | PC (Windows 11 Home), AMD Ryzen 3 3200U, x86-64, 2 cores / 4 threads, 5.9 GB RAM; **CPU only** (the training log says `Device: cpu`). Python 3.14.0, torch 2.13.0+cpu — **deduced, not recorded at the time** (see below). Epochs of 294-301 s in the log (12 epochs). |
 | Shards | 46 (`gen1_shard_00001`..`00046`) |
 | Games | 230,000 (assigned = completed, 100%) |
 | Raw positions | 3,300,643 |
@@ -213,6 +246,7 @@ done, cost disproportionate to the goal.
 | Self-play nodes | 3,000 |
 | Annotation nodes | 20,000 (chosen: knee of the 10k/20k/50k curve) |
 | Machine | Oracle (self-play, and — after reconciliation, see below — the entire annotation too) |
+| Training machine | Oracle VM (OCI `VM.Standard.A1.Flex`, KVM), ARM Neoverse-N1, aarch64, 4 cores (1 thread each), 23 GB RAM, Ubuntu 24.04.4; **CPU only** (no GPU on the machine; the training log says `Device: cpu`). Python 3.12.3, torch 2.14.0+cu130 (CUDA build, CUDA unavailable). Versions **deduced, not recorded at the time** (see below). Epochs of 121-174 s in the log (10 epochs, mean 149 s). |
 | Shards | 53 (`gen2_shard_00001`..`00053`) |
 | Games | 265,000 (assigned = completed, 100%) |
 | Raw positions | 3,083,063 |
@@ -260,6 +294,7 @@ objectively better network of the two.
 | Self-play nodes | 3,000 |
 | Annotation nodes | 20,000 (master gate: ρ 0.8537/0.8760/0.8887 at 10k/20k/50k, above the gen2 master's 0.8072/0.8285/0.8413) |
 | Machine | Oracle, sole machine start to finish (method rule fixed after the gen2 incident) |
+| Training machine | Oracle VM (OCI `VM.Standard.A1.Flex`, KVM), ARM Neoverse-N1, aarch64, 4 cores (1 thread each), 23 GB RAM, Ubuntu 24.04.4; **CPU only** (no GPU on the machine; the training log says `Device: cpu`). Python 3.12.3, torch 2.14.0+cu130 (CUDA build, CUDA unavailable). Versions **deduced, not recorded at the time** (see below). Epochs of 122.5-128.6 s in the log (9 epochs before the early stop). |
 | Shards | 54 (`gen3_shard_00001`..`00054`) |
 | Games | 270,000 (assigned = completed, 100%, verified) |
 | Raw positions | 3,210,755 |
