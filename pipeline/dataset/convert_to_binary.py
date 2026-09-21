@@ -19,7 +19,11 @@ and targets, not a reimplementation — so the equivalence check verifies
 a format issue, not two different pieces of logic that happen to agree.
 
 Usage:
-  python convert_to_binary.py --in train.tsv --out train_bin
+  python convert_to_binary.py --in train.tsv --out train_bin --eval-lambda 0.7
+
+--eval-lambda has no default on purpose: it is BAKED into <out>.targets.npy and train.py --format binary
+reads those targets, ignoring its own --eval-lambda. The published gen1-gen3 binaries were built with 0.7.
+To get the targets of another lambda without redoing the features, use make_lambda_targets.py.
 """
 import argparse
 import math
@@ -53,7 +57,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--in", dest="inp", required=True)
     ap.add_argument("--out", required=True, help="output prefix (no extension)")
-    ap.add_argument("--eval-lambda", type=float, default=0.7)
+    ap.add_argument("--eval-lambda", type=float, required=True,
+                    help="no default on purpose: it is baked into the targets file (see the module docstring)")
     args = ap.parse_args()
 
     with open(args.inp, "r", errors="ignore") as f:
