@@ -345,11 +345,10 @@ report: `results/static_vs_search_gap_report_gen{2,3}.txt`.
 Rule: (a) median gap capture/quiet >= 1.5 — **not met** (1.362 gen3, 1.385
 gen2); (b) Spearman lower by >= 0.05 — met (−0.116, −0.144); (c) error
 share / position share — 1.657 (gen3), 1.630 (gen2). The hypothesis needed
-(a) AND (b): **not supported; the filter was not implemented.** The profile
-is the same on gen2 and gen3, so it is a property of the position class, not
-of one fit. (Gen3's labels come from the gen2 search, so the gen2 gap is the
-one directly present in the data and the gen3 gap is the student's own; they
-agree.) Piece count showed no comparable concentration. Promotion moves
+(a) AND (b): **not supported; the filter was not implemented.** (Gen3's
+labels come from the gen2 search, so the gen2 gap is the one directly present
+in the data and the gen3 gap is the student's own.) Piece count showed no comparable
+concentration. Promotion moves
 (n=2) and the smallest move-class x piece-count cells (n<100) are flagged
 under-powered in the reports and support no conclusion.
 
@@ -357,6 +356,24 @@ Limits, stated plainly: condition (a) compares **medians**, and squared
 error lives in the tail, so (a) and (c) measure different things — (c)
 was signalling a concentration that (a) could not see. Follow-up
 (decided after seeing this divergence, so not independent): 5.13.
+
+**Correction (2026-09-20) — the inference, not the measurements; every number above stands.**
+This section used to say that the profile is the same on gen2 and gen3, "so it is a property of the
+position class, not of one fit". That inference does not hold. The seed-to-seed floor of the
+capture/quiet ratio, measured on three identical runs (lambda sweep Phase 1,
+`results/lambda_sweep_phase1.md`), is **0.3307**, while the gen2-gen3 difference is **0.023**: the
+two generations cannot be told apart on that ratio, and the agreement between them is not evidence
+of anything. The bootstrap intervals published in 5.13 already said so, `1.385 [1.223, 1.597]` and
+`1.362 [1.169, 1.565]`: they overlap almost entirely and gen3's contains gen2's value with room to
+spare. The data to notice it was already there and was read past.
+
+**What stands, and is just as clear:** the **direction**. In every run measured (gen2 1.385, gen3
+1.362, and the three Phase 1 runs 1.655, 1.585, 1.324) the ratio is well above 1: positions whose
+best move is a capture have a larger static-vs-search gap than quiet ones, every time. "Captures
+are harder for a static evaluator" remains a property of the position class. What falls is only
+the claim that the numerical closeness of gen2's and gen3's values means anything. Whether the
+student inherits the master's blind spots is measured directly, with its own floor and controls,
+in 5.15.
 
 ## 5.13 The tail of the gap (follow-up to 5.12, NOT independent of it)
 
