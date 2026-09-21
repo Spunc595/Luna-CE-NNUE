@@ -1,0 +1,5 @@
+quantization saturation (elements reaching the i16 limits): feature_weights=0 feature_bias=0 output_weights=0 output_bias=0
+max |feature_weight| = 140, max |feature_bias| = 47
+accumulator worst case (32 features): max = +2842, min = -2633; margin to i16 limits: up 29925 (11.5x), down 30135 (12.4x)
+max |output_weight| = 5 (SIMD-safe limit: 128)
+✅ <scratch>/run_L0.4_s101/net.nnue: 6297664 bytes (expected: 6297664)

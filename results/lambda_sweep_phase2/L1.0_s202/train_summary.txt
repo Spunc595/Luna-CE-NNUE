@@ -1,0 +1,19 @@
+NOTE: --format binary reads the targets baked into the .targets.npy files; --eval-lambda (1.0) is NOT applied to them (see pipeline/dataset/make_lambda_targets.py)
+Train seed: 202
+  1. Target variance (constant predictor):   0.120380
+  2. MSE of material alone:                0.027849
+  3. MSE of the untrained model:           0.122681
+✅ Epoch 1/25 completed — train_loss=0.0294  val_loss=0.0148  lr=9.96e-04  3,033,768 positions  120.7s  weights_at_clamp: feature=0 output=0
+✅ Epoch 2/25 completed — train_loss=0.0121  val_loss=0.0134  lr=9.84e-04  3,033,768 positions  121.0s  weights_at_clamp: feature=0 output=0
+✅ Epoch 3/25 completed — train_loss=0.0102  val_loss=0.0128  lr=9.65e-04  3,033,768 positions  120.6s  weights_at_clamp: feature=0 output=0
+✅ Epoch 4/25 completed — train_loss=0.0090  val_loss=0.0126  lr=9.39e-04  3,033,768 positions  120.8s  weights_at_clamp: feature=0 output=0
+✅ Epoch 5/25 completed — train_loss=0.0082  val_loss=0.0126  lr=9.05e-04  3,033,768 positions  122.0s  weights_at_clamp: feature=0 output=0
+✅ Epoch 6/25 completed — train_loss=0.0076  val_loss=0.0128  lr=8.66e-04  3,033,768 positions  120.8s  weights_at_clamp: feature=0 output=0
+✅ Epoch 7/25 completed — train_loss=0.0069  val_loss=0.0126  lr=8.21e-04  3,033,768 positions  120.8s  weights_at_clamp: feature=0 output=0
+✅ Epoch 8/25 completed — train_loss=0.0064  val_loss=0.0128  lr=7.70e-04  3,033,768 positions  124.3s  weights_at_clamp: feature=0 output=0
+✅ Epoch 9/25 completed — train_loss=0.0060  val_loss=0.0129  lr=7.16e-04  3,033,768 positions  122.1s  weights_at_clamp: feature=0 output=0
+✅ Epoch 10/25 completed — train_loss=0.0057  val_loss=0.0131  lr=6.58e-04  3,033,768 positions  120.9s  weights_at_clamp: feature=0 output=0
+✅ Epoch 11/25 completed — train_loss=0.0054  val_loss=0.0130  lr=5.98e-04  3,033,768 positions  120.9s  weights_at_clamp: feature=0 output=0
+✅ Epoch 12/25 completed — train_loss=0.0051  val_loss=0.0132  lr=5.36e-04  3,033,768 positions  120.2s  weights_at_clamp: feature=0 output=0
+✅ Epoch 13/25 completed — train_loss=0.0048  val_loss=0.0133  lr=4.74e-04  3,033,768 positions  120.8s  weights_at_clamp: feature=0 output=0
+Early stop: no improvement on validation for 6 epochs (best: 0.0126)

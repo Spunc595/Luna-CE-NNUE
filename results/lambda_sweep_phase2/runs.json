@@ -1,0 +1,82 @@
+[
+ {
+  "name": "A1",
+  "lambda": 0.7,
+  "seed": 101,
+  "gap_csv": "results/inheritance/A1_gap.csv",
+  "stockfish_csv": "results/lambda_sweep_phase2/A1/A1_vs_stockfish.csv",
+  "train_log": "results/lambda_sweep_phase1/train_log_A1.csv",
+  "sha256": "a5580def88bb1b80ba4b08fbae14e8def55491f34513ecbf5f99aacfb740a66e",
+  "gate": "20/20"
+ },
+ {
+  "name": "B",
+  "lambda": 0.7,
+  "seed": 202,
+  "gap_csv": "results/inheritance/B_gap.csv",
+  "stockfish_csv": "results/lambda_sweep_phase2/B/B_vs_stockfish.csv",
+  "train_log": "results/lambda_sweep_phase1/train_log_B.csv",
+  "sha256": "a8b4ad4458ca789219313ab36e6b69f270a46eaa5f716254ac2f0fb3e9975cbc",
+  "gate": "20/20"
+ },
+ {
+  "name": "L1.0_s101",
+  "lambda": 1.0,
+  "seed": 101,
+  "gap_csv": "results/lambda_sweep_phase2/L1.0_s101/L1.0_s101_gap.csv",
+  "stockfish_csv": "results/lambda_sweep_phase2/L1.0_s101/L1.0_s101_vs_stockfish.csv",
+  "train_log": "results/lambda_sweep_phase2/L1.0_s101/train_log.csv",
+  "sha256": "72175311541cce866dfce2cf763b55dad250a168f7c040187d8932bbdecc720b",
+  "gate": "20/20"
+ },
+ {
+  "name": "L1.0_s202",
+  "lambda": 1.0,
+  "seed": 202,
+  "gap_csv": "results/lambda_sweep_phase2/L1.0_s202/L1.0_s202_gap.csv",
+  "stockfish_csv": "results/lambda_sweep_phase2/L1.0_s202/L1.0_s202_vs_stockfish.csv",
+  "train_log": "results/lambda_sweep_phase2/L1.0_s202/train_log.csv",
+  "sha256": "e82f93e6ae8c4dd72eacdbf485d7d126ea668aef7983e6daf4269c106db83493",
+  "gate": "20/20"
+ },
+ {
+  "name": "L0.4_s101",
+  "lambda": 0.4,
+  "seed": 101,
+  "gap_csv": "results/lambda_sweep_phase2/L0.4_s101/L0.4_s101_gap.csv",
+  "stockfish_csv": "results/lambda_sweep_phase2/L0.4_s101/L0.4_s101_vs_stockfish.csv",
+  "train_log": "results/lambda_sweep_phase2/L0.4_s101/train_log.csv",
+  "sha256": "9db4ab53b76ab389bbcee30d294d1d5df9b664064b5f0e10b528e4019205f2cd",
+  "gate": "20/20"
+ },
+ {
+  "name": "L0.4_s202",
+  "lambda": 0.4,
+  "seed": 202,
+  "gap_csv": "results/lambda_sweep_phase2/L0.4_s202/L0.4_s202_gap.csv",
+  "stockfish_csv": "results/lambda_sweep_phase2/L0.4_s202/L0.4_s202_vs_stockfish.csv",
+  "train_log": "results/lambda_sweep_phase2/L0.4_s202/train_log.csv",
+  "sha256": "315e188f896a7bf43fc6c602485688ac5f171f9d9781cc484db1141fc8b497de",
+  "gate": "20/20"
+ },
+ {
+  "name": "L0.0_s101",
+  "lambda": 0.0,
+  "seed": 101,
+  "gap_csv": "results/lambda_sweep_phase2/L0.0_s101/L0.0_s101_gap.csv",
+  "stockfish_csv": "results/lambda_sweep_phase2/L0.0_s101/L0.0_s101_vs_stockfish.csv",
+  "train_log": "results/lambda_sweep_phase2/L0.0_s101/train_log.csv",
+  "sha256": "adfe23a56220319f58cc05891de29c400aed10109b9b9437aaba094c21a2ee1a",
+  "gate": "20/20"
+ },
+ {
+  "name": "L0.0_s202",
+  "lambda": 0.0,
+  "seed": 202,
+  "gap_csv": "results/lambda_sweep_phase2/L0.0_s202/L0.0_s202_gap.csv",
+  "stockfish_csv": "results/lambda_sweep_phase2/L0.0_s202/L0.0_s202_vs_stockfish.csv",
+  "train_log": "results/lambda_sweep_phase2/L0.0_s202/train_log.csv",
+  "sha256": "77ea4c16f5b3890261fc120f6d1ec434136af39432138400bd1bd2c10107fbd7",
+  "gate": "20/20"
+ }
+]

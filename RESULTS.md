@@ -569,6 +569,25 @@ than akimbo's, by margins far above what the seed changes. What it does **not** 
 
 ---
 
+## 5.16 Lambda sweep, Phase 2: what the weight of the target does (2026-09-21)
+
+Full table, preflights and caveats: `results/lambda_sweep_phase2.md`. Rule: Amendments 1 and 2 of
+`results/lambda_sweep_decision_rule.md`, committed before the first run. Six new runs (lambda 1.0, 0.4, 0.0, seeds 101 and
+202) plus A1 and B as the lambda 0.7 point. **Amendment 2 matters for reading this**: the binary dataset bakes lambda into
+its targets and `--eval-lambda` does nothing on it, so the targets were rebuilt per lambda (validated: byte-identical to the
+published ones at 0.7); launched as first written, all six runs would have trained at 0.7 without any error.
+
+**Verdict under the registered rule:** Prediction A (rho(e, gen2) at lambda 0.0 lower than at 1.0 by more than 0.021) **met**
+(+0.0880: 0.5474 -> 0.4594, monotone over the four points); Prediction B (rho(e, akimbo) stays within 0.021) **not met**
+(excursion 0.0477). Combination **A yes, B no**: lowering lambda makes the network less in agreement with everybody, and it is
+**not demonstrated** that the inheritance is specific to the master; the label-versus-lineage question left open by 5.15 stays
+open. Static rho against Stockfish falls with lambda (1.0: 0.7037, 0.7: 0.6979, 0.4: 0.6783, 0.0: 0.6552); the best lambda (1.0)
+beats 0.7 by 0.0058, inside the 0.0103 floor, so **by the registered rule generation 4 stays at lambda 0.7** and the weight of
+the target is not, in the range measured, a lever that raises quality. Caveat: at lambda != 0.7 the two seeds scatter more than
+the Phase 1 floor (up to 0.044 on rho(e, gen2) at 0.4). Nothing here authorizes a filter or a change of the pipeline.
+
+---
+
 ## 5.8 Generation 3's confound
 
 The gen3 normal-opening pool was **regenerated from scratch** with the

@@ -1,0 +1,15 @@
+NOTE: --format binary reads the targets baked into the .targets.npy files; --eval-lambda (0.4) is NOT applied to them (see pipeline/dataset/make_lambda_targets.py)
+Train seed: 101
+  1. Target variance (constant predictor):   0.152365
+  2. MSE of material alone:                0.058596
+  3. MSE of the untrained model:           0.153669
+✅ Epoch 1/25 completed — train_loss=0.0610  val_loss=0.0492  lr=9.96e-04  3,033,768 positions  119.8s  weights_at_clamp: feature=0 output=0
+✅ Epoch 2/25 completed — train_loss=0.0412  val_loss=0.0484  lr=9.84e-04  3,033,768 positions  119.9s  weights_at_clamp: feature=0 output=0
+✅ Epoch 3/25 completed — train_loss=0.0366  val_loss=0.0484  lr=9.65e-04  3,033,768 positions  119.9s  weights_at_clamp: feature=0 output=0
+✅ Epoch 4/25 completed — train_loss=0.0331  val_loss=0.0494  lr=9.39e-04  3,033,768 positions  121.0s  weights_at_clamp: feature=0 output=0
+✅ Epoch 5/25 completed — train_loss=0.0299  val_loss=0.0512  lr=9.05e-04  3,033,768 positions  120.1s  weights_at_clamp: feature=0 output=0
+✅ Epoch 6/25 completed — train_loss=0.0272  val_loss=0.0518  lr=8.66e-04  3,033,768 positions  120.6s  weights_at_clamp: feature=0 output=0
+✅ Epoch 7/25 completed — train_loss=0.0249  val_loss=0.0530  lr=8.21e-04  3,033,768 positions  120.5s  weights_at_clamp: feature=0 output=0
+✅ Epoch 8/25 completed — train_loss=0.0230  val_loss=0.0544  lr=7.70e-04  3,033,768 positions  120.9s  weights_at_clamp: feature=0 output=0
+✅ Epoch 9/25 completed — train_loss=0.0216  val_loss=0.0559  lr=7.16e-04  3,033,768 positions  121.5s  weights_at_clamp: feature=0 output=0
+Early stop: no improvement on validation for 6 epochs (best: 0.0484)
