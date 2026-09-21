@@ -60,7 +60,7 @@ small systematic offset under a much larger random scatter.
 |---|---|---|---|
 | best move (2M): capture | 463 | 0.0344 | 0.0459 |
 | best move (2M): quiet | 1,508 | 0.0340 | 0.0491 |
-| best move (2M): promotion | 2 | 0.0348 | 0.0348 |  (n < 100: UNDER-POWERED, no conclusion) |
+| best move (2M): promotion (n < 100: UNDER-POWERED, no conclusion) | 2 | 0.0348 | 0.0348 |
 | pieces <= 8 | 193 | 0.0241 | 0.0410 |
 | pieces 9-12 | 256 | 0.0301 | 0.0450 |
 | pieces 13-20 | 654 | 0.0378 | 0.0559 |
