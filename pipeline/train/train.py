@@ -226,7 +226,11 @@ def main():
     ap.add_argument("--batch-size", type=int, default=8192)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--eval-lambda", type=float, default=0.7,
-                     help="weight of the annotator's evaluation vs the game result (1.0 = eval only)")
+                     help="weight of the annotator's evaluation vs the game result (1.0 = eval only). "
+                          "Applied only with --format tsv: a binary dataset has the target baked into its "
+                          ".targets.npy (convert_to_binary.py, default 0.7) and this option does NOT change it; "
+                          "to train a binary dataset at another lambda rebuild the targets with "
+                          "pipeline/dataset/make_lambda_targets.py")
     ap.add_argument("--patience", type=int, default=5,
                      help="early stop if the validation loss does not improve for N epochs in a row")
     ap.add_argument("--best-out", default=None,
@@ -255,6 +259,9 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}" + ("" if device.type == "cuda" else "  (no GPU found: it will be slow)"))
 
+    if args.format == "binary":
+        print("NOTE: --format binary reads the targets baked into the .targets.npy files; --eval-lambda "
+              f"({args.eval_lambda}) is NOT applied to them (see pipeline/dataset/make_lambda_targets.py)")
     torch.manual_seed(args.train_seed)
     print(f"Train seed: {args.train_seed}")
     model = LunaHalfKA().to(device)
