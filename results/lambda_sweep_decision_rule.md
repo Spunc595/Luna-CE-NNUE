@@ -114,3 +114,82 @@ The four checkpoints (about 38 MB each) and four networks (6.3 MB) stay on the O
 server in a dedicated scratch directory and are **not published**: until it is known what
 is worth keeping, the repository gets the **numbers**, not the weights. Deletion is manual,
 when decided, looking at what is deleted.
+
+
+---
+
+## Amendment 1 — Phase 2 (registered 2026-09-20, before the first Phase 2 run)
+
+**Why the amendment.** The original prediction used the capture/quiet ratio, whose seed-to-seed
+floor turned out to be 0.3307 against a difference of interest of 0.023: it is not a usable
+instrument and is abandoned. The inheritance measure of RESULTS.md 5.15 has a floor of 0.0070 and
+replaces it. (Phase 1 also measured the floor of the static rho against Stockfish: 0.0103.)
+
+**What stays open.** 5.15 established that the inheritance exists, but not whether it comes from the
+**label** or from the **closeness of the training data**: the order gen2 > gen1 > akimbo is also the
+order of distance in the lineage. Varying lambda separates the two, because it keeps data,
+architecture and split fixed and changes only how much of the label comes from the master.
+
+**Design.** `lambda in {1.0, 0.4, 0.0}`, **two seeds each: 101 and 202**. They are the seeds of
+Phase 1 on purpose: the point `lambda = 0.7` is already measured with the same seeds (runs A1 and B)
+and is not redone, and the comparison between lambdas stays paired on the seed. Everything else as
+in Phase 1 and gen3 (same binary dataset, batch 8192, lr 1e-3, cosine over 25 epochs, patience 6,
+split seed 42, same code and machine, one run after the other, the bot and the watchers stopped).
+Every network passes the 20/20 identity gate and its sha256 is printed next to each result row.
+
+**Quantities** (for each of the six new networks, with the known values of A1 and B beside them):
+static rho against Stockfish; rho(e_S, e_gen2) (inheritance from the master); rho(e_S, e_akimbo) (the
+control: akimbo has nothing to do with the label at any lambda); rho(e_S, e_gen1) (intermediate
+reference, as in 5.15); epoch and value of the minimum validation loss and the epochs run. `e_X` is
+the vector of signed static errors defined in 5.15, `sigmoid(K*search_X) - sigmoid(K*static_X)`, each
+network with its own 20,000-node search. Floors already measured, used as the yardstick: **static
+rho 0.0103** (Phase 1), **rho(., gen2) 0.0070** (5.15).
+
+**Prediction A — it goes down.** As lambda falls, `rho(e_S, e_gen2)` decreases. Condition: the value at
+`lambda = 0.0` is lower than the value at `lambda = 1.0` by **more than three times the floor**
+(> 0.021). Monotonicity over all four points is reported but **not required**: with two seeds per
+point a local inversion is expected.
+
+**Prediction B — it stays put.** The excursion of `rho(e_S, e_akimbo)` over all four lambdas is
+**less than three times the floor** (< 0.021).
+
+**How the combinations are read** (written now, not afterwards):
+
+* **A yes, B yes** -> the inheritance goes through the label. A strong result, and the lever for
+  generation 4 is the design of the target.
+* **A yes, B no** (akimbo goes down too) -> lowering lambda makes the network noisier and less in
+  agreement with **everybody**. It is not inheritance specific to the master: not demonstrated.
+* **A no** -> the weight of the label does not govern the agreement with the master, which comes from
+  the distribution of the data and the architecture. **The inheritance line is closed**: a fifth
+  measure is not sought.
+
+**The lambda of generation 4 is a separate question**, decided on static rho: the lambda that
+maximises it, provided the advantage exceeds the floor of 0.0103. If rho is flat within the floor
+over all four lambdas, then **the weight of the target is not a quality lever**: generation 4 stays at
+0.7 and the search goes elsewhere. That is a legitimate outcome and is declared as such, not worked
+around.
+
+**No outcome of this phase produces generation 4.** It produces the numbers with which to design it.
+
+**Two practical warnings.** `lambda = 0.0` trains on the **game result alone** (the label is 0, 0.5
+or 1 and nothing else): the network may stop very early or come out much worse. That is an outcome to
+report, not a fault, and it is the extreme that is needed precisely because it zeroes the master's
+component. If a run behaves anomalously (early stop in the first epoch, a loss that does not go down, a
+network that fails the export gate), **stop and report** instead of relaunching it with other
+parameters: a missing point is better than a point obtained by changing the rules midway.
+
+### Operational definitions (added while registering, before any Phase 2 run; they resolve what the text above leaves open, not what it decides)
+
+* **The value of a point** (a lambda) is the **mean of its two seeds** (101 and 202). For lambda 0.7
+  the two seeds are A1 and B. The excursion in B is `max - min` over the four per-lambda means of
+  rho(e_S, e_akimbo). Per-seed values and the per-seed differences (paired on the seed) are reported
+  as well and decide nothing.
+* **Prediction A** is judged on `mean_rho(e_S, e_gen2)[lambda 1.0] - mean_rho(e_S, e_gen2)[lambda 0.0] > 0.021`
+  (strict, unrounded values).
+* **The lambda of generation 4:** static rho per lambda is the mean of its two seeds. If
+  `max - min` of the four means is <= 0.0103, rho is flat and generation 4 stays at 0.7. Otherwise the
+  best lambda is the one with the highest mean, and it is adopted only if its mean exceeds the mean at
+  lambda 0.7 by more than 0.0103 (if the best is 0.7 itself, generation 4 stays at 0.7).
+* **Anomaly** (the "stop and report" of the warnings): a run that ends after fewer than three epochs,
+  a training process that exits with an error, or a network refused by the export gate. The driver
+  stops after such a run; the runs still to do are not started until it is decided what to do.
