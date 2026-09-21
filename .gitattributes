@@ -2,3 +2,15 @@
 # that ships them: a shell script with CRLF refuses to run on Linux, and Python or a data file with CRLF
 # would run silently with different bytes.
 * text=auto eol=lf
+
+# Binary files are declared, not left to the text=auto heuristic (a NUL-byte guess): every .nnue has a published
+# sha256 that must survive checkout and git archive byte for byte.
+*.nnue binary
+*.sha256 text eol=lf
+*.npy binary
+*.bin binary
+*.pt binary
+*.gz binary
+*.png binary
+*.ico binary
+*.pgn -text
