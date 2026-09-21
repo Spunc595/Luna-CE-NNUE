@@ -132,10 +132,13 @@ one computed after removing the CRs (`310e0476...` / `3b4a2398...`).
 
 **What was measured** (details in `RESULTS.md` 5.14): the annotators drop a
 position silently when its annotation fails and never stored how many. The counts
-exist only for gen1 (all shards) and gen2 shards 1-9 (a superseded PC run); the Oracle
-logs of gen2 and gen3 are empty (stdout was redirected without flushing). Rebuilt
-from the surviving input and output files, validated where an original count exists:
-**zero failed annotations in gen1, gen2 and gen3**, and every distinct position of
+were on disk only for gen1 (all shards) and gen2 shards 1-9 (a superseded PC run); the
+Oracle logs of gen2 and gen3 are 0 bytes (stdout was redirected without flushing). The
+gen2 and gen3 counts were nevertheless still in the memory of the idle annotators, and
+were recovered from there on 2026-09-20 (`results/annotation_recovered/`). Rebuilt
+from the surviving input and output files and checked against the original counts,
+shard by shard, for all three generations: **zero failed annotations in gen1, gen2 and
+gen3**, the reconstruction equal to the original counts (no mismatch), and every distinct position of
 each input appears in its output, so no position was lost for good. The gen3
 annotator that ran on Oracle used a worker named `_annotate_chunk_worker_gen3.py`; it is
 byte-identical to the gen2 worker, and the published gen3 annotator points at the

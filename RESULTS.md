@@ -433,7 +433,7 @@ here, read-only, with `pipeline/measure/reconstruct_annotation_failures.py`.
 |---|---|---|
 | gen1 | all 46 shards | PC log of the run |
 | gen2 | shards 1-9 only, and of a first PC run that was superseded (see below) | PC log |
-| gen2 shards 10-53, gen3 (54 shards) | **do not exist** | the Oracle runs redirected stdout to a file without flushing: both logs are 0 bytes; the status file has no `n_failed` |
+| gen2 shards 10-53, gen3 (54 shards) | **were not on disk, and were recovered on 2026-09-20** | the Oracle runs redirected stdout to a file without flushing: both log files are 0 bytes and the status file has no `n_failed`; but the two annotators were still running (idle) and the unflushed output was still in their memory. Read from the process memory before anything was closed and saved as `results/annotation_recovered/annotator_stdout_gen{2,3}.txt` (53 and 54 lines, one per shard) |
 
 **Method (B.2).** A position is dropped either because it is a duplicate (its hash
 is in `global_seen`) or because it failed (it is not). Rebuilding `global_seen`
@@ -464,8 +464,8 @@ recovered order the reconstruction gives zero. gen3 was annotated in numeric ord
 | Generation | Machine | Input rows | Written | Failed | Source |
 |---|---|---|---|---|---|
 | gen1 | PC | 3,300,643 | 2,135,009 | **0** | measured (original log) and reconstructed, equal |
-| gen2 | Oracle (shards 1-9 also on PC) | 3,083,063 | 2,972,944 | **0** | reconstructed only (order recovered), not validated against an original count |
-| gen3 | Oracle | 3,210,755 | 3,112,004 | **0** | reconstructed only |
+| gen2 | Oracle (shards 1-9 also on PC) | 3,083,063 | 2,972,944 | **0** | reconstructed (order recovered) **and** equal to the original counts recovered from memory (53 of 53 shards match; original totals: 105,283 dup, 4,836 forced, 0 failed) |
+| gen3 | Oracle | 3,210,755 | 3,112,004 | **0** | reconstructed **and** equal to the original counts recovered from memory (54 of 54 shards match; original totals: 95,073 dup, 3,678 forced, 0 failed) |
 
 Per shard: `results/annotation_failures_gen{1,2,3}.csv`. There is no drift and no
 difference between machines to explain: nothing to drift. A stronger statement
@@ -473,9 +473,10 @@ that does not depend on the order or on the "fails then succeeds" limit: the
 number of **distinct dedup keys present in the inputs equals the number of keys
 written** in all three generations (2,135,009; 2,972,944; 3,112,004), so no
 position was lost for good anywhere. What this cannot exclude: a *transient*
-failure later recovered (harmless for the dataset), and a failed "force" row in
-gen2/gen3 (its game keeps the game result instead of the corrected one; the gen1
-log shows 0 of 21,716 forced rows failing, gen2/gen3 have no count). With zero
+failure later recovered (harmless for the dataset). A failed "force" row (its game
+would keep the game result instead of the corrected one) is excluded too: the
+original counts, `failed` included, are 0 for every shard of gen1 (21,716 forced
+rows), gen2 (4,836) and gen3 (3,678). With zero
 failures observed among at least 2.1M (gen1: new+forced), 2.97M and 3.11M
 annotations, the 95% upper bound on a per-annotation failure probability, if
 failures were independent, is about 1.4e-6, 1.0e-6 and 1.0e-6.
