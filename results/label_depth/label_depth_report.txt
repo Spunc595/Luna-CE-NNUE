@@ -1,0 +1,37 @@
+positions: 2000; valid (no mate score at any budget): 1973; discarded: 27; mate scores per budget: {20000: 12, 50000: 14, 100000: 14, 200000: 17, 400000: 22, 1000000: 24, 2000000: 27}; valid positions with a clamped score at some budget: 10
+median depth reached per budget: 20000: 6, 50000: 7, 100000: 8, 200000: 10, 400000: 11, 1000000: 12, 2000000: 14
+
+REFERENCE CHECK rho(1M, 2M) = 0.9966  -> the 2M reference is STABLE enough to use (> 0.99)
+
+3a  budget    rho(n,2M)   1-rho   1-rho 95% CI (bootstrap, info)   median|d|   depth median
+        20000   0.9642     0.0358   [0.0295, 0.0434]                  0.0341      6
+        50000   0.9752     0.0248   [0.0204, 0.0304]                  0.0282      7
+       100000   0.9822     0.0178   [0.0141, 0.0227]                  0.0237      8
+       200000   0.9878     0.0122   [0.0104, 0.0146]                  0.0187      10
+       400000   0.9920     0.0080   [0.0067, 0.0099]                  0.0142      11
+      1000000   0.9966     0.0034   [0.0026, 0.0046]                  0.0062      12
+
+3b  budget    signed mean of label(n) - label(2M)   95% CI (bootstrap 10,000)   excludes 0
+        20000   -0.00157                            [-0.00467, +0.00156]        False
+        50000   -0.00272                            [-0.00531, -0.00014]        True
+       100000   -0.00208                            [-0.00429, +0.00004]        False
+       200000   -0.00233                            [-0.00416, -0.00057]        True
+       400000   -0.00164                            [-0.00306, -0.00020]        True
+      1000000   -0.00002                            [-0.00095, +0.00088]        False
+    (label from the side to move's point of view: a positive mean = the shorter search OVERRATES the side to move)
+
+3c  |label(20k) - label(2M)|, class by the 2M best move / piece count
+    class:capture    n=  463   median 0.0344   mean 0.0459
+    class:quiet      n= 1508   median 0.0340   mean 0.0491
+    class:promotion  n=    2   median 0.0348   mean 0.0348  UNDER-POWERED (n<100)
+    pieces:<=8        n=  193   median 0.0241   mean 0.0410
+    pieces:9-12       n=  256   median 0.0301   mean 0.0450
+    pieces:13-20      n=  654   median 0.0378   mean 0.0559
+    pieces:21-32      n=  870   median 0.0344   mean 0.0452
+
+VERDICT (mechanical, as registered):
+  reference stable (rho(1M,2M) > 0.99): True
+  alive, 1 - rho(20k,2M) = 0.0358 >= 0.05: False
+  1 - rho(100k,2M) = 0.0178 <= 0.5 * 0.0358 = 0.0179: True
+  systematic distortion of the 20k label (CI excludes 0): False
+  -> NOT ALIVE: the 20k label is already correlated above 0.95 with the 2M label; depth is not the bottleneck, the line is closed

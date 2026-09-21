@@ -588,6 +588,22 @@ the Phase 1 floor (up to 0.044 on rho(e, gen2) at 0.4). Nothing here authorizes 
 
 ---
 
+## 5.17 How noisy is the 20,000-node label? (2026-09-21)
+
+Full tables and limits: `results/label_depth.md`. Rule `results/label_depth_decision_rule.md`, committed before the
+scripts and before any search. The published gen3 network (identity gate 20/20) searches the 2,000 evaluation positions at
+20k, 50k, 100k, 200k, 400k, 1M and 2M nodes (1,973 valid, 27 discarded for mate scores), Luna against Luna, no Stockfish.
+
+**Verdict under the registered rule: not alive.** `rho(20k, 2M) = 0.9642`, `1 - rho = 0.0358` (bootstrap CI [0.0295,
+0.0434]), below the 0.05 needed for the question to be alive: by the rule depth is not the bottleneck and the line is
+closed. The 2M reference is stable (`rho(1M, 2M) = 0.9966 > 0.99`). The convergence curve is smooth (`1 - rho` 0.0358,
+0.0248, 0.0178, 0.0122, 0.0080, 0.0034 at 20k, 50k, 100k, 200k, 400k, 1M); no systematic distortion of the 20k label (the
+CI of its signed mean, -0.0016, includes zero); captures and quiet positions have the same median error (0.0344 against
+0.0340). What it does not show: how close the label is to the truth, since the 2M search is the same network searched deeper
+and the network's own blind spots (5.12, 5.15) are inside it. Nothing here starts generation 4.
+
+---
+
 ## 5.8 Generation 3's confound
 
 The gen3 normal-opening pool was **regenerated from scratch** with the
