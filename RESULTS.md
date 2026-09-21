@@ -499,6 +499,59 @@ Nothing was regenerated and no published manifest was touched.
 
 ---
 
+## 5.15 Does the student inherit the master's static blind spots? (2026-09-20)
+
+**Verdict under the registered rule** (`results/inheritance_measure_decision_rule.md`, commit
+`40f8d2c`, before any correlation existed): **SUSTAINED.** Measure and rule are described there;
+in one line: the static error of a network on a position is
+`e(p) = sigmoid(K*search(p)) - sigmoid(K*static(p))` (signed, each network against its own
+20,000-node search), and the inheritance of a student from a reference is the Spearman correlation
+of the two error vectors over the positions valid for both. The students are the three Phase 1 runs
+(lambda 0.7, seeds 101, 202, 303); the references are gen2 (the master), gen1 (an ancestor, not the
+master) and akimbo (the embedded network, unrelated). Computed with
+`pipeline/measure/inheritance_measure.py` from `results/inheritance/` and
+`results/static_vs_search_gap_gen{2,3}.csv`; no training was involved.
+
+Spearman (Pearson in brackets), n = positions valid for both:
+
+| student | vs gen2 (master) | vs gen1 (ancestor) | vs akimbo (unrelated) |
+|---|---|---|---|
+| A1 | **0.5485** (0.7081), n 1989 | 0.4822 (0.6315), n 1988 | 0.4015 (0.5562), n 1990 |
+| B  | **0.5433** (0.7185), n 1987 | 0.4757 (0.6291), n 1987 | 0.4028 (0.5769), n 1988 |
+| C  | **0.5503** (0.7153), n 1989 | 0.4573 (0.6433), n 1988 | 0.3845 (0.5748), n 1990 |
+| gen3 (published, information only) | 0.5565 (0.7236), n 1987 | 0.4719 (0.6317), n 1986 | 0.4103 (0.5480), n 1988 |
+
+* **Floor** (spread of rho(S, gen2) over A1, B, C): **0.0070**.
+* Margin of gen2 over gen1: A1 +0.0663, B +0.0676, C +0.0929. Over akimbo: A1 +0.1470, B +0.1404,
+  C +0.1657. All six exceed the floor (the smallest is about 9 times the floor); the rule asks for
+  all six.
+* **Siblings** (same master, same lambda, different seed; yardstick only): A1-B 0.6588, A1-C 0.6400,
+  B-C 0.6924 (Pearson 0.7896, 0.7820, 0.8209).
+* Networks (sha256 of the `.nnue`), all through the identity gate: A1 `a5580def...a66e`, B
+  `a8b4ad44...5cbc`, C `6ffa0160...d4f675`, gen1 `53daabcd...d2a0bc` (published), gen2 `bbd2aa25...713fc2`
+  (published), gen3 `82aa1bf0...320954` (published): 20/20 positions differ from the embedded
+  network in each. akimbo is the embedded network of the engine binary (sha256 `f9edde89...d44f55b`
+  for the binary): its gate is the mirror image, 20/20 positions equal to the embedded engine and 20/20
+  different from gen3.
+
+What this shows: the error pattern of a student resembles gen2's more than gen1's, and gen1's more
+than akimbo's, by margins far above what the seed changes. What it does **not** show:
+
+* **Why.** The controls exclude "a tactically alive position is hard for anyone" (gen1 and akimbo are
+  static evaluators facing the same positions and correlate less). They do not exclude closeness of
+  lineage and of training distribution: gen2 is the network whose search labelled the students' data,
+  but it is also the one whose self-play produced the positions the students' predecessor family was
+  trained on, and the ordering gen2 > gen1 > akimbo is also the ordering by distance in the lineage.
+  Separating the label from the lineage is what varying lambda would do (Phase 2).
+* That the resemblance is large in absolute terms: the students resemble each other (0.64-0.69) more
+  than they resemble their master (0.54-0.56), so the seed-independent part of the error is
+  substantial and the part specific to the master is the smaller one.
+* Anything about generation 4: by its own rule, a sustained result authorizes no filter and no
+  change; the Phase 2 prediction would have to be restated in terms of this measure, with this floor,
+  in an amendment committed before any Phase 2 run. That amendment is not written here.
+
+---
+
 ## 5.8 Generation 3's confound
 
 The gen3 normal-opening pool was **regenerated from scratch** with the
