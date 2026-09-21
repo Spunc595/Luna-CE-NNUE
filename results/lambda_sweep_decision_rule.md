@@ -193,3 +193,32 @@ parameters: a missing point is better than a point obtained by changing the rule
 * **Anomaly** (the "stop and report" of the warnings): a run that ends after fewer than three epochs,
   a training process that exits with an error, or a network refused by the export gate. The driver
   stops after such a run; the runs still to do are not started until it is decided what to do.
+
+
+---
+
+## Amendment 2 — the binary dataset bakes lambda (registered 2026-09-20, before any Phase 2 run)
+
+**What was wrong.** Amendment 1 says the Phase 2 runs use "the same binary dataset" with another lambda.
+That cannot work as written: `convert_to_binary.py` stores the blended target
+`lambda*sigmoid(K*eval) + (1-lambda)*WDL` in `<prefix>.targets.npy` (lambda 0.7 for the published gen3 binary)
+and `train.py --format binary` reads exactly those targets, so `--eval-lambda` has **no effect** on a binary
+dataset. Phase 2 launched that way would have trained all six runs at lambda 0.7, silently (and the runs with
+seeds 101 and 202 would have reproduced A1 and B). Found before any Phase 2 run.
+
+**The correction.** Each Phase 2 run trains and validates on the published gen3 feature arrays (`.us.npy`,
+`.them.npy`: same rows, same order, same split, they do not depend on lambda) with the **targets rebuilt at the
+run's lambda** by `pipeline/dataset/make_lambda_targets.py` (from the same 5-column TSVs, row for row the
+computation of `convert_to_binary.py`; a test checks equality with it for lambda 1.0 / 0.7 / 0.4 / 0.0).
+The procedure is validated on lambda 0.7: the rebuilt targets are **byte-identical** to the published ones
+(train `9ed7a5c8...b72594`, val `3f2f3d12...b24958`, as in `checksums/gen3/dataset.txt`). The sha256 of every
+generated targets file (lambda 1.0, 0.7, 0.4, 0.0, train and val) is committed with this amendment, before the
+first run, in `results/lambda_sweep_phase2/targets_sha256.txt`.
+
+**Consequence to keep in mind.** The validation set is also rebuilt at the run's lambda, so that early stopping
+and the reported validation loss are those of the run's own objective. **Validation losses are therefore not
+comparable between lambdas** (they measure different targets); only rho and the error-based measures are. The
+epoch of the minimum and the epochs run are reported as behaviour of each run, not compared across lambdas.
+
+Nothing else of Amendment 1 changes: its predictions, combinations, operational definitions and the anomaly rule
+stand as registered. Its phrase "same binary dataset" is read as "same feature arrays and rows".
