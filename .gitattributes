@@ -1,0 +1,4 @@
+# Text files are stored AND exported (git archive) with LF, whatever core.autocrlf says on the machine
+# that ships them: a shell script with CRLF refuses to run on Linux, and Python or a data file with CRLF
+# would run silently with different bytes.
+* text=auto eol=lf
