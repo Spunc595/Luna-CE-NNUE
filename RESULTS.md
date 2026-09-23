@@ -20,6 +20,17 @@ reference.
 | gen0 *(non-compliant — see `non_conforme/README.md`)* | 0.7850 |
 | akimbo *(third-party network, MIT, reference only — never used to generate data)* | 0.8522 |
 
+**Correction, 2026-09-23 (Luna-CE, Block D of `piano-ricerca.md`):** the 0.8522 row above is mislabeled. It is not
+akimbo's own evaluation: akimbo rescales its raw NNUE output by a material-dependent factor
+(`eval * (700 + material/32) / 1024`, `src/position.rs::scale`) that this engine repository's build did not apply
+when the akimbo network was queried (the "akimbo" reference build here was Luna running that network through its own,
+at-the-time-unscaled `evaluate_from_accumulator`). 0.8522 is the akimbo NETWORK evaluated WITHOUT akimbo's own
+post-network formula, not akimbo's actual `eval` output. Re-measuring with the scale applied gives 0.8518 (paired
+bootstrap of the difference against 0.8522, 10,000 resamples: 95% CI [-0.0015, +0.0005], contains zero — see
+`rust-chess/BENCHMARKS.md`, Block D). Every gen1-gen3 comparison in this table was made against the mislabeled
+0.8522; the correction does not change which network is stronger (0.8518 vs 0.8522 is not a resolvable difference at
+n=2000), so no conclusion in this document changes, but the row's own label was wrong and is recorded here as such.
+
 Script: `results/scripts/measure_static_vs_stockfish.py`. CSV:
 `results/gen1_vs_stockfish.csv`, `gen2_vs_stockfish.csv`,
 `gen3_vs_stockfish.csv`, `gen0_vs_stockfish.csv`, `akimbo_vs_stockfish.csv`.
