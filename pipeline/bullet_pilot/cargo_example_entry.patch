@@ -1,0 +1,12 @@
+diff --git a/crates/bullet_lib/Cargo.toml b/crates/bullet_lib/Cargo.toml
+index 4916ca7..3817ed3 100644
+--- a/crates/bullet_lib/Cargo.toml
++++ b/crates/bullet_lib/Cargo.toml
+@@ -73,3 +73,7 @@ path = "../../examples/progression/4_multi_layer.rs"
+ [[example]]
+ name = "relabel"
+ path = "../../examples/extra/relabel.rs"
++
++[[example]]
++name = "luna_pilot"
++path = "../../examples/luna_pilot.rs"
