@@ -69,5 +69,29 @@ class MirrorRoundTrip(unittest.TestCase):
         self.assertGreater(diffs, len(self.fens) // 2, "the round-trip did not notice a wrong mirror direction")
 
 
+
+@unittest.skipUnless(os.path.exists(EXE), f"no engine at {EXE} (set LUNA_EXE)")
+class VerifiedConverter(unittest.TestCase):
+    """The converter itself must refuse to write when the round-trip fails."""
+
+    def test_writes_when_zero_differences(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "n.nnue")
+            self.assertEqual(bl.convert_verified(random_raw(), out, EXE, n=100), 100)
+            self.assertTrue(os.path.exists(out))
+
+    def test_refuses_and_writes_nothing_when_the_mapping_is_wrong(self):
+        real = bl.convert
+        bl.convert = lambda raw, mirror_fix=True: real(raw, mirror_fix=False)   # deliberately break the mapping
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                out = os.path.join(d, "n.nnue")
+                with self.assertRaises(bl.RoundTripError):
+                    bl.convert_verified(random_raw(), out, EXE, n=100)
+                self.assertFalse(os.path.exists(out), "a failed round-trip must not leave a file")
+        finally:
+            bl.convert = real
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

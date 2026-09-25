@@ -125,3 +125,50 @@ def luna_eval(exe, net_path, fens):
         return out
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def sample_positions(n, seed=7):
+    """Seeded random legal positions (both colours to move, kings on every half of the board)."""
+    import random
+    import chess
+    rng = random.Random(seed)
+    out = []
+    while len(out) < n:
+        b = chess.Board()
+        for _ in range(rng.randint(6, 90)):
+            m = list(b.legal_moves)
+            if not m:
+                break
+            b.push(rng.choice(m))
+        if not b.is_game_over() and not b.is_check():
+            out.append(b.fen())
+    return out
+
+
+class RoundTripError(Exception):
+    pass
+
+
+def convert_verified(raw_f32, out_path, exe, n=2000, seed=11):
+    """The only sanctioned way to produce a net.bin: convert (all gates), then evaluate `n` positions with the independent
+    reference and with the engine `exe` loading the converted bytes as luna.nnue, and write `out_path` ONLY if there is not
+    one single difference. There is no path from a checkpoint to a file that skips the round-trip."""
+    import os
+    import tempfile
+    data = convert(raw_f32)
+    fens = sample_positions(n, seed)
+    ref = Reference(raw_f32)
+    expected = [ref.eval(f) for f in fens]
+    fd, tmp = tempfile.mkstemp(suffix=".nnue")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+        got = luna_eval(exe, tmp, fens)
+    finally:
+        os.unlink(tmp)
+    diffs = [i for i, (a, b) in enumerate(zip(expected, got)) if a != b]
+    if len(got) != len(fens) or diffs:
+        raise RoundTripError(f"round-trip FAILED: {len(diffs)} of {len(fens)} positions differ (first {diffs[:5]}); {out_path} not written")
+    with open(out_path, "wb") as f:
+        f.write(data)
+    return len(fens)

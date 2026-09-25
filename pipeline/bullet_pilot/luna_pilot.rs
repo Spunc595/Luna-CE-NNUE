@@ -22,6 +22,9 @@ fn main() {
     let sb: usize = env("LP_SB", 10);
     let bps: usize = env("LP_BPS", 100);
     let batch: usize = env("LP_BATCH", 4096);
+    let start_sb: usize = env("LP_START", 1); // resume: first superbatch still to run (checkpoint N done -> N+1)
+    let save: usize = env("LP_SAVE", sb);
+    let resume: String = env("LP_RESUME", String::new());
     let out: String = env("LP_OUT", "checkpoints".to_string());
     let data: Vec<String> = std::env::var("LP_DATA").expect("LP_DATA").split(',').map(String::from).collect();
     let data: Vec<&str> = data.iter().map(|s| s.as_str()).collect();
@@ -42,14 +45,18 @@ fn main() {
             l1.forward(a.concat(b))
         });
 
+    if !resume.is_empty() {
+        trainer.load_from_checkpoint(&resume); // weights + AdamW moments; the loader skips to batch (start_sb-1)*bps
+    }
     let loader = DirectSequentialDataLoader::new(&data);
     let schedule = TrainingSchedule {
         net_id: "luna_pilot".to_string(),
         eval_scale: 400.0,
-        steps: TrainingSteps { batch_size: batch, batches_per_superbatch: bps, start_superbatch: 1, end_superbatch: sb },
-        wdl_scheduler: wdl::ConstantWDL { value: 0.1 },
+        steps: TrainingSteps { batch_size: batch, batches_per_superbatch: bps, start_superbatch: start_sb, end_superbatch: sb },
+        // phase-3 recipe (Petrel): WDL fraction ramps 0.0 -> 0.1 (bullet's convention), lr cosine 4e-4 -> peak/40
+        wdl_scheduler: wdl::CosineDecayWDL { start: 0.0, end: 0.1, final_superbatch: sb },
         lr_scheduler: lr::CosineDecayLR { initial_lr: 0.0004, final_lr: 0.0004 / 40.0, final_superbatch: sb },
-        save_rate: sb,
+        save_rate: save,
     };
     let settings = LocalSettings { threads: 2, test_set: None, output_directory: &out, batch_queue_size: 32 };
     trainer.run(&schedule, &settings, &loader);
