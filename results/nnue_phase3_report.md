@@ -106,3 +106,18 @@ logged as a network error. Tests (`test_dl.py`, local Range server with fault in
 were the network (proves test 1 can see the defect); 3) a real cut (server hangs up at 40% twice) -> 2 `NETWORK ERROR` lines, byte-exact
 resume (sha256 equal), `DONE ... 2 network retries`; 4) plain transfer -> `DONE ... 0 network retries`. All pass on Windows (Python 3.14)
 and on Oracle (Python 3.12, run with `nice -n 19` while the 1 G step was training; superbatch time unchanged at ~150 s).
+
+## 1 G step (4x the samples of A-mix, 1.0 G distinct positions, one epoch, shuffled in 4 parts + interleave)
+60 superbatches x 4069 batches x 4096 = 1.0 G samples, Oracle, 8,975 s (2.49 h, ~111-120k pos/s). Round-trip 2000 positions: 0 differences.
+
+| | samples | Spearman (95% CI) |
+|---|---|---|
+| A-mix | 250 M | 0.8870 (0.8859-0.8880) |
+| **1 G** | 1.0 G | **0.8952** (0.8943-0.8963) |
+| embedded | | 0.9036 |
+
+Difference 1 G - A-mix = **+0.0083**, paired bootstrap 95% CI [+0.0081, +0.0085] (300 resamples), about 8x the ~0.001 resolution threshold
+and about 20x the single floor measurement (0.0004). The gain is real at this resolution. Two things changed together (samples x4 and
+the shuffle type: 4 separately shuffled parts interleaved vs one global permutation); the shuffle effect measured elsewhere is ~+0.001,
+so it cannot account for +0.0083. Remaining gap to the embedded net: 0.0084 (gen3 -> 1 G covers 0.0699 of the original 0.0783).
+Curve so far (shuffled runs): 250 M -> 0.8870, 1 G -> 0.8952: +0.0082 for x4 samples.
