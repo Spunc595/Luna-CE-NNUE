@@ -34,3 +34,20 @@ raise all of them was not measured. (`bullet_utils` has a shuffle tool; it needs
 ## Artifacts
 Nets in `C:\Users\danie\Desktop\NNUE\pilot\` (`step_37M.nnue`, `step_250M.nnue`, `step_B.nnue`): measurement candidates,
 not to be played. Oracle: `~/nnue_pilot/data/` (8 GB + 1 GB), checkpoints `ck_250M`, `ck_B`.
+
+## 3c: shuffling (B vs B-mix) and the 100 GB volume
+Tool: `bullet-utils shuffle -i -o -m` (bullet's own, `crates/bullet_utils/src/shuffle.rs`; in-memory Fisher-Yates over 32-byte
+records when the file fits `-m`, otherwise split into `./tmp` parts + interleave; seed = clock, so not reproducible).
+B-mix = the same 1.0 GB as B, shuffled (24.7 s), same recipe, same 250 M samples, Oracle.
+
+| | order | Spearman (95% CI) |
+|---|---|---|
+| B | file order | 0.8847 (0.8835-0.8856) |
+| B-mix | shuffled | **0.8858** (0.8848-0.8868) |
+
+Difference +0.0011, CIs overlapping; one run each. At this scale (31 M positions, 8 epochs) shuffling made no measurable
+difference. Not shown by this: whether it matters for 250 M+ distinct positions (A-mix, running).
+
+Volume: 100 GB block volume attached as `/dev/sdb` (stable path `/dev/oracleoci/oraclevda`), ext4, label `nnuedata`, mounted at
+`/mnt/nnue-data` via UUID in `/etc/fstab` with `nofail,noatime,x-systemd.device-timeout=10` (backup `/etc/fstab.bak-before-nnue`);
+verified by umount + `mount -a` and `findmnt --verify` (no errors). Not verified: a real reboot.
