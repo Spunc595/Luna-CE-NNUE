@@ -51,3 +51,22 @@ difference. Not shown by this: whether it matters for 250 M+ distinct positions 
 Volume: 100 GB block volume attached as `/dev/sdb` (stable path `/dev/oracleoci/oraclevda`), ext4, label `nnuedata`, mounted at
 `/mnt/nnue-data` via UUID in `/etc/fstab` with `nofail,noatime,x-systemd.device-timeout=10` (backup `/etc/fstab.bak-before-nnue`);
 verified by umount + `mount -a` and `findmnt --verify` (no errors). Not verified: a real reboot.
+
+## 3d notes recorded before the 1 G step
+- **Different shuffle types.** A-mix: one global Fisher-Yates in memory over all 8 GB (`bullet-utils shuffle`, clock seed, NOT
+  reproducible; both permutations `s2_250M_mix.bin` and `s2_250M_mix2.bin` are kept for that reason). The 1 G data: **four parts of
+  250 M shuffled separately** (`chunkshuf.py`, numpy, seeds `20260925 + k`, reproducible) and then randomly interleaved by
+  `bullet-utils interleave` (clock seed for the interleave itself, so the final file is not reproducible either, the parts are).
+  This is not a global permutation: two records of the same part are never adjacent in the output, and the order stays stratified
+  by part. **The 1 G step therefore differs from A-mix in two things, more samples and a different shuffle quality.** If it
+  disappoints, this is a ready candidate explanation, not a tested one; B vs B-mix (+0.0011) suggests shuffle quality matters little
+  at that scale.
+- **Disk guard (`prep1G.sh` line 10):** a **precondition** evaluated once before anything is written (`avail >= 70 GB`, else it
+  writes `abort_prep1G` and exits), not a check during the run. There is no check during the run; the run writes 64 GB into 82 GB
+  free (about 74 GB when it starts, after the second A-mix shuffle file exists), leaving about 10 GB.
+- **If it stops halfway:** no resume logic. Parts already finished stay on disk as complete files; the interrupted one may be a
+  partial file. Re-running redoes everything (re-download, same seeds) and overwrites (truncates) `part_*.bin` and the output; it does
+  not reuse them and deletes nothing. `prep1G_done` is written only after the output size check (32,000,000,000 bytes); training on
+  the 1 G data must be gated on that marker.
+- **Paired bootstrap B vs B-mix:** the 10,000-resample run ran 28 min and exited with an error I did not capture (no output); it was
+  replaced by a 2,000-resample run (~0.5 s per resample, about 17 min).
