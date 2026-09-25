@@ -70,3 +70,26 @@ verified by umount + `mount -a` and `findmnt --verify` (no errors). Not verified
   the 1 G data must be gated on that marker.
 - **Paired bootstrap B vs B-mix:** the 10,000-resample run ran 28 min and exited with an error I did not capture (no output); it was
   replaced by a 2,000-resample run (~0.5 s per resample, about 17 min).
+
+## 3d results: the floor
+Same 8 GB, same recipe, same 250 M samples, two different global shuffles (clock seeds, both files kept):
+
+| run | Spearman (95% CI) |
+|---|---|
+| A (file order) | 0.8857 (0.8847-0.8867) |
+| A-mix | 0.8870 (0.8859-0.8880) |
+| A-mix-2 | 0.8865 (0.8855-0.8875) |
+
+**Floor (same configuration, different randomness): |A-mix - A-mix-2| = 0.0004** (paired bootstrap of the difference, 300 resamples:
+-0.0004, CI [-0.0006, -0.0003]). One pair only, so this is one sample of the floor, not its distribution.
+Reading against it (paired bootstrap of the differences, same eval set): B-mix - B = +0.0011 (2,000 resamples, CI [+0.0009, +0.0013]);
+mean(A-mix, A-mix-2) - A = +0.0011. Both are about 2.5-3x the single floor measurement and both point the same way (shuffled >
+file order), at two scales. That is consistent with a small real shuffling effect of about +0.001, not established by one floor pair.
+Any step-to-step gain below ~0.001 cannot be told from the floor.
+
+## 3d: 1 G preparation failure (13:53 UTC) and restart
+`prep1G.sh` aborted: the plain `curl | zstd` stream ended after 8,002,469,888 decompressed bytes (part_0, 250 M records, complete;
+chunk 1 got 2.4 MB). Cause of the drop not captured (curl ran with `-s`, zstd stderr discarded). `part_0.bin` is valid and untouched.
+Restart as `prep1G_v2.sh`: resumable range downloader `dl.py` (re-requests from the last byte on any error, logs retries), part_0
+skipped rather than rewritten (`chunkshuf2.py`, same seeds `20260925 + k`), guard precondition 60 GB (3 parts + output + margin).
+Note: part_0 is the same first 250 M positions of S2 iter-1 that A used, so the 1 G set contains A's data.
