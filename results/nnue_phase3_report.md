@@ -93,3 +93,16 @@ chunk 1 got 2.4 MB). Cause of the drop not captured (curl ran with `-s`, zstd st
 Restart as `prep1G_v2.sh`: resumable range downloader `dl.py` (re-requests from the last byte on any error, logs retries), part_0
 skipped rather than rewritten (`chunkshuf2.py`, same seeds `20260925 + k`), guard precondition 60 GB (3 parts + output + margin).
 Note: part_0 is the same first 250 M positions of S2 iter-1 that A used, so the 1 G set contains A's data.
+
+## dl.py: reader-closed vs network error (fix, 2026-09-25)
+`dl.py` treated `BrokenPipe` (the consumer closed the pipe: normal end) as a network error and retried it 30 times (31 misleading log
+lines after the 1 G cut). Now: a write failure on stdout is handled in its own branch (`READER CLOSED`, one line, exit 0, no retry;
+`OSError` with `EPIPE`, and on Windows winerror 232/109/EINVAL, recognised; stdout redirected to the null device before exit so Python
+does not print its own "BrokenPipeError ignored"); network failures log `NETWORK ERROR ... retry n from byte p`; success ends with
+`DONE: n file(s), B bytes transferred, r network retries`. Found while testing: `http.client` `read(amt)` returns `b''` on a premature
+close instead of raising, so a cut connection used to resume silently with no log line at all; it now raises `ConnectionError` and is
+logged as a network error. Tests (`test_dl.py`, local Range server with fault injection): 1) reader closes early -> exactly one
+`READER CLOSED` line, 0 network errors, exit 0; 2) the old script (`dl_v1_defective.py`) on the same case retries a closed pipe as if it
+were the network (proves test 1 can see the defect); 3) a real cut (server hangs up at 40% twice) -> 2 `NETWORK ERROR` lines, byte-exact
+resume (sha256 equal), `DONE ... 2 network retries`; 4) plain transfer -> `DONE ... 0 network retries`. All pass on Windows (Python 3.14)
+and on Oracle (Python 3.12, run with `nice -n 19` while the 1 G step was training; superbatch time unchanged at ~150 s).
