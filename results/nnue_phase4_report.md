@@ -56,3 +56,15 @@ an unclipped float net would need a separate run).
 The training example uses **768 inputs, no king buckets**: `pipeline/bullet_pilot/luna_pilot.rs` line 38 `.inputs(Chess768hm)` and
 line 41 `builder.new_affine("l0", 768, HIDDEN)`. Luna's file has 768x4 rows only because the converter replicates the same 768 rows
 into the 4 buckets. So the capacity gap to akimbo's 768x4 net is real for the trained parameters (768x1024 vs 3,072x1024 distinct).
+
+## Corrections (2026-09-26, later the same day)
+- Section 3: the reading of the third branch was incomplete. The rule had no tolerance band relative to the measured floor; read with a band,
+  -0.0001 against a floor of 0.0004 is nothing to explain. And **my explanation was wrong**: ties in the integer outputs predict the opposite
+  direction (more ties lower rho, so the quantised net would score lower, not higher). What is consistent is that rounding is a deterministic
+  perturbation that fell marginally favourably on this set. A paired CI that excludes zero does not make a difference below the floor
+  significant. Rule added to `PROTOCOLLO.md`.
+- Section 1: the earlier remark that "118/h" was a misreading stands, and it was mine (the 13:36-17:00 window was the bot-silence check window).
+- Section 4 (buckets): akimbo (4x the input parameters) is ahead by only 0.0011 on Spearman, the resolution threshold, so on this measure the
+  buckets are worth at most that; whether they are worth more in strength without showing in rank is open (rank statistic, cf. D1 and Kiwipete).
+  With four buckets each row block trains on about a quarter of the data (250 M per bucket at 1 G distinct): testing four buckets on the current
+  1 G would be an ambiguous experiment (a loss would not tell "buckets do not help" from "not enough data for buckets"); not to be run in isolation.
