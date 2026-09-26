@@ -43,3 +43,9 @@ here first; going back to [0, +10] after a failure to "retry" would be cheating.
 ## Prediction, declared now
 With -0.0011 static I expect a result between -5 and +5 Elo (parity likely). On [-5, +5] I expect acceptance; on [0, +10] I would give
 it 25-30%. If wrong, it goes in the report.
+
+## Started 2026-09-26 18:36 UTC (A = patch, B = base, seed 1207) - note added after the start, parameters unchanged
+Observed rate at 20+0.2 with concurrency 2: **28 games in 13 minutes = about 129 games/hour**, half of the ~267/hour used for the time
+estimate (that figure belongs to 10+0.1). At this rate the 8,000-game cap is about **62 hours**, not ~30; an early stop (LLR bound or the
+futility rule from 2,000 games = about 15.5 h) is where the match is expected to end. Nothing was changed: bounds, tc, cap and rules stand as
+registered above. Early counts (28 games, 4-9-15) mean nothing at this size.
