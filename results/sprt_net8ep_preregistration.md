@@ -103,3 +103,7 @@ Execution log (filled in as it happens): see below.
   B = engines/net_base sha256 f817914f552cfbe7...36d38; results sprt_net8ep_tc10_on_v3.1.7`; the running `cutechess-cli` command line shows `tc=10+0.1`.
   All values are the expected ones.
 - **First rate measure:** pending (to be entered here after 30 minutes; expected 240-260 games/hour, ~120 would mean the TC did not change).
+- **First rate measure (21:15:06 UTC, 30 min 43 s after the start):** 118 games completed = **230 games/hour**, zero games lost on time, bot inactive,
+  load average 2.00. The TC did change (the failure case was ~120/h). It is slightly under the 240-260 window expected from the earlier matches;
+  the first half hour includes engine start-up and the ratio of long-to-short games is not yet settled, so it is recorded as observed and re-read
+  from the log later. Score at 118 games 21-36-61 (Elo about -44): meaningless at this size, noted only because the previous half-hour showed the same sign.
