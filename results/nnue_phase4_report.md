@@ -68,3 +68,23 @@ into the 4 buckets. So the capacity gap to akimbo's 768x4 net is real for the tr
   buckets are worth at most that; whether they are worth more in strength without showing in rank is open (rank statistic, cf. D1 and Kiwipete).
   With four buckets each row block trains on about a quarter of the data (250 M per bucket at 1 G distinct): testing four buckets on the current
   1 G would be an ambiguous experiment (a loss would not tell "buckets do not help" from "not enough data for buckets"); not to be run in isolation.
+
+## L3 patch (conditional on the SPRT accepting the net): what the bucket index does, read from the code (nothing implemented)
+`src/nnue.rs` at `main`: `get_bucket` (line 105) is used in exactly two places. (1) `feature_index` -> `get_base_index` (line 139): it picks the
+768-row block (`768 * bucket + ...`) of the weight table. (2) `same_feature_mapping` (line 124, called from `board.rs` lines 521, 648, 759): it
+decides whether a king move needs a refresh of that perspective's accumulator half (a bucket change forces one; so does a mirror flip).
+Nothing else reads the bucket. With four identical copies of the rows (which is what the converter writes for a 768-input net), (1) selects
+between equal rows, and (2) only changes how often a refresh happens: a refresh recomputes the same sum the incremental updates maintain (i16
+wrapping adds are exact modular arithmetic), so the accumulator, and therefore the evaluation and the whole search, are identical. The
+mirror (`perspective_flip`) must stay: it changes the square index. So collapsing to 768 rows removes only the bucket term; expected effect:
+evaluation bit-identical, node counts identical, fewer refreshes when a king crosses a bucket boundary, table 1.57 MB instead of 6.29 MB.
+Gate to use (not statistical): eval byte-for-byte equal on the 2,000-position set plus positions with the king in all four buckets (both
+sides, after castling on both wings); one difference stops everything. Then NPS with the floor of the same run, then SPRT like any speed patch.
+The 39.3% and 220 ns figures quoted in the request were not re-measured here.
+
+## Blocks A and C: already closed in `BENCHMARKS.md`, not pending
+Block A (padded accumulator cells 4 KB -> 16 KB): run and closed on 2026-09-23 (padded probe -9.8% / -10.8% vs `main`, -14.9% / -8.7% vs
+`acc-a-stack`, floor 1.3% / 5.4%), section "Block A, decisive test", and the "Part 5" note repeats "Nothing pending". Block C: the question
+"which variant is today's code" was answered (both `search.rs:586` and `:603` were tried and discarded) and the grouped patch
+`c-improving-and-nmp-bonus` (`b76ae6b`) already exists. Step 3 of the ordering in the request therefore has nothing to run on the PC; if a
+rerun is wanted it is a new decision, not the pending one.
