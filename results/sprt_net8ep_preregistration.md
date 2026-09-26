@@ -69,3 +69,37 @@ Expected time to the cap: about 32 hours instead of about 62.
 parameter is not the one of the campaign" is a reason of validity, found by measuring; the first is never enough, the second is
 enough, and only before the data exist.
 Execution log (filled in as it happens): see below.
+
+### Execution log of Amendment 1 (2026-09-26)
+- **Authorization:** Daniele authorised terminating the `cutechess-cli` process of the 20+0.2 match and nothing else (document
+  "fermare-e-ripartire"). An earlier attempt at 19:3x UTC to stop it was refused by the permission system and was not worked around.
+- **Before the kill (Part 0):** `bash -n` passed on `sprt_match5.sh` and `queue_net2.sh`. `sprt_match5.sh` had not run and did **not** log the
+  values that matter (only `params.txt`/`header.txt` after the fact), so it was rewritten before the kill (old version kept as
+  `sprt_match5.sh.v0-before-preamble`): TC, bounds, cap, concurrency, seed, the two binary paths with sha256, the results name, the literal
+  command line and the load / number of luna processes are written as the first lines of `cutechess.log` (and `preamble.txt`) from the same
+  variables that build the command. It also refuses an existing results directory and an engine directory with a `luna.nnue`. A dry run with a stub in
+  place of cutechess (`results/dryrun_preamble_only_20260926`, left in place, not a match) confirmed the preamble.
+- **Queue order (Part 1), read before the kill:** `queue_net2.sh` waits for the old match to end and never stops it; refuses to start if the old
+  match ended by itself (>= 8,000 games or an SPRT bound line); then **stops the bot, and only when no `luna` process exists after the stop does it
+  break out of the loop** (stop -> verify zero engine processes -> start); the match starts after that; results go to `sprt_net8ep_tc10_on_v3.1.7`
+  (and `sprt_match5.sh` refuses an existing directory). Order was right, not changed. One weakness noted, not changed (the queue was already running
+  and modifying a running script is what we avoid): if the wait loop ran out its 5,000 iterations (about 4 h) it would go on anyway; and the queue does not
+  check the load average (the preamble records it).
+- **Snapshot (Part 2), 20:43:58 UTC:** started 18:36:00 UTC; 268 games completed at the snapshot, 269 at the end; A (net) +44 =153 -72 (score 0.4480,
+  Elo about -36.3, draw ratio 0.569, SPRT LLR -1.89 of bounds +-2.94, not crossed); **games lost on time: 0**. **These 269 games are discarded, not used
+  in the verdict.** Reason: the amendment (TC not that of the campaign), decided at 95 games (Elo then about -37, i.e. in the same direction the data
+  had at the kill): the decision was taken before the data could matter and its reason is not the data, but the record says the discarded games leaned
+  negative so nobody has to wonder. Directory renamed (moved, nothing deleted) to
+  `results/sprt_net8ep_on_v3.1.7_tc20_ABANDONED_amendment1_269games` after its stop-rule watchdog had exited on its own.
+- **The kill (Part 3):** 20:44:17 UTC. `pgrep -a -x cutechess-cli` returned exactly one PID, 2212624, whose command line had `tc=20+0.2`;
+  `kill -TERM 2212624` (explicit PID). It was gone within 12 s, no escalation needed.
+- **Orphans (Part 4):** after the kill no `luna` process from the old match existed (the four `luna` processes present 12 s later all started at
+  20:44:23 and have cwd `engines/net_patch` / `engines/net_base` of the NEW match). The queue's guard (`pgrep -x luna` = 0 after the bot stop) was satisfied by
+  itself; the preamble records "luna processes running: 0" and load average 1.93 (a trailing average from the old match). Note: the queue started the new
+  match 3 s after the kill, so there was no window for a manual load check before the start; the guard is the process count.
+- **Restart (Part 5):** new match started 20:44:23 UTC (queue log 20:44:20). The bot: the old queue's exit restarts it, the new queue stopped it again
+  within the same second (no game was running); `luna-bot` is inactive during the match. Preamble as written by the script:
+  `TC 10+0.1; elo0=-5 elo1=5 alpha=0.05 beta=0.05; cap 8000 games (4000 rounds x 2); concurrency 2; seed 1207; A = engines/net_patch sha256 3dd876860d206a06...87f160;
+  B = engines/net_base sha256 f817914f552cfbe7...36d38; results sprt_net8ep_tc10_on_v3.1.7`; the running `cutechess-cli` command line shows `tc=10+0.1`.
+  All values are the expected ones.
+- **First rate measure:** pending (to be entered here after 30 minutes; expected 240-260 games/hour, ~120 would mean the TC did not change).
