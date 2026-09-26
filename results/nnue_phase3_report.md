@@ -121,3 +121,28 @@ and about 20x the single floor measurement (0.0004). The gain is real at this re
 the shuffle type: 4 separately shuffled parts interleaved vs one global permutation); the shuffle effect measured elsewhere is ~+0.001,
 so it cannot account for +0.0083. Remaining gap to the embedded net: 0.0084 (gen3 -> 1 G covers 0.0699 of the original 0.0783).
 Curve so far (shuffled runs): 250 M -> 0.8870, 1 G -> 0.8952: +0.0082 for x4 samples.
+
+## 8 epochs over the 1 G positions (2026-09-26)
+480 superbatches x 4069 x 4096 = 8.0 G samples seen, ONE schedule (lr cosine 4e-4 -> 1e-5 and WDL 0 -> 0.1 over all 480), Oracle,
+19 h 43 m (71,003 s), finished 14:32 UTC (16:32 Italian). No trainer error, no resume needed (`train_8ep.err` empty). Round-trip: 0 differences.
+
+| net | samples | Spearman v3.1.6 raw (95% CI) | v3.1.7 (material scale) |
+|---|---|---|---|
+| 1 G (1 epoch) | 1.0 G | 0.8952 (0.8943-0.8963) | |
+| **8 epochs** | 8.0 G | **0.9026** (0.9017-0.9035) | 0.9023 (0.9011-0.9034) |
+| embedded | | 0.9036 (0.9026-0.9045) | 0.9029 |
+
+- 8 epochs - 1 G = **+0.0074**, paired CI [+0.0072, +0.0076]: real (7x the 0.001 threshold).
+- 8 epochs - embedded = **-0.0011**, paired CI [-0.0013, -0.0008]: the difference is small but its interval excludes zero; it is at the
+  resolution threshold (~0.001), not below it. Of the original gen3 -> embedded gap (0.0783), 0.0773 is covered.
+- Gain per step: 250 M -> 1 G (x4 samples) +0.0082; 1 G -> 8 G (x8 samples, same distinct positions) +0.0074.
+
+**Defect in my queueing, found afterwards: no intermediate checkpoints exist, so there is NO per-epoch Spearman curve.** The run
+printed `Save Rate : 480`. The `luna_pilot` binary on Oracle was built before `LP_SAVE`/`LP_RESUME`/`LP_START` were added to the example
+(the PC binary had them), so `LP_SAVE=60` was ignored: only the final checkpoint (`luna_pilot-480`) was written, and the "resume from the
+newest checkpoint" branch of `run8ep.sh` could not have worked either (`LP_RESUME` ignored). It was stated as verified/available; it was
+not, on Oracle. Nothing failed in this run, so nothing was lost except the curve. What exists instead: the per-batch training loss in
+`log.txt` (saved next to the checkpoint). Mean training loss per epoch: 0.00911, 0.00818, 0.00806, 0.00802, 0.00803, 0.00806, 0.00808,
+0.00808. Not comparable across epochs as a quality measure (the WDL blend ramps 0 -> 0.1 during the run, so the target itself changes);
+they say only that the training loss stopped falling after epoch ~4 while the lr was still decaying. To fix before any further long run:
+rebuild `luna_pilot` on Oracle from the current example and check `Save Rate` in the preamble before leaving it unattended.
