@@ -49,3 +49,23 @@ Observed rate at 20+0.2 with concurrency 2: **28 games in 13 minutes = about 129
 estimate (that figure belongs to 10+0.1). At this rate the 8,000-game cap is about **62 hours**, not ~30; an early stop (LLR bound or the
 futility rule from 2,000 games = about 15.5 h) is where the match is expected to end. Nothing was changed: bounds, tc, cap and rules stand as
 registered above. Early counts (28 games, 4-9-15) mean nothing at this size.
+
+## AMENDMENT 1 (decided 2026-09-26 at 95 games of the first run; a dated amendment, the text above is NOT rewritten): time control 20+0.2 -> 10+0.1
+Everything else stays as registered: cap 8,000 games, elo0 = -5, elo1 = +5, alpha = beta = 0.05, futility rule, one game lost on time
+invalidates the match, base v3.1.7 unchanged, bot off, concurrency 2, no book, same openings, same A/B engines (same binaries).
+Only the TC changes. The 95 games played at 20+0.2 (Elo about -37, draw ratio 0.60) are kept in `results/sprt_net8ep_on_v3.1.7/` and are
+NOT used in the new match or in the verdict.
+
+**Reason (validity, found by measuring, before the data exist):** the TC 20+0.2 was taken from Block 6, the fixed-length match against
+v3.1.6, and not from the SPRT campaign, which runs entirely at 10+0.1 (D3, D4, G2b, G5, control: all 10+0.1 at 250-257 games/hour with
+`concurrency 2`). It was a transfer of a parameter between contexts, not a choice. It is corrected before the measurement has begun.
+Three independent arguments in the same direction: (1) working point: Luna plays lichess and MCEC rapid games, 10+0.1 is closer to
+its real use; (2) comparability: at 10+0.1 the Elo of this net can be lined up with D3's +44.8 and the other patches, at 20+0.2 it cannot;
+(3) resolution per Oracle hour: 10+0.1 gives 250 games/h (draw ratio ~0.555, SE after one hour ~15.2 Elo), 20+0.2 gives ~120 games/h (higher
+draw ratio, SE after one hour ~20.0 Elo): the extra draws of the long TC do not repay the halved rate.
+Expected time to the cap: about 32 hours instead of about 62.
+
+**On the record: the difference between two kinds of reason.** "It takes too long" is a reason of convenience and is refused. "The registered
+parameter is not the one of the campaign" is a reason of validity, found by measuring; the first is never enough, the second is
+enough, and only before the data exist.
+Execution log (filled in as it happens): see below.
