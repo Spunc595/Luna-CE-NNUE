@@ -120,3 +120,18 @@ Spearman stops being a shipping gate for this line of work and returns to being 
 (not epochs) per the phase-3 evidence (0.25 G 0.8870, 1 G/1 epoch 0.8952, 1 G/8 epochs 0.9026 -> diminishing return from repetition). The L3
 accumulator patch (Part 4 of "emendamento-e-dopo") does not proceed: it was conditional on H1. D3 re-measurement does not proceed either (also
 conditional on H1). The bot restarted automatically at the end and is playing again.
+
+## CORRECTION (2026-09-27): the -53.9 Elo measures a CONFIGURATION, not the net alone
+Both sides of this match had D3 (the material scale) active, and I wrote in "emendamento-e-dopo" Part 6 that it "cancels" because it is
+present on both sides. **That reasoning was wrong.** D3 is not an additive constant; it is a correction term
+(`eval * (700 + material/32) / 1024`) tuned on akimbo's own network (+44.8 Elo measured on that network in D3's own SPRT). A correction
+tuned on one network interacts with the network, it does not cancel when the network changes. The two binaries were:
+```
+base  = akimbo's network  + a correction tuned FOR akimbo's network
+patch = the new network   + the SAME correction, tuned for a DIFFERENT network
+```
+So up to about 45 of the 54 Elo may be the D3/network interaction, not the new network's own quality. **What still stands: the decision.**
+The configuration that would have shipped is worse than production; `step_8ep.nnue` does not become `resources/net.bin`. **What needs
+re-measuring: the net's own quality**, isolated from D3 — see `results/match_no_d3.md`. The Spearman-saturation reading (section above,
+"a rank gap of 0.0011 corresponds to tens of Elo") stands regardless of how much of the 54 Elo is D3: two independent matches at two TCs
+both show a small Spearman gap paired with a large Elo gap.
