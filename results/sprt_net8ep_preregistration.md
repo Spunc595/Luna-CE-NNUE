@@ -107,3 +107,16 @@ Execution log (filled in as it happens): see below.
   load average 2.00. The TC did change (the failure case was ~120/h). It is slightly under the 240-260 window expected from the earlier matches;
   the first half hour includes engine start-up and the ratio of long-to-short games is not yet settled, so it is recorded as observed and re-read
   from the log later. Score at 118 games 21-36-61 (Elo about -44): meaningless at this size, noted only because the previous half-hour showed the same sign.
+
+## RESULT: H0 ACCEPTED (rejected for shipping) — 2026-09-26 22:07:48 UTC
+338 games, A (net8ep) +61 =164 -113, score 0.4231, Elo(A-B) = -53.9 +/- 26.6, draw ratio 0.485, LOS 0.0%. SPRT LLR -2.99, crossed the lower
+bound (-2.94) before the upper one: H0 accepted per the pre-registered rule, on the actual campaign TC (10+0.1, amendment 1). Zero games lost
+on time, match valid. Rate 338 games / 83 min = 244 games/hour, consistent with the campaign's earlier matches.
+
+**By the pre-registered decision rule (Part 8):** rejected. Not a failure — it is the information the static measure could not give: Spearman
+0.9026 vs embedded 0.9036 (-0.0011, near the ~0.001 resolution floor) predicted near-parity; the SPRT found a clear loss (-53.9 Elo). Confirms,
+on this net, what D1 showed in the other direction: a rank-correlation gap this small does not bound the Elo gap. Consequence stated in advance:
+Spearman stops being a shipping gate for this line of work and returns to being an entry filter; the next long run increases DISTINCT positions
+(not epochs) per the phase-3 evidence (0.25 G 0.8870, 1 G/1 epoch 0.8952, 1 G/8 epochs 0.9026 -> diminishing return from repetition). The L3
+accumulator patch (Part 4 of "emendamento-e-dopo") does not proceed: it was conditional on H1. D3 re-measurement does not proceed either (also
+conditional on H1). The bot restarted automatically at the end and is playing again.
