@@ -45,3 +45,37 @@ matters, the direct measurement is a separate match (new net with D3 vs new net 
 ## Explicit limit of this match
 This measures network quality in an engine WITHOUT the correction. It does not directly predict the shipped configuration, where D3 is
 present. That is the price of isolating the variable, stated rather than left implicit.
+
+## RESULT (2026-09-27, 07:26:26 -> 15:14:23 UTC, 2,000 games)
+```
+A (new net, D3 off)     +373 =969 -658   score 0.4288
+B (akimbo, D3 off)
+Elo(A-B)                -49.8 +/- 10.9   (95% CI)
+draw ratio               0.4845
+games lost on time       0   (match VALID)
+```
+SE-model check: predicted CI at N=2,000 with this draw ratio is close to the observed +/-10.9 (the model's own table used
+d~0.52; here d=0.484, giving a very similar prediction) — consistent with earlier verifications on D4/G2b.
+
+**By the pre-registered reading (three thresholds):** -49.8 falls in the "~-50" bracket, not "~-10 or better" and not
+clearly "in between". **The new network is genuinely weaker here; D3 is not the main story.** Isolating D3 recovered
+about 4 Elo (-53.9 with the interaction -> -49.8 without it) out of 54, not "up to 45 of the 54" as the upper bound
+allowed for — the interaction turned out to be small, not large.
+
+**Derived quantity, with its explicit limit (Part 3):** assuming additivity, `D3(new net) ~= 44.8 - 53.9 - (-49.8) = +40.7`
+Elo, close to D3's own +44.8 on akimbo's network — i.e., on this reading D3 would transfer to the new network about as
+well as it works on akimbo's. This number inherits the wide uncertainty of both inputs (roughly +/-29, per the
+pre-registered caveat) AND assumes additivity, which is untested; it says "D3 likely still helps with this network", not
+a value to use. If it matters, the direct measurement (new net with D3 vs new net without D3, same cost) is the way to get it
+without the additivity assumption.
+
+**Consequence, per Part 3 of the pre-registration and Part 8 of the original SPRT plan:** the data/capacity questions
+stand. The network trained on 1 G distinct positions (8 epochs) is not close to shipping quality, D3 retuning would not
+close most of the gap, and the next step is more/better data (or the capacity question, king buckets) — not a D3
+retune as the primary lever. A D3 retune for the new network may still be worth a small, separate measurement later
+(the derived +40.7 estimate suggests it is not obviously wasted), but it is not where the gap lives.
+
+## Explicit limit, restated
+This measures network quality without the correction. The shipped configuration (with D3) was measured directly by the
+earlier SPRT (-53.9 +/- 26.6): the two numbers together (-49.8 without D3, -53.9 with D3, on the same net) are the actual
+evidence about D3's effect on this net, not the additivity formula above, which is a cruder read of the same two numbers.
