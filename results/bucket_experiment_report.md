@@ -107,3 +107,24 @@ measured.
 1 epoch over 1 G like the earlier no-bucket comparison point, ~4.25h at this rate, trading the 8-epoch comparison
 for a faster read), (c) investigate/fix the throughput before spending the time, or (d) drop this experiment. Parts 4-6
 (quantisation gates, scale coefficient, Spearman, the match) all wait on whichever training actually completes.
+
+## The 20-minute read (2026-09-28): dense, not sparse, not configurable
+Read `acyclib/src/trainer/optimiser/adam.rs` and `acyclib/src/device/cpu/base.rs`. `AdamW::update` calls
+`weights.buf.adam(&cfg, weights.size(), &grads.buf, ...)` with `size = weights.size()` — the FULL tensor. The CPU
+`adam()` implementation (`base.rs:294`) is a flat loop over `self.buf[..size]`, unconditionally, every call: no row is
+skipped regardless of whether this batch's sparse features touched it. `trainer/optimiser.rs` lists exactly four
+optimiser modules (`adam`, `clip`, `decay`, `radam`, `ranger`) — no sparse-aware variant exists anywhere in this bullet
+version. **Answer: the input-layer weight update is dense, and there is no flag or alternative path to make it sparse.**
+This means the 4x row count (768 -> 3,072) genuinely quadruples this specific per-batch loop's work — a real compute
+cost, on top of (not instead of) the cache-capacity effect (float32 weights + Adam's two moment buffers: ~9 MB at 768
+rows, ~38 MB at 3,072, against the Ampere Altra's 32 MB system cache) that was already a sufficient explanation on its
+own. Both mechanisms point the same way and neither is a bug to fix; the ~1.9x slowdown observed is consistent with
+either, or both together. **Decision (not mine): proceed at the ~34h estimate** — Oracle is idle and free, so the extra
+~14 hours cost calendar time, not money, and the 8-epoch comparison is paired with the existing `step_8ep.nnue`
+baseline in a way a 1-epoch test would not be (a negative 1-epoch result would leave open whether buckets need more
+training, likely requiring the 34-hour run anyway, after spending ~9 on the shorter one first).
+
+**Relaunched 2026-09-28, same recipe, same command, nothing changed**: bot stopped (no game running), `Save Rate : 60`
+confirmed in the preamble again, `Positions / Superbatch : 16666624` matching. Stale markers from the stopped attempt
+(`done_8ep_buckets`, `stopped_8ep_buckets`, the old log) removed before relaunch so the new run's own markers cannot be
+confused with the old one's.
