@@ -172,3 +172,96 @@ def convert_verified(raw_f32, out_path, exe, n=2000, seed=11):
     with open(out_path, "wb") as f:
         f.write(data)
     return len(fens)
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# 4-king-bucket variant (ChessBucketsMirrored, BUCKETS32 below). Row layout verified against the real bullet Rust
+# code AND against Luna's own feature_index to match EXACTLY, with no permutation needed (unlike the no-bucket
+# Chess768hm case, whose mirror direction is opposite Luna's and needs `sq ^ 7`; ChessBucketsMirrored's own mirror
+# direction already matches Luna's -- see pipeline/bullet_pilot/bucket_layout_check.py, 0/35278 mismatches, mutation
+# test has teeth). raw.bin for this net already has 768*4 = 3072 input rows (no replication).
+# ---------------------------------------------------------------------------------------------------------------
+NUM_BUCKETS = 4
+BUCKETS_RAW_FLOATS = 768 * NUM_BUCKETS * HIDDEN + HIDDEN + 2 * HIDDEN + 1
+
+
+def convert_buckets(raw_f32):
+    """raw_f32: flat f32 array, l0w[768*4][1024] (already bucketed, bullet's own row order == Luna's), l0b[1024],
+    l1w[2][1024], l1b. Same gates as convert(); no tiling, no permutation. Returns net.bin bytes or raises GateError."""
+    raw = np.asarray(raw_f32, dtype="<f4")
+    assert raw.size == BUCKETS_RAW_FLOATS, raw.size
+    n_rows = 768 * NUM_BUCKETS
+    l0w = raw[:n_rows * HIDDEN].reshape(n_rows, HIDDEN)
+    l0b = raw[n_rows * HIDDEN:n_rows * HIDDEN + HIDDEN]
+    l1w = raw[n_rows * HIDDEN + HIDDEN:n_rows * HIDDEN + 3 * HIDDEN].reshape(2, HIDDEN)
+    l1b = raw[-1:]
+    q = lambda a, s: np.round(a.astype(np.float64) * s)
+    fw, fb, ow, ob = q(l0w, QA), q(l0b, QA), q(l1w, QB), q(l1b, QA * QB)
+    problems = []
+    for n, a in (("feature_weights", fw), ("feature_bias", fb), ("output_weights", ow), ("output_bias", ob)):
+        c = int(((a >= I16MAX) | (a <= I16MIN)).sum())
+        if c:
+            problems.append(f"{n}: {c} saturated")
+    if QA * int(np.abs(ow).max()) > I16MAX:
+        problems.append("SIMD gate: 255 * max|output weight| > 32767")
+    w = fw.astype(np.int64)
+    up = fb.astype(np.int64) + np.sort(w, axis=0)[-32:].clip(min=0).sum(axis=0)
+    lo = fb.astype(np.int64) + np.sort(w, axis=0)[:32].clip(max=0).sum(axis=0)
+    if up.max() > I16MAX or lo.min() < I16MIN:
+        problems.append(f"accumulator bound: max {up.max()} min {lo.min()}")
+    if problems:
+        raise GateError("; ".join(problems))
+    out = fw.astype("<i2").tobytes() + fb.astype("<i2").tobytes() + ow.astype("<i2").tobytes() + ob.astype("<i2").tobytes() + bytes(62)
+    assert len(out) == 6_297_664, len(out)  # same file size as the no-bucket net: 4x fewer replicated rows, 4x more real ones
+    return out
+
+
+class ReferenceBuckets:
+    """Independent reference inference for the bucketed net, from bullet's own ChessBucketsMirrored row-index formula
+    (bucket_layout_check.bullet_map_features / row layout), NOT from Luna's code."""
+
+    def __init__(self, raw_f32):
+        raw = np.asarray(raw_f32, dtype="<f4")
+        n_rows = 768 * NUM_BUCKETS
+        q = lambda a, s: np.round(a.astype(np.float64) * s).astype(np.int64)
+        self.W = q(raw[:n_rows * HIDDEN].reshape(n_rows, HIDDEN), QA)
+        self.B = q(raw[n_rows * HIDDEN:n_rows * HIDDEN + HIDDEN], QA)
+        self.OW = q(raw[n_rows * HIDDEN + HIDDEN:n_rows * HIDDEN + 3 * HIDDEN].reshape(2, HIDDEN), QB)
+        self.OB = int(q(raw[-1:], QA * QB)[0])
+
+    def eval(self, fen):
+        import bucket_layout_check as blc
+        b64 = blc.expand_buckets(blc.BUCKETS32)
+        rows = blc.bullet_map_features(fen, b64)  # {(white,pt,sq): (row_stm, row_ntm)}
+        stm_idx = [v[0] for v in rows.values()]
+        ntm_idx = [v[1] for v in rows.values()]
+        s = 0
+        for k, idx in enumerate((stm_idx, ntm_idx)):
+            c = np.clip(self.B + self.W[idx].sum(axis=0), 0, QA)
+            s += int((c * c * self.OW[k]).sum())
+        out = int(s / QA) + self.OB
+        return max(-15000, min(15000, int(out * 400 / (QA * QB))))
+
+
+def convert_verified_buckets(raw_f32, out_path, exe, n=2000, seed=11):
+    """Bucketed analogue of convert_verified: converts, round-trips against ReferenceBuckets on `n` positions, and
+    writes out_path ONLY if there is zero difference."""
+    import os
+    import tempfile
+    data = convert_buckets(raw_f32)
+    fens = sample_positions(n, seed)
+    ref = ReferenceBuckets(raw_f32)
+    expected = [ref.eval(f) for f in fens]
+    fd, tmp = tempfile.mkstemp(suffix=".nnue")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+        got = luna_eval(exe, tmp, fens)
+    finally:
+        os.unlink(tmp)
+    diffs = [i for i, (a, b) in enumerate(zip(expected, got)) if a != b]
+    if len(got) != len(fens) or diffs:
+        raise RoundTripError(f"round-trip FAILED: {len(diffs)} of {len(fens)} positions differ (first {diffs[:5]}); {out_path} not written")
+    with open(out_path, "wb") as f:
+        f.write(data)
+    return len(fens)
