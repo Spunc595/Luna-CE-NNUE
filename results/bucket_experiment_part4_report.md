@@ -68,3 +68,32 @@ and SPRT-tested yesterday, sha `8df114079ff6f81af6f0ecb5700cf88ebd62e840577cd4f0
 SCALE=400 baseline, which would have handed one side an unearned ~16 Elo (yesterday's own measured gain from the
 358 correction) and made the match measure calibration instead of architecture, the exact mistake that voided the
 first net8ep verdict.
+
+## The scale inflation is a property of the training recipe, not the architecture
+The two networks' coefficients against akimbo (same eval_set.epd, seed 7, homogeneous now): **1.1156 (bucket) vs
+1.1164 (no-bucket)**, 0.07% apart — the same number within measurement precision. `400/1.1156 = 358.55`,
+`400/1.1164 = 358.30`: the two corrected SCALE values also coincide. **Using SCALE=359 for the bucket net (distinct
+from 358) would have introduced a 0.3% difference for no reason** — D4 showed even a real 16% margin retune could not
+be measured cleanly; 0.3% is noise. Rebuilt with **SCALE=358 for both sides**, on a tree that is a copy of
+`build_net_scale358` with only `resources/net.bin` swapped — the two trees now differ in exactly one file, the
+cleanest possible single-variable comparison, and the diff gate lists one line.
+
+**Reading:** the WDL-blend mechanism identified yesterday (bullet's convention, blend toward the discrete game result
+pulling decisive-position targets to more extreme probabilities) predicted a scale inflation from the RECIPE, not from
+either architecture. Two independently-trained networks landing on the same ~1.116 factor confirms it: **the correct
+fix, going forward, is the WDL ramp in the bullet training script, not a per-network `SCALE` constant patched into the
+engine after the fact.** A downstream `SCALE` patch works today but leaves a magic number nobody will be able to
+explain in six months; it is being used here only because re-running the 30-hour training with a different ramp was
+not in scope for this comparison.
+
+## Two static indicators now agree, for the first time in four days
+| | no-bucket (8ep) | bucket (8ep) |
+|---|---|---|
+| residual vs akimbo (same population, after removing scale) | 149 cp | **123 cp (-17%)** |
+| Spearman (full SF18 set) | 0.9026 | **0.9043** |
+
+Both point the same way (the bucket net agrees with akimbo more, after scale is factored out, and correlates better
+with Stockfish 18). **Neither predicts Elo** — learned three times in four days now (D1: null Spearman, +44.8 Elo;
+net8ep: -0.0011 Spearman, ~-50 Elo; both times the static number and the match disagreed). R^2 = 0.9784 for the
+bucket net is still below the ~0.98 threshold, so the reading stays the third row for both networks (scale AND a real
+disagreement) — not "mostly scale" for one and not the other. **The match decides.**
