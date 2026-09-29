@@ -128,3 +128,36 @@ training, likely requiring the 34-hour run anyway, after spending ~9 on the shor
 confirmed in the preamble again, `Positions / Superbatch : 16666624` matching. Stale markers from the stopped attempt
 (`done_8ep_buckets`, `stopped_8ep_buckets`, the old log) removed before relaunch so the new run's own markers cannot be
 confused with the old one's.
+
+## RESULT: H1 ACCEPTED — the bucket architecture adds strength at this data scale (2026-09-29, 13:44:04-15:56:04 UTC)
+Match: A = 4-king-bucket net (`ck_8ep_buckets`, D3 active, SCALE=358), B = the no-bucket 8-epoch net (`step_8ep.nnue`,
+D3 active, SCALE=358) — both at the SAME scale (see the scale-correction correction above), trees differing in exactly
+`resources/net.bin`. elo0=0 elo1=10, tc 10+0.1, cap 8,000, bot off.
+
+```
+games              529
+A (buckets)        +155 =275 -99   score 0.5529
+Elo(A-B)           +36.9 +/- 20.5   (95% CI)
+LOS                100.0%
+draw ratio          0.5198
+games lost on time  0   (match VALID)
+SPRT               llr 2.95, ubound 2.94 -> H1 ACCEPTED
+```
+Rate: 529 games / 132 min = ~240 games/hour, consistent with the campaign.
+
+**Reading, per the pre-registered table (Part 6 of the plan): H1 accepted.** Capacity was a real limitation already at
+1 G distinct positions; the bucket architecture is worth adopting for the next generation, and more distinct data will
+likely help it further. Consistent (not confirmatory — the match decided, not them) with both static indicators found
+earlier the same day: the bucket net's residual against akimbo was 17% smaller (123 vs 149 cp) and its Spearman 0.0017
+higher (0.9043 vs 0.9026) than the no-bucket net's, the first time in four days two independent static indicators and
+the match all pointed the same way.
+
+## What this experiment leaves open
+- **The scale-inflation mechanism (WDL ramp) is a recipe property**, confirmed by both networks landing on the same
+  ~1.116 coefficient; fixing it at the source (the bullet training script) rather than patching `SCALE` downstream is
+  future work, not done here.
+- **`SCALE=358` for the bucket net is not yet adopted anywhere** — this was a measurement plus one validation match,
+  not a release.
+- Whether MORE distinct data (beyond 1 G) helps the bucket architecture further is not tested; phase 3's finding that
+  fresh data beats repetition (for the no-bucket net) has not been re-checked with buckets.
+- The next network to embed (if any) is a decision for later, not made here.
