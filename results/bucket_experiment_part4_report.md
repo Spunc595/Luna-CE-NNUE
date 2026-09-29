@@ -39,3 +39,32 @@ drop). This number does not decide anything on its own; the match does.
 (tree diff exactly one line, sha differ, eval differs on a fixed position), verify the SCALE correction against a
 larger sample before trusting it (re-run the scale measurement with the corrected binary, expect slope ~1.00), THEN
 launch the SPRT with each net at its own correct scale.
+
+## CORRECTION (2026-09-29, before the match): wrong position source invalidated the R^2/SCALE numbers above
+The scale measurement above used `bucket_layout_check.positions()` (random self-play walks), NOT the same source as
+yesterday's no-bucket measurement (`results/eval_set.epd`, seed 7). This was caught by comparing std(X) across the two
+measurements: **744.8 cp yesterday vs 1377.3 cp today, for the SAME akimbo D3-off binary** — impossible unless the
+position sets differ in character, which they did (self-play walks reach far more decisive/extreme positions than
+`eval_set.epd`'s curated real-game/puzzle positions). The reported R^2 = 0.9815 and SCALE = 380 above are **wrong**,
+an artifact of measuring on a more extreme sample, not a property of the network. **Re-measured with the correct,
+homogeneous source** (`eval_set.epd`, seed 7, same 2,000 positions as yesterday's no-bucket measurement):
+
+| indicator | bucket net (corrected) | no-bucket net (yesterday, same source) |
+|---|---|---|
+| std(X), akimbo D3-off | 744.8 (matches yesterday exactly — confirms the fix) | 744.8 |
+| std(Y) | 840.5 | 845.2 |
+| slope | **1.1156** | 1.1164 |
+| R^2 (uncentered) | **0.9784** | 0.9688 |
+| residual std (cp) | **122.99** | 148.96 |
+| residual median \|resid\| (cp) | 61.96 | - |
+| SCALE corrected | **400/1.1156 = 358.56 -> 359** | 358 |
+
+**The two networks turn out to have almost identical scale disparity against akimbo** (slope ~1.115-1.116, SCALE
+correction 358-359) — not the "0.9815, mostly scale" outlier the bad sample suggested. Reading against the
+pre-registered table: R^2=0.978 is still below the ~0.98 threshold (third row: scale AND a real disagreement, same as
+the no-bucket net, not the second row "almost all scale"). The match binaries below use **SCALE=359** for the bucket
+net, and **B is `step_8ep.nnue` at ITS OWN measured SCALE=358** (the exact `engines/net_scale358` binary already built
+and SPRT-tested yesterday, sha `8df114079ff6f81af6f0ecb5700cf88ebd62e840577cd4f09de3166b0b395355`) — not a straw-man
+SCALE=400 baseline, which would have handed one side an unearned ~16 Elo (yesterday's own measured gain from the
+358 correction) and made the match measure calibration instead of architecture, the exact mistake that voided the
+first net8ep verdict.
