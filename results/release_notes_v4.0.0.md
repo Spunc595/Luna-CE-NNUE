@@ -70,7 +70,7 @@ aarch64-only) to both build and verify it, and an unverified binary is not shipp
 |---|---|
 | `luna-v4.0.0-source.tar` | `e489f68cbfc97fc00c6cf8203951e6b3aef4edbb7f98c2e8ac4ce1d148218c02` |
 | `luna-v4.0.0-android-arm64` | `72caa67615d3741be085dc16712f78340618f67c220c9a2e68c06b38d421d9ab` |
-| `luna-v4.0.0-linux-aarch64` | `2de537190dfee6c0f7b24ce4c8d4305f1c74ca05b6e9f74e07335c5dd7eacb0d` |
+| `luna-v4.0.0-linux-arm64` | `2de537190dfee6c0f7b24ce4c8d4305f1c74ca05b6e9f74e07335c5dd7eacb0d` |
 
 The Android binary was built and its bytes hashed; it was **not executed on an Android device** (none available in
 this session) — verified only by the same gates (G2/G3/G7-equivalent) as the Linux aarch64 build, on the source tree
