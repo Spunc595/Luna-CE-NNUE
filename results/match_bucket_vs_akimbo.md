@@ -50,3 +50,28 @@ The chained estimate (D3's own +44.8, the net8ep SPRT's -53.9, the no-D3 match's
 information is not just about this network — it is that chaining Elo differences this way does not work reliably in
 this system, and other derived estimates used in this campaign (D3's transfer estimate, prior comparisons against
 3.1.6) deserve more suspicion than they have been given.
+
+## RESULT (2026-09-29 17:48:52 -> 2026-09-30 01:56:41 UTC, 8h08m, 2,000 games)
+```
+A (bucket, SCALE=358)   +492 =1018 -490   score 0.5005
+B (akimbo, SCALE=400)
+Elo(A-B)                +0.3 +/- 10.7   (95% CI)
+draw ratio               0.5090
+games lost on time       0   (match VALID)
+rate                      2000 games / 488 min = ~246 games/h, consistent with the campaign
+```
+SE-model check: draw ratio 0.509 (close to the model's 0.52 assumption) -> predicted CI ~+-10.5, observed +-10.7. Consistent.
+
+**Decision, per the rule fixed before the run: Elo >= 0 -> SHIP.** The network trained on our own data, with king
+buckets, at the correct scale, is statistically indistinguishable from akimbo's (+0.3 +/- 10.7, essentially the center
+of the CI). Not a win, not a loss: parity, which per Part 3 is worth shipping on its own — every future network is now
+measured against OUR OWN, not a frozen external artifact.
+
+## Part 4: chain vs direct measurement
+Chained estimate: **-1.1 +/- 36** (`results/match_no_d3.md`, additivity assumed across D3's own SPRT, the net8ep
+SPRT, and the no-D3 match). Direct measurement: **+0.3 +/- 10.7**. The direct number falls almost exactly at the
+center of the chained interval (1.4 Elo from the chain's point estimate) — **the chain was right**, even though its
+own uncertainty was far too wide to decide anything by itself. This is one data point in favour of the chaining
+method in this system, not a general validation of every chained estimate used earlier (D3's transfer, the 3.1.6
+comparisons): those remain unverified by a direct match and should keep the same "derived, not measured" caveat they
+already carry.
