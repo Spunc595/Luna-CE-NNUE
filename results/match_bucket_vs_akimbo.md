@@ -1,4 +1,4 @@
-# Direct match: bucket net (own data, SCALE=358) vs akimbo (SCALE=400) — pre-registered 2026-09-29, before the run
+# Direct match: bucket net (public Leela data, SCALE=358) vs akimbo (SCALE=400) — pre-registered 2026-09-29, before the run
 
 ## Part 0: binaries, no build needed
 ```
@@ -62,7 +62,7 @@ rate                      2000 games / 488 min = ~246 games/h, consistent with t
 ```
 SE-model check: draw ratio 0.509 (close to the model's 0.52 assumption) -> predicted CI ~+-10.5, observed +-10.7. Consistent.
 
-**Decision, per the rule fixed before the run: Elo >= 0 -> SHIP.** The network trained on our own data, with king
+**Decision, per the rule fixed before the run: Elo >= 0 -> SHIP.** The network trained by the author on public Leela data, with king
 buckets, at the correct scale, is statistically indistinguishable from akimbo's (+0.3 +/- 10.7, essentially the center
 of the CI). Not a win, not a loss: parity, which per Part 3 is worth shipping on its own — every future network is now
 measured against OUR OWN, not a frozen external artifact.
