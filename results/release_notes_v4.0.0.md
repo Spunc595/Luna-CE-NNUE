@@ -5,7 +5,8 @@
 This is the first release whose embedded network (`resources/net.bin`) was
 trained by the author, with his own training pipeline, on public Leela Chess
 Zero data. It was trained with [bullet](https://github.com/jw1912/bullet) on
-1 billion distinct positions (8 epochs), in the king-bucketed 768x4 mirrored
+1 billion positions (about 914 million unique by exact board and
+side-to-move match; 8 epochs), in the king-bucketed 768x4 mirrored
 architecture ported from akimbo: 1024 hidden neurons, squared clipped ReLU.
 The file format and size are unchanged.
 

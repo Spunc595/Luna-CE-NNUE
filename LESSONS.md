@@ -26,10 +26,13 @@ before the real source was read and the direction corrected
 (`nnue_phase3_report.md`).
 
 **bullet does not shuffle training data by itself, and the loader reads
-sequentially** — "distinct positions" in a data file is not the same claim
-as "randomly ordered." Shuffling (via `bullet-utils shuffle` or an
-equivalent tool) is a separate, explicit step; skipping it was measured to
-cost a small but real amount of quality (shuffled runs consistently ahead of
+sequentially** — how many positions a data file holds is not the same claim
+as whether they are randomly ordered, and neither is the same claim as how
+many of them are actually unique (measured later at 91.4% for the shipped
+network's data, not the 100% a label like "distinct" would suggest — see
+`PROVENANCE.md`). Shuffling (via `bullet-utils shuffle` or an equivalent
+tool) is a separate, explicit step; skipping it was measured to cost a
+small but real amount of quality (shuffled runs consistently ahead of
 unshuffled ones on the same data, `nnue_phase3_report.md`).
 
 **A reimplementation is validated against the real code, never against a
