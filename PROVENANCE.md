@@ -41,8 +41,84 @@ training pipeline, on public Leela Chess Zero data (source and license:
   inflation corrected by `SCALE=358`, see the release notes).
 - Batch size: 4,096. Batches per superbatch: 4,069 (measured,
   `Positions / Superbatch: 16,666,624` from the run preamble). Superbatches:
-  480. Total: 8.0 billion samples (8 epochs) over 1 billion distinct
-  positions.
+  480. Total: 8.0 billion samples (8 epochs) over 1 billion positions —
+  about 914 million unique by exact board and side-to-move match (91.4%),
+  910.5 million if mirror images are merged (91.0%). See "Position-uniqueness
+  measurement" below.
+
+## Position-uniqueness measurement (2026-10-01)
+
+Measured directly on the training files still present on the Oracle volume
+(`/mnt/nnue-data`), read-only, not re-derived from memory or the training
+logs' "distinct" language (which asserted a count without having measured
+one — see `LESSONS.md`).
+
+**Format and identity key**: `bulletformat` 1.8.0's `MarlinFormat` (32-byte
+record: `occ: u64, pcs: [u8;16], stm_enp: u8, hfm: u8, fmc: u16, score: i16,
+result: u8, extra: u8` — layout read from the crate's own
+`src/chess/marlin.rs`, not reconstructed). The identity key used is `occ +
+pcs + stm` (the side-to-move bit, bit 7 of `stm_enp`) only — board and side
+to move, as specified. **Deliberately excludes**: the en-passant bits (the
+other 7 bits of `stm_enp`) and the halfmove/fullmove counters, score and
+result fields, none of which are position identity. **Limit of the
+measurement, not of the method**: this record format does not encode
+castling rights at all, so two positions identical in board and side to
+move but differing only in castling rights are counted as one.
+
+**Mirror-canonical key**: the same fields, additionally folding the
+horizontal file mirror (`sq ^= 7`, the same mirror `ChessBucketsMirrored`
+applies) and taking the lexicographically smaller of the raw and mirrored
+key, so a position and its mirror image collapse to one entry.
+
+**Method**: stream-read each file, hash each record's key with 64-bit
+FNV-1a, collect into an in-memory `Vec<u64>` (8 GB peak for the 1-billion-
+record file, against 21 GB free RAM — comfortable; no disk-based sort was
+needed), `sort_unstable`, count runs of equal values. Validated on a 10
+-million-record sample before the full run.
+
+**Collision risk**: with a 64-bit hash and N records, P(>=1 collision) ~
+`1 - exp(-N^2 / 2^65)`. At N=1e9: ~2.7% chance of at least one collision
+somewhere, expected count ~0.027 (i.e. under 1 expected, across the entire
+file) — negligible against the tens of millions of real duplicates found.
+At N=2.5e8: ~0.17% chance, expected ~0.0017.
+
+**Results**:
+
+| File | Used for | Records | Unique (raw) | Unique (mirror-canonical) | Time (raw / mirror) |
+|---|---|---|---|---|---|
+| `s2_1G_mix.bin` | shipped network + no-bucket comparison | 1,000,000,000 | 914,416,689 (91.44%) | 910,466,531 (91.05%) | 1221.2s / 1232.9s |
+| `s2_250M_mix.bin` | phase-3 "A-mix" | 250,000,000 | 243,748,129 (97.50%) | 242,961,864 (97.18%) | 331.6s / 72.6s |
+| `s2_250M_mix2.bin` | phase-3 "A-mix-2" | 250,000,000 | 243,748,129 (97.50%) | 242,961,864 (97.18%) | 331.6s / 72.5s |
+
+`s2_250M_mix.bin` and `s2_250M_mix2.bin` give byte-identical unique counts —
+expected, since both are the same underlying 250M positions under two
+different shuffles (`runAmix.sh`/`runAmix2.sh`), and the method is
+order-independent. This is a consistency check on the method, not a new
+fact about the data.
+
+**What is not computable from current data**: `s2_1G_mix.bin` was built by
+`prep1G.sh` interleaving 4 parts drawn from `iter-1` (used whole) and a
+prefix of `iter-2`; those intermediate per-source files
+(`g1/part_0.bin`...`part_3.bin`) and the raw `iter-1`/`iter-2` downloads
+were deleted by the prep script after interleaving, before this
+measurement was conceived, and are no longer on Oracle. The overlap
+between `iter-1` and `iter-2` specifically, and the per-source contribution
+to `s2_1G_mix.bin`, cannot be recovered from the files that remain — doing
+so would require re-downloading the ~9 GB source files from Hugging Face,
+which was not done.
+
+**Source files, identified without re-downloading** (Hugging Face's file
+API exposes LFS object metadata — name, size, sha256 — without transferring
+the file content):
+
+| File (`linrock/bullet-training-data`, subset S2) | Size (compressed, as hosted) | sha256 (LFS object) |
+|---|---|---|
+| `test77nov-unfilt-test79-maraprmay-v6-dd.skip-see-ge0.wdl-pdist.iter-1.bullet.bin.zst` | 9,007,693,288 bytes | `f02a0dc3da8e294f32514b599135e39685d4d80672bbf0371fe81cab7a0aa84d` |
+| `test77nov-unfilt-test79-maraprmay-v6-dd.skip-see-ge0.wdl-pdist.iter-2.bullet.bin.zst` | 9,003,836,115 bytes | `9493a253194a7042ad398aaaed9e2cb7759aaeb5cb41214022a83fd43d8e19fe` |
+
+These are the sizes/hashes of the `.zst`-compressed files as published, not
+of the decompressed `.bin` content actually streamed into training (that
+form no longer exists locally to hash).
 
 ## Machine and duration
 

@@ -1,9 +1,11 @@
 # Results: the v4.0.0 network (phase-1 line)
 
 Covers the network shipped in Luna CE v4.0.0, trained by the author, with
-his own training pipeline, on public Leela Chess Zero data (`DATA.md`). Not
-the `gen1`/`gen2`/`gen3` self-play line — that line's numbers are in the
-root `RESULTS.md`.
+his own training pipeline, on public Leela Chess Zero data (`DATA.md`), on
+1 billion positions (about 914 million unique by exact board and
+side-to-move match, 91.4%; 910.5 million if mirror images are merged — see
+`PROVENANCE.md` for the measurement). Not the `gen1`/`gen2`/`gen3` self-play
+line — that line's numbers are in the root `RESULTS.md`.
 
 All matches below were run in Luna's own search (not static evaluation),
 cutechess-cli, preamble-verified (TC, bounds, binaries' sha256 recorded

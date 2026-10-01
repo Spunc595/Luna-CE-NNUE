@@ -11,10 +11,12 @@ The network in Luna CE
 (`resources/net.bin`, sha256
 `ecd8a917fd8d6f1e900f64ec1721494178cd610ab5f02b4c91c0ca1950446940`): trained
 by the author, with his own training pipeline, on public Leela Chess Zero
-data (`phase-1` line, not the `gen1`/`gen2`/`gen3` line below). Measured in
-the engine's own search against akimbo's network: **statistically
-indistinguishable, +0.3 ± 10.7 Elo (95% CI, 2,000 games)** — parity, not a
-win. Full provenance: `PROVENANCE.md`. Data source and license: `DATA.md`.
+data (`phase-1` line, not the `gen1`/`gen2`/`gen3` line below), on 1 billion
+positions (about 914 million unique by exact board and side-to-move match,
+91.4%; 910.5 million if mirror images are merged). Measured in the engine's
+own search against akimbo's network: **statistically indistinguishable,
++0.3 ± 10.7 Elo (95% CI, 2,000 games)** — parity, not a win. Full
+provenance: `PROVENANCE.md`. Data source and license: `DATA.md`.
 Result detail: `results/RESULTS_v4.0.0.md`. Traps hit along the way:
 `LESSONS.md`.
 

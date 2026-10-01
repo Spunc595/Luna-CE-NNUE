@@ -12,8 +12,10 @@ top of this repository's `README.md` for that distinction.
    in bullet's binary format, published by Linrock on Hugging Face
    (`linrock/bullet-training-data`, subset `S2`). The files used were
    `test77nov-unfilt-test79-maraprmay-v6-dd.skip-see-ge0.wdl-pdist.iter-1.bullet.bin.zst`
-   in full, plus a prefix of `iter-2`, for 1 billion distinct positions in
-   total.
+   in full, plus a prefix of `iter-2`, for 1 billion positions in total
+   (about 914 million unique by exact board and side-to-move match, 91.4%;
+   910.5 million if mirror images are merged — see `PROVENANCE.md` for the
+   measurement).
 
 These are two distinct facts. A license on (1) does not automatically mean a
 license on (2): (2) is Linrock's own derived artifact, not a re-publication
